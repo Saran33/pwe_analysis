@@ -1,7 +1,7 @@
 # PWE Analysis
 
 ### Financial timeseries charting and analysis. 
-PWE Analysis is a repository for analysing securities using Pandas, Plotly, Cufflinks and other tools.
+PWE Analysis is a PWE Capital repository for analysing securities using Pandas, Plotly, Cufflinks and other tools.
 
 The repository can be found at:
 [Github-PWE_Analysis](https://github.com/Saran33/pwe_analysis/)
@@ -75,12 +75,12 @@ start_date= '2021-01-01'
 btc_dist = charts.pwe_return_dist_chart(BTC_Bitfinex,start_date,end_date,tseries='Price_Returns',kind='scatter',
                                     title='Daily Bitcoin Returns on Bitfinex',ticker='BTC',yTitle='BTC/USD (%)',asPlot=asPlot,
                                     showlegend=False,theme='white',auto_start='2021-01-01', auto_end=end_date,
-                                    connectgaps=False,tickformat='%',decimals=2)
+                                    connectgaps=False,tickformat='.0%',decimals=2)
 
 btc_dist_bar = charts.pwe_return_bar_chart(BTC_Bitfinex,start_date,end_date,tseries='Price_Returns',kind='bar',
                                              title='Bitfinex Bitcoin Daily Returns',
                                              ticker='BRTI',yTitle='BTC/USD (%)',xTitle=None,asPlot=asPlot,theme='white',
-                                             showlegend=False,auto_start=auto_start,auto_end=end_date,tickformat='%',
+                                             showlegend=False,auto_start=auto_start,auto_end=end_date,tickformat='.0%',
                                              decimals=2,orientation='v',textangle=0)
 
 btc_yz30_dist = charts.pwe_return_dist_chart(BTC,start_date,end_date,
@@ -89,14 +89,14 @@ btc_yz30_dist = charts.pwe_return_dist_chart(BTC,start_date,end_date,
                                              ticker='BTC-USD YZ Vol.',yTitle='BTC/USD YZ Vol.',
                                              asPlot=asPlot,showlegend=False,theme='white',
                                              auto_start='2021-01-01',auto_end=end_date,
-                                             connectgaps=False,tickformat='%',decimals=2)
+                                             connectgaps=False,tickformat='.0%',decimals=2)
 
 btc_vol30_dist = charts.pwe_return_dist_chart(BTC_Bitfinex,start_date,end_date,
                                               tseries='Ann_Vol_30',kind='scatter',
                                     title='Spot Bitcoin to US Dollars: Annualized 30 Day Volatility',
                                              ticker='BTC-USD Vol.',yTitle='BTC/USD Vol.',asPlot=asPlot,
                                              showlegend=False,theme='white',auto_start='2021-01-01',auto_end=end_date,
-                                             connectgaps=False,tickformat='%',decimals=2)
+                                             connectgaps=False,tickformat='.0%',decimals=2)
 ```
 #### Returns by Subseries: 
 ##### 2019
