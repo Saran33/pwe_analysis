@@ -6,7 +6,7 @@ PWE Analysis is a repository for analysing securities using Pandas, Plotly, Cuff
 The repository can be found at:
 [Github-PWE_Analysis](https://github.com/Saran33/pwe_analysis/)
 
-#### Toinstal using pip:
+#### To instal using pip:
 `pip install pwe`
 
 ```python
