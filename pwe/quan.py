@@ -90,7 +90,8 @@ def quandl_data(ticker,start_date=None,end_date=None,key=None):
         print ("No CSV found. Downloading data from API") 
 
         df = q_get(ticker,start_date,end_date,key)
-        
+		
+		check_folder('csv_files')
         f_name = f'csv_files/{tkr}_{start_date}_{end_date}.csv'
         print (f"Saving as csv to: {f_name}")
         df.to_csv(f_name)

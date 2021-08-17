@@ -15,6 +15,7 @@ import numpy as np
 import numpy.ma as ma
 from pandas_summary import DataFrameSummary
 #from isoweek import Week
+from pwetools import check_folder
 
 import plotly
 import cufflinks as cf
@@ -209,22 +210,6 @@ def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start
     return;
 
 #def quant_chart_int(df, theme='henanigans'):
-
-def check_folder(name):
-    '''
-    Check if directory exists, if not, create it
-    name : a string for the directory name.
-    
-    '''
-    check_path = os.path.isdir(name)
-    print (f"checking if {name} directory exists...")
-
-    if not check_path:
-        os.makedirs(name)
-        print("created folder : ", name)
-    else:
-        print(name, "folder already exists.")
-        return name;
 
 def add_tags(qf,tags=None,auto_start=auto_start,auto_end=today,theme='white',showarrow=True,arrowhead=6,fontsize=6,textangle=0,yanchor="bottom",fontfamily='Roboto'):
     """

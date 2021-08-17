@@ -82,3 +82,19 @@ def format_ohlc(df):
 	else:
 		df.columns = df.columns.str.strip().str.capitalize().str.replace(' ', '_').str.replace('(', '').str.replace(')', '')
 	return df;
+
+def check_folder(name):
+    '''
+    Check if directory exists, if not, create it
+    name : a string for the directory name.
+    
+    '''
+    check_path = os.path.isdir(name)
+    print (f"checking if {name} directory exists...")
+
+    if not check_path:
+        os.makedirs(name)
+        print("created folder : ", name)
+    else:
+        print(name, "folder already exists.")
+        return name;

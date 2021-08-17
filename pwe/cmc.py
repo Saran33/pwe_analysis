@@ -87,6 +87,7 @@ def cmc_data(ticker="BTC",start_date=None,end_date=None):
         df = format_ohlc(df)
         
         f_name = f'csv_files/{tkr}_{start_date}_{end_date}.csv'
+		check_folder('csv_files')
         print (f"Saving as csv to: {f_name}")
         #scraper.export("csv", name=f_name)
         df.to_csv(f_name)
