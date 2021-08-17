@@ -11,7 +11,7 @@ import pandas as pd
 import quandl
 from datetime import datetime,date,timedelta
 from . import pwetools
-from pwetools import sort_index,format_ohlc
+from pwetools import sort_index,format_ohlc,check_folder
 
 def get_dates(start_date=None,end_date=None):
     # utc_now = datetime.utcnow()
@@ -90,8 +90,8 @@ def quandl_data(ticker,start_date=None,end_date=None,key=None):
         print ("No CSV found. Downloading data from API") 
 
         df = q_get(ticker,start_date,end_date,key)
-		
-		check_folder('csv_files')
+        
+        check_folder('csv_files')
         f_name = f'csv_files/{tkr}_{start_date}_{end_date}.csv'
         print (f"Saving as csv to: {f_name}")
         df.to_csv(f_name)
