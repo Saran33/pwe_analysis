@@ -7,7 +7,7 @@ The repository can be found at:
 [Github-PWE_Analysis](https://github.com/Saran33/pwe_analysis/)
 
 #### To install from git:
-`pip install git+git://github.com/Saran33/Saran33/pwe_analysis.git`
+`pip install git+git://github.com/Saran33/pwe_analysis.git`
 
 #### Download CoinMarketCap data:
 ```python
