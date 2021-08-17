@@ -9,6 +9,7 @@ The repository can be found at:
 #### To instal using pip:
 `pip install pwe`
 
+## Download CoinMarketCap data:
 ```python
 from pwe import charts,returns,vol,quan,cmc
 from datetime import date
@@ -17,7 +18,6 @@ import time
 start_date = "01-01-2017"
 end_date = date.today().strftime("%d-%m-%Y")
 
-## Download CoinMarketCap data:
 BTC = cmc.cmc_data(ticker="BTC",start_date=start_date,end_date=end_date)
 
 settlements = dict({'2021-01-29': 'CME Exp.', '2021-02-26': 'CME Exp.', 
@@ -34,11 +34,13 @@ charts.quant_chart_int(BTC,start_date,end_date,ticker='BTC',
                        showboll=True,showrsi=True,rsi_periods=14,showama=True,
                        ama_periods=9,showvol=True,show_price_range=True,
                        textangle=60,tags=settlements)
-
+```
 ## Download Quandl data:
+```python
 BTC_Bitfinex = quan.quandl_data(ticker='BITFINEX/BTCUSD',
                                 start_date=start_date,end_date=end_date)
-
+                                
+# If running all the code on this README page in one block, include the below sleep function:
 time.sleep(1)
 
 charts.pwe_line_chart(BTC_Bitfinex,columns=['Last'],start_date=start_date,end_date=end_date,kind='scatter',
@@ -46,23 +48,28 @@ charts.pwe_line_chart(BTC_Bitfinex,columns=['Last'],start_date=start_date,end_da
                   ticker='BTC',yTitle='BTC/USD',asPlot=True,showlegend=False,
                   theme='white',auto_start='2021-01-01',auto_end=auto_end,
                   connectgaps=False)
-
+```
 ## Calculate Returns:
+```python
 returns.get_returns(BTC, price='Close');
 returns.get_returns(BTC_Bitfinex, price='Last');
-
+```
 
 ## Calculate 30 Day Volatility:
+```python
 vol.get_vol(BTC_Bitfinex, window=30, column='Price_Returns',trading_periods=365);
-
+```
 ## Calculate 30 Day YangZhang Volatility Estimator (Requires OHLC data):
+```python
 vol.YangZhang_estimator(BTC, window=30, trading_periods=365, clean=True);
-
+```
 ## Returns Profile:
+```python
 bitfinex_btc_stats = returns.return_stats(BTC_Bitfinex,returns='Price_Returns',price='Last',
                                           trading_periods=365,interval='daily',market_hours=24)
-
+```
 ## PLot the Returns & Volatility Distributions:
+```python
 asPlot=True
 start_date= '2021-01-01'
 btc_dist = charts.pwe_return_dist_chart(BTC_Bitfinex,start_date,end_date,tseries='Price_Returns',kind='scatter',
@@ -90,9 +97,9 @@ btc_vol30_dist = charts.pwe_return_dist_chart(BTC_Bitfinex,start_date,end_date,
                                              ticker='BTC-USD Vol.',yTitle='BTC/USD Vol.',asPlot=asPlot,
                                              showlegend=False,theme='white',auto_start='2021-01-01',auto_end=end_date,
                                              connectgaps=False,tickformat='%',decimals=2)
-
-## Returns by Subseries:
-### 2019
+```
+## Returns by Subseries: ### 2019
+```python
 df_2019 = returns.get_sub_series(BTC,start_date='2019-1-1',end_date='2019-12-31')
 df_2019.name = 2019
 df_2019
