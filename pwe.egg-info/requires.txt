@@ -1,9 +1,0 @@
-cufflinks@ git+https://github.com/Saran33/cufflynx.git@Saran33#egg=cufflinks
-cryptocmd@ git+https://github.com/guptarohit/cryptoCMD.git
-pandas
-numpy
-pandas_summary
-plotly
-quandl
-TA-Lib
-ta
