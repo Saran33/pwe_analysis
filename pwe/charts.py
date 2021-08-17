@@ -616,23 +616,8 @@ def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='s
     df['Series_str'] = df[tseries]
     
     df['Series_str'] = pd.Series([round(val, 6) for val in df[tseries]], index = df.index)
+    df['Series_str'] = pd.Series([f"{val*100:.{decimals}f}%" for val in df['Series_str']], index = df.index)
   
-    if decimals==0:
-        df['Series_str'] = pd.Series(["{0:.0f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    if decimals==1:
-        df['Series_str'] = pd.Series(["{0:.1f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    if decimals==2:
-        df['Series_str'] = pd.Series(["{0:.2f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==3:
-        df['Series_str'] = pd.Series(["{0:.3f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==4:
-        df['Series_str'] = pd.Series(["{0:.4f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==5:
-        df['Series_str'] = pd.Series(["{0:.5f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==6:
-        df['Series_str'] = pd.Series(["{0:.6f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    else: raise  ("Modify code for more decimals or learn a less hackish way.")
-    
     if 'DateTime_str' in df:
         df['Date_Ret_str'] = df['DateTime_str'].astype(str)+", "+df['Series_str']
     elif 'DateTime' in df:
@@ -697,22 +682,7 @@ def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='sc
     
     df['Series_str'] = df[tseries]
     df['Series_str'] = pd.Series([round(val, 6) for val in df[tseries]], index = df.index)
-  
-    if decimals==0:
-        df['Series_str'] = pd.Series(["{0:.0f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    if decimals==1:
-        df['Series_str'] = pd.Series(["{0:.1f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    if decimals==2:
-        df['Series_str'] = pd.Series(["{0:.2f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==3:
-        df['Series_str'] = pd.Series(["{0:.3f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==4:
-        df['Series_str'] = pd.Series(["{0:.4f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==5:
-        df['Series_str'] = pd.Series(["{0:.5f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==6:
-        df['Series_str'] = pd.Series(["{0:.6f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    else: raise  ("Modify code for more decimals or learn a less hackish way.")
+    df['Series_str'] = pd.Series([f"{val*100:.{decimals}f}%" for val in df['Series_str']], index = df.index)
     
     if 'DateTime_str' in df:
         df['Date_Ret_str'] = df['DateTime_str'].astype(str)+", "+df['Series_str']
@@ -1419,22 +1389,7 @@ def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='s
     df['Series_str'] = df[tseries]
     
     df['Series_str'] = pd.Series([round(val, 6) for val in df[tseries]], index = df.index)
-  
-    if decimals==0:
-        df['Series_str'] = pd.Series(["{0:.0f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    if decimals==1:
-        df['Series_str'] = pd.Series(["{0:.1f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    if decimals==2:
-        df['Series_str'] = pd.Series(["{0:.2f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==3:
-        df['Series_str'] = pd.Series(["{0:.3f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==4:
-        df['Series_str'] = pd.Series(["{0:.4f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==5:
-        df['Series_str'] = pd.Series(["{0:.5f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==6:
-        df['Series_str'] = pd.Series(["{0:.6f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    else: raise  ("Modify code for more decimals or learn a less hackish way.")
+    df['Series_str'] = pd.Series([f"{val*100:.{decimals}f}%" for val in df['Series_str']], index = df.index)
     
     if 'DateTime_str' in df:
         df['Date_Ret_str'] = df['DateTime_str'].astype(str)+", "+df['Series_str']
@@ -1500,22 +1455,7 @@ def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='sc
     
     df['Series_str'] = df[tseries]
     df['Series_str'] = pd.Series([round(val, 6) for val in df[tseries]], index = df.index)
-  
-    if decimals==0:
-        df['Series_str'] = pd.Series(["{0:.0f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    if decimals==1:
-        df['Series_str'] = pd.Series(["{0:.1f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    if decimals==2:
-        df['Series_str'] = pd.Series(["{0:.2f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==3:
-        df['Series_str'] = pd.Series(["{0:.3f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==4:
-        df['Series_str'] = pd.Series(["{0:.4f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==5:
-        df['Series_str'] = pd.Series(["{0:.5f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    elif decimals==6:
-        df['Series_str'] = pd.Series(["{0:.6f}%".format(val * 100) for val in df['Series_str']], index = df.index)
-    else: raise  ("Modify code for more decimals or learn a less hackish way.")
+    df['Series_str'] = pd.Series([f"{val*100:.{decimals}f}%" for val in df['Series_str']], index = df.index)
     
     if 'DateTime_str' in df:
         df['Date_Ret_str'] = df['DateTime_str'].astype(str)+", "+df['Series_str']
