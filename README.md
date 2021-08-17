@@ -6,7 +6,7 @@ PWE Analysis is a repository for analysing securities using Pandas, Plotly, Cuff
 The repository can be found at:
 [Github-PWE_Analysis](https://github.com/Saran33/pwe_analysis/)
 
-#### To instal using pip:
+#### To install from `pypi`:
 `pip install pwe`
 
 #### Download CoinMarketCap data:
@@ -68,7 +68,7 @@ vol.YangZhang_estimator(BTC, window=30, trading_periods=365, clean=True);
 bitfinex_btc_stats = returns.return_stats(BTC_Bitfinex,returns='Price_Returns',price='Last',
                                           trading_periods=365,interval='daily',market_hours=24)
 ```
-#### PLot the Returns & Volatility Distributions:
+#### Plot the Returns & Volatility Distributions:
 ```python
 asPlot=True
 start_date= '2021-01-01'
