@@ -98,7 +98,7 @@ btc_vol30_dist = charts.pwe_return_dist_chart(BTC_Bitfinex,start_date,end_date,
                                              showlegend=False,theme='white',auto_start='2021-01-01',auto_end=end_date,
                                              connectgaps=False,tickformat='%',decimals=2)
 ```
-#### Returns by Subseries: ##### 2019
+#### Returns by Subseries: 2019
 ```python
 df_2019 = returns.get_sub_series(BTC,start_date='2019-1-1',end_date='2019-12-31')
 df_2019.name = 2019
