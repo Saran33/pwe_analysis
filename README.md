@@ -1,6 +1,7 @@
 # PWE Analysis
 
-### Chartig and analysis using Pandas, Plotly,Cufflinks and other tools.
+### Financial timeseries charting and analysis. 
+PWE Analysis is a repository for analysing securities using Pandas, Plotly, Cufflinks and other tools.
 The repository can be found at  the below link:
 [Github-flavored Markdown](https://github.com/Saran33/pwe_analysis/)
 #### Toinstal using pip:
