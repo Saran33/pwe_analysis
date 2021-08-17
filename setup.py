@@ -11,10 +11,10 @@ setup(
     description='PWE Capital security analysis and charting package.',
 	long_description=long_description,
 	long_description_content_type="text/markdown",
-	#url="https://github.com/Saran33/pwe_analysis",
-    #project_urls={
-    #    "Bug Tracker": "https://github.com/Saran33/pwe_analysis/issues",
-    #},
+	url="https://github.com/Saran33/pwe_analysis",
+    project_urls={
+        "Bug Tracker": "https://github.com/Saran33/pwe_analysis/issues",
+    },
 	classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
