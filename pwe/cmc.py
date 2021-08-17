@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Aug 17 13:12:43 2021
+Created on Tue Aug 17 12:01:45 2021
 
-@author: zenman618
+@author: Saran Connolly saran.c@pwecapital.com
 """
 
 import os
 import pandas as pd
-import quandl
-from datetime import datetime,date,timedelta
+from cryptocmd import CmcScraper
+from datetime import date,timedelta
 from pwetools import sort_index,format_ohlc
 
 def get_dates(start_date=None,end_date=None):
@@ -34,46 +34,29 @@ def get_dates(start_date=None,end_date=None):
     print("End date:", end_date)
     return start_date, end_date;
 
-def create_quandl_key(key):
-    cwd = os.getcwd()
-    quandl_api_key = quandl.ApiConfig.api_key = key
-    quandl.save_key("quandl_api_key", filename="quandl_api_key")
-    print(os.path.join(os.path.expanduser('~')))
-    quandl_api_key = quandl.save_key(key, filename=f"{cwd}/quandl_api_key")
-    print(quandl.ApiConfig.api_key)
-    print(quandl_api_key)
-    return quandl_api_key;
-
-def check_quandl_key(key=None):
-    cwd = os.getcwd()
-    if os.path.exists(os.path.abspath(f"{cwd}/quandl_api_key")) == True:
-        quandl.read_key(filename="quandl_api_key")
-        quandl_api_key = quandl.ApiConfig.api_key
-    else:
-        quandl_api_key = create_quandl_key(key)
-        
-        return quandl_api_key;
-
-def q_get(ticker,start_date=None,end_date=None, key=None):
-    
-    quandl_api_key = check_quandl_key(key)
-    
-    df = quandl.get(ticker,api_key=quandl_api_key, start_date=start_date, end_date=end_date)
-    
-    df = sort_index(df)
-    df = format_ohlc(df)
-    
-    return df;
-
-def quandl_data(ticker,start_date=None,end_date=None,key=None):
+def cmc_data(ticker="BTC",start_date=None,end_date=None):
     """
-    Read data from Quandl and store it to a CSV. If the data is recent, it will read from csv 
-    rather than making an API request.
+    Parameters
+    ----------
+    start_date : TYPE
+        DESCRIPTION.
+    end_date : TYPE
+        DESCRIPTION.
+    ticker : TYPE, optional
+        DESCRIPTION. The default is "BTC".
+
+    Returns
+    -------
+    None.
+
+    https://github.com/guptarohit/cryptoCMD/tree/87b80b544c31999313692e4adde7d0055de2c08a
     
     """
     
     start_date, end_date = get_dates(start_date=start_date,end_date=end_date)
+    print('')
     print("Security:", ticker)
+    print('')
     
     tkr = ticker.replace('/', '_')
     
@@ -84,15 +67,30 @@ def quandl_data(ticker,start_date=None,end_date=None,key=None):
         print(file_path)
         
         df = pd.read_csv(file_path,low_memory=False, index_col=['Date'], parse_dates=['Date'],infer_datetime_format=True)
-            
+        df= sort_index(df)
+        
     else:
         print ("No CSV found. Downloading data from API") 
 
-        df = q_get(ticker,start_date,end_date,key)
+        scraper = CmcScraper(ticker,start_date=start_date, end_date=end_date) # start_date=start_date,
+    
+        # get raw data as list of list
+        headers, data = scraper.get_data()
+    
+        # get data in a json format
+        #btc_json_data = scraper.get_data("json")
+        # pp(btc_json_data)
+    
+        # Pandas dataFrame for the same data
+        df = scraper.get_dataframe(date_as_index=True)
+        df= sort_index(df)
+        df = format_ohlc(df)
         
         f_name = f'csv_files/{tkr}_{start_date}_{end_date}.csv'
         print (f"Saving as csv to: {f_name}")
+        #scraper.export("csv", name=f_name)
         df.to_csv(f_name)
     
     return df;
+    
     
