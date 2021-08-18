@@ -77,27 +77,27 @@ def return_stats(df, returns='Price_Returns',price='Close', trading_periods=252,
     if interval =='daily':
         ann_factor = trading_periods
         t = 'days'
-        vol_window = vol_window
+        #vol_window = vol_window
     elif interval =='annual':
         ann_factor = 1
         t = 'years'
-        vol_window = vol_window
+        #vol_window = vol_window
     elif interval =='hourly':
         ann_factor = trading_periods*market_hours
         t = 'hours'
-        vol_window = vol_window*market_hours
+        #vol_window = vol_window*market_hours
     elif interval =='minutes':
         ann_factor = trading_periods*market_hours*60
         t = 'minutes'
-        vol_window = vol_window*market_hours*60
+        #vol_window = vol_window*market_hours*60
     elif interval =='seconds':
         ann_factor = trading_periods*market_hours*(60**2)
         t = 'seconds'
-        vol_window = vol_window*market_hours*(60**2)
+        #vol_window = vol_window*market_hours*(60**2)
     elif interval =='weekly':
         ann_factor = 52
         t = 'weeks'
-        vol_window = vol_window/7
+        #vol_window = vol_window/7
     elif interval =='quarterly':
         ann_factor = 4
         t = 'quarters'
