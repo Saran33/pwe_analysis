@@ -9,6 +9,7 @@ Created on Tue Aug 17 09:25:47 2021
 import pandas as pd
 import numpy as np
 import os
+from datetime import now
 
 def commas(number):
     return ("{:,}".format(number))
@@ -107,3 +108,42 @@ def check_folder(name):
     else:
         print(name, "folder already exists.")
         return name;
+    
+def file_datetime(df):
+    if 'DateTime' in df:
+        csv_start = df['DateTime'].dt.strftime('%Y-%m-%d_%H:%M:%S').min()
+        csv_start = csv_start.strip().replace(':', ',')
+        
+        csv_end = df['DateTime'].dt.strftime('%Y-%m-%d_%H:%M:%S').max()
+        csv_end = csv_end.strip().replace(':', ',')
+        
+    elif 'Date' in df:  
+        csv_start = df['Date'].dt.strftime('%Y-%m-%d_%H:%M:%S').min()
+        csv_start = csv_start.strip().replace(':', ',')
+        
+        csv_end = df['Date'].dt.strftime('%Y-%m-%d_%H:%M:%S').max()
+        csv_end = csv_end.strip().replace(':', ',')
+        
+        return csv_start, csv_end;
+    
+def df_to_csv(df,symbol,csv_start=None,csv_end=None,today_dmymhs=None,market=None,interval=None,outputsize=None):
+    check_folder('csv_files')
+
+    now_dmymh = str(now().strftime("%d-%m-%Y_%H,%M"))
+    csv_start, csv_end = file_datetime(df)
+    
+    if (market==None) and (interval==None) and (outputsize==None):
+        file_path = f'csv_files/{symbol}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
+    elif (market==None) and (outputsize==None):
+        file_path = f'csv_files/{symbol}_{interval}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
+    elif market==None:
+        file_path = f'csv_files/{symbol}_{interval}_{outputsize}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
+    elif outputsize==None:
+        file_path = f'csv_files/{symbol}_{interval}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
+    else:
+        file_path = f'csv_files/{symbol}_{market}_{interval}_{outputsize}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
+    
+    df.to_csv(file_path)
+    print (f"Saved csv to {file_path}")
+    return;
+    

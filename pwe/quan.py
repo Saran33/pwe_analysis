@@ -3,37 +3,14 @@
 """
 Created on Tue Aug 17 13:12:43 2021
 
-@author: zenman618
+@author: Saran Connolly saran.c@pwecapital.com
 """
 
 import os
 import pandas as pd
 import quandl
 from datetime import datetime,date,timedelta
-from . import pwetools
-from pwetools import sort_index,format_ohlc,check_folder
-
-def get_dates(start_date=None,end_date=None):
-    # utc_now = datetime.utcnow()
-    today = date.today()
-    td = today.strftime("%d-%m-%Y")
-    today_dmy = str(td)
-    if end_date is None:
-        end_date = today_dmy
-    else:
-        pass
-    if start_date is None:
-        start_date = today - timedelta(days=365)
-        start_date = start_date.strftime("%d-%m-%Y")
-        start_date = str(start_date)
-    else:
-        pass
-    
-    print("Today's date:", today_dmy)
-    print(" ")
-    print("Start date:", start_date)
-    print("End date:", end_date)
-    return start_date, end_date;
+from pwetools import sort_index,format_ohlc,check_folder,get_dates
 
 def create_quandl_key(key):
     cwd = os.getcwd()
