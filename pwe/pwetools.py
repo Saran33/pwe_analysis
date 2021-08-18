@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import os
 from datetime import date,timedelta
-import datetime
+from datetime import datetime,date,timedelta
 
 def get_dates(start_date=None,end_date=None):
     # utc_now = datetime.utcnow()
@@ -88,18 +88,19 @@ def rid_na(arr):
     return out
 
 def sort_index(df):
+    df.index=pd.DatetimeIndex(df.index)
+    
     if 'DateTime' in df:
         df.set_index('DateTime')
-        df['DateTime'] = df.index.to_series()
+        
     elif ('Date' in df) or ('date' in df):
-        df.set_index('Date')
-        df['Date'] = df.index.to_series()
-        df.index.names = ['Date']
+        df.index.names = ['DateTime']
     else:
-        pass    
-    df.index=pd.DatetimeIndex(df.index)
+        pass
+    
+    df['Date'] = df.index.to_series().dt.date
     df.sort_index(ascending=True, inplace=True)
-    df['Date'] = df.index.to_series()
+    
     return df;
 
 def format_ohlc(df):
@@ -133,38 +134,35 @@ def check_folder(name):
         return name;
     
 def file_datetime(df):
-    if 'DateTime' in df:
-        csv_start = df['DateTime'].dt.strftime('%Y-%m-%d_%H:%M:%S').min()
-        csv_start = csv_start.strip().replace(':', ',')
+    if type(df.index) != 'DatetimeIndex' :
+        df.index=pd.DatetimeIndex(df.index)
         
-        csv_end = df['DateTime'].dt.strftime('%Y-%m-%d_%H:%M:%S').max()
-        csv_end = csv_end.strip().replace(':', ',')
+    csv_start = df.index.strftime('%Y-%m-%d_%H:%M:%S').min()
+    csv_start = csv_start.strip().replace(':', ',')
         
-    elif 'Date' in df:  
-        csv_start = df['Date'].dt.strftime('%Y-%m-%d_%H:%M:%S').min()
-        csv_start = csv_start.strip().replace(':', ',')
+    csv_end = df.index.strftime('%Y-%m-%d_%H:%M:%S').max()
+    csv_end = csv_end.strip().replace(':', ',')
         
-        csv_end = df['Date'].dt.strftime('%Y-%m-%d_%H:%M:%S').max()
-        csv_end = csv_end.strip().replace(':', ',')
-        
-        return csv_start, csv_end;
+    return csv_start, csv_end;
     
-def df_to_csv(df,symbol,csv_start=None,csv_end=None,today_dmymhs=None,market=None,interval=None,outputsize=None):
+def df_to_csv(df,symbol,market=None,interval=None,outputsize=None):
     check_folder('csv_files')
 
     now_dmymh = str(datetime.now().strftime("%d-%m-%Y_%H,%M"))
     csv_start, csv_end = file_datetime(df)
     
+    tkr = symbol.replace('/', '_')
+    
     if (market==None) and (interval==None) and (outputsize==None):
-        file_path = f'csv_files/{symbol}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
+        file_path = f'csv_files/{tkr}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
     elif (market==None) and (outputsize==None):
-        file_path = f'csv_files/{symbol}_{interval}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
+        file_path = f'csv_files/{tkr}_{interval}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
     elif market==None:
-        file_path = f'csv_files/{symbol}_{interval}_{outputsize}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
+        file_path = f'csv_files/{tkr}_{interval}_{outputsize}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
     elif outputsize==None:
-        file_path = f'csv_files/{symbol}_{interval}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
+        file_path = f'csv_files/{tkr}_{interval}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
     else:
-        file_path = f'csv_files/{symbol}_{market}_{interval}_{outputsize}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
+        file_path = f'csv_files/{tkr}_{market}_{interval}_{outputsize}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
     
     df.to_csv(file_path)
     print (f"Saved csv to {file_path}")
