@@ -213,6 +213,8 @@ def return_stats(df, returns='Price_Returns',price='Close', trading_periods=252,
         if f'YangZhang{vol_window}_Ann' in df:
             stats.yz_roll_an = df[f'YangZhang{vol_window}_Ann'].mean()
         else:
+			# If this throws an error it's because the widow in the volatility calc. was not set to the time period.
+			# e.g. a 30 day window for hourly Bitcoin data should be 720, assuming 24 hours of trading, 7 days per week.
             stats.yz_roll_an = yz_roll_an.mean()
             #yz_yr, yz_yr_an = YangZhang_estimator(df,window=periods,trading_periods=ann_factor,clean=True);
             #stats.yz_yr_an = yz_yr_an.iloc[-1]
