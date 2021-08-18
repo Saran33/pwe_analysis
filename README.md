@@ -8,7 +8,7 @@ PWE Analysis is a PWE Capital repository for analysing securities using Pandas, 
 The repository can be found at:
 [Github-PWE_Analysis](https://github.com/Saran33/pwe_analysis/)
 
-#### To install pwe from git:
+#### To install from git:
 `pip install git+git://github.com/Saran33/pwe_analysis.git`
 
 #### Download CoinMarketCap data:
