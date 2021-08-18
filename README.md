@@ -37,7 +37,8 @@ charts.quant_chart_int(BTC,start_date,end_date,ticker='BTC',
 ```
 #### Download Quandl data:
 ```python
-# Input your key the first time and then no need to input a key arguement again. Your key will be saved to the currrent directory.
+# Input your key the first time and then no need to input a key arguement again. 
+# Your key will be saved to the currrent directory.
 BTC_Bitfinex = quan.quandl_data(ticker='BITFINEX/BTCUSD',
                                 start_date=start_date,end_date=end_date, key='MY_API_KEY')
                                 
