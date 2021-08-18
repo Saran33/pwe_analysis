@@ -22,7 +22,9 @@ setup(
     ],
 	install_requires = [
   'cufflinks @ git+https://github.com/Saran33/cufflynx.git@Saran33#egg=cufflinks',
-		'cryptocmd @ git+https://github.com/guptarohit/cryptoCMD.git','pandas','numpy','pandas_summary','plotly','quandl','TA-Lib','ta',
+  'alpha_vantage @ git+git://github.com/Saran33/alpha_vantage.git@develop#egg=alpha_vantage',
+		'cryptocmd @ git+https://github.com/guptarohit/cryptoCMD.git','pandas',
+        'numpy','pandas_summary','plotly','quandl','TA-Lib','ta',
 ],
 	#package_dir={"": "src"},
     #packages=find_packages(where="pwe"),
