@@ -9,7 +9,30 @@ Created on Tue Aug 17 09:25:47 2021
 import pandas as pd
 import numpy as np
 import os
-from datetime import now
+from datetime import date,timedelta
+import datetime
+
+def get_dates(start_date=None,end_date=None):
+    # utc_now = datetime.utcnow()
+    today = date.today()
+    td = today.strftime("%d-%m-%Y")
+    today_dmy = str(td)
+    if end_date is None:
+        end_date = today_dmy
+    else:
+        pass
+    if start_date is None:
+        start_date = today - timedelta(days=365)
+        start_date = start_date.strftime("%d-%m-%Y")
+        start_date = str(start_date)
+    else:
+        pass
+    
+    print("Today's date:", today_dmy)
+    print(" ")
+    print("Start date:", start_date)
+    print("End date:", end_date)
+    return start_date, end_date;
 
 def commas(number):
     return ("{:,}".format(number))
@@ -129,7 +152,7 @@ def file_datetime(df):
 def df_to_csv(df,symbol,csv_start=None,csv_end=None,today_dmymhs=None,market=None,interval=None,outputsize=None):
     check_folder('csv_files')
 
-    now_dmymh = str(now().strftime("%d-%m-%Y_%H,%M"))
+    now_dmymh = str(datetime.now().strftime("%d-%m-%Y_%H,%M"))
     csv_start, csv_end = file_datetime(df)
     
     if (market==None) and (interval==None) and (outputsize==None):
