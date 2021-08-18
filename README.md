@@ -1,12 +1,12 @@
 # PWE Analysis
 
 ### Financial timeseries charting and analysis. 
-PWE Analysis is a PWE Capital repository for analysing securities using Pandas, Plotly, Cufflinks and other tools.
+PWE Analysis is a PWE Capital repository for analysing securities using Pandas, Plotly, Cufflinks and other tools, combined in a pwe package.
 
 The repository can be found at:
 [Github-PWE_Analysis](https://github.com/Saran33/pwe_analysis/)
 
-#### To install from git:
+#### To install pwe from git:
 `pip install git+git://github.com/Saran33/pwe_analysis.git`
 
 #### Download CoinMarketCap data:
