@@ -185,13 +185,11 @@ def return_stats(df, returns='Price_Returns',price='Close', trading_periods=252,
         stats.vol_roll_mean = vol_roll.mean()
     print (f'Mean Volatility ({vol_window}):', "{:.6%}".format(stats.vol_roll_mean))
     
-    if ('High' in df) and ('Low' in df) and ('Open' in df) and ('close' in df):
+    if ('High' in df) and ('Low' in df) and ('Open' in df) and ('Close' in df):
         # Average {vol_window} Day YangZhang Estimator:
-        if f'YangZhang_{vol_window}' in df:
-            stats.yz_roll_mean = df[f'YangZhang_{vol_window}'].mean()
-        else:
-            yz_roll, yz_roll_an = vol.YangZhang_estimator(df,window=vol_window,trading_periods=ann_factor,clean=True);
-            stats.yz_roll_mean = yz_roll.mean()
+        yz_roll, yz_roll_an = vol.YangZhang_estimator(df,window=vol_window,trading_periods=trading_periods, clean=True,
+                                                          interval=interval,market_hours=market_hours)
+        stats.yz_roll_mean = yz_roll.mean()
         print (f'Mean YangZhang ({vol_window}):', "{:.6%}".format(stats.yz_roll_mean))
         print ('')
     else:
@@ -202,22 +200,14 @@ def return_stats(df, returns='Price_Returns',price='Close', trading_periods=252,
     print ('Annualized Vol:', "{:.2%}".format(stats.ann_std_ret))
     
     # Average Annualized {vol_window} Volatility:
-    if f'Ann_Vol_{vol_window}' in df:
-        stats.vol_roll_an = df[f'Ann_Vol_{vol_window}'].mean()
-    else:
-        stats.vol_roll_an = vol_roll_an.mean()
+    stats.vol_roll_an = stats.vol_roll_mean*np.sqrt(ann_factor)
     print (f'Annualized Mean Volatility ({vol_window}):', "{:.2%}".format(stats.vol_roll_an))
 
+    # Annualized {vol_window} YangZhang:
     if ('High' in df) and ('Low' in df) and ('Open' in df) and ('Close' in df):        
-        # Annualized {vol_window} YangZhang:
-        if f'YangZhang{vol_window}_Ann' in df:
-            stats.yz_roll_an = df[f'YangZhang{vol_window}_Ann'].mean()
-        else:
-			# If this throws an error it's because the widow in the volatility calc. was not set to the time period.
-			# e.g. a 30 day window for hourly Bitcoin data should be 720, assuming 24 hours of trading, 7 days per week.
-            stats.yz_roll_an = yz_roll_an.mean()
-            #yz_yr, yz_yr_an = YangZhang_estimator(df,window=periods,trading_periods=ann_factor,clean=True);
-            #stats.yz_yr_an = yz_yr_an.iloc[-1]
+        stats.yz_roll_an = stats.yz_roll_mean*np.sqrt(ann_factor)
+        #yz_yr, yz_yr_an = YangZhang_estimator(df,window=periods,trading_periods=ann_factor,clean=True);
+        #stats.yz_yr_an = yz_yr_an.iloc[-1]
         print (f'Annualized Mean YangZhang ({vol_window}):', "{:.2%}".format(stats.yz_roll_an))
         #print (f'Period YangZhang ({periods}):', "{:.2%}".format(stats.yz_yr_an))
     else:
@@ -228,11 +218,11 @@ def return_stats(df, returns='Price_Returns',price='Close', trading_periods=252,
 
     # Compute Simple Sharpe (No RFR)
     stats.sharpe_ratio_ar = stats.avg_annualaized / (stats.ann_std_ret)
-    print ('Arithmetic Sharpe Ratio:', "{:.2}".format(stats.sharpe_ratio_ar))
+    print ('Arithmetic Sharpe Ratio:', "{:.2f}".format(stats.sharpe_ratio_ar))
     
     # Compute Geometric Sharpe (No RFR)
     stats.sharpe_ratio_geo = stats.avg_annualized_geometric / (stats.ann_std_ret)
-    print ('Geometric Sharpe Ratio:', "{:.2}".format(stats.sharpe_ratio_geo))
+    print ('Geometric Sharpe Ratio:', "{:.2f}".format(stats.sharpe_ratio_geo))
     print (' ')
 
 #####################################################################################################################
