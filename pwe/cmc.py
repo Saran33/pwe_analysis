@@ -10,7 +10,7 @@ import os
 import pandas as pd
 from cryptocmd import CmcScraper
 from datetime import date,timedelta
-from pwetools import sort_index,format_ohlc
+from pwetools import sort_index,format_ohlc,check_folder
 
 def get_dates(start_date=None,end_date=None):
     # utc_now = datetime.utcnow()
@@ -87,7 +87,8 @@ def cmc_data(ticker="BTC",start_date=None,end_date=None):
         df = format_ohlc(df)
         
         f_name = f'csv_files/{tkr}_{start_date}_{end_date}.csv'
-		check_folder('csv_files')
+        
+        check_folder('csv_files')
         print (f"Saving as csv to: {f_name}")
         #scraper.export("csv", name=f_name)
         df.to_csv(f_name)
