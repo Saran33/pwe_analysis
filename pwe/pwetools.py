@@ -67,9 +67,10 @@ def sort_index(df):
     if 'DateTime' in df:
         df.set_index('DateTime')
         df['DateTime'] = df.index.to_series()
-    elif 'Date' in df:
+    elif ('Date' in df) or ('date' in df):
         df.set_index('Date')
         df['Date'] = df.index.to_series()
+        df.index.names = ['Date']
     else:
         pass    
     df.index=pd.DatetimeIndex(df.index)
@@ -82,6 +83,13 @@ def format_ohlc(df):
 		pass
 	else:
 		df.columns = df.columns.str.strip().str.capitalize().str.replace(' ', '_').str.replace('(', '').str.replace(')', '')
+	return df;
+
+def del_col_num(df):
+	if 'Close' in df:
+		pass
+	else:
+		df.columns = df.columns.str.strip().str.replace('\d+', '').str.replace('.', '').str.replace(' ', '').str.replace('_', '').str.capitalize().str.replace('(', '').str.replace(')', '')
 	return df;
 
 def check_folder(name):
