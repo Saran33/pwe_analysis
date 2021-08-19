@@ -5,13 +5,9 @@ Created on Tue Aug 17 01:58:52 2021
 
 @author: Saran Connolly saran.c@pwecapital.com
 """
-import os
-import time
-from datetime import datetime, date, timedelta, timezone
+from datetime import datetime, date, timedelta
 import pandas as pd
 import numpy as np
-import numpy.ma as ma
-from pandas_summary import DataFrameSummary
 from . import vol
 
 # This may be used for other metrics relating to volatility:
@@ -166,7 +162,7 @@ def return_stats(df, returns='Price_Returns',price='Close', trading_periods=252,
     print ('Annualaized Arithmetic Return:', "{:.2%}".format(stats.avg_annualaized))
     
     #Annualaized Geometric:
-    stats.avg_annualized_geometric = ((1 + stats.geomean)**ann_factor) - 1
+    stats.avg_annualized_geometric = ((1 + stats.cum_ret)**(ann_factor/periods)) - 1
     #stats.avg_annualized_geometric = ((1 + df[returns]).cumprod()) -1
     print ('Annualized Geometric Return:', "{:.2%}".format(stats.avg_annualized_geometric))
     print(' ')
