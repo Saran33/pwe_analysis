@@ -34,6 +34,31 @@ def get_returns(df, returns='Price_Returns',price='Close'):
     # x =  np.around((df1['Log_Returns'] - df1['log_ret']).cumsum(),100)
     return df[returns], df['Log_Returns'];
 
+def vwap(df, h='High',l='Low',c='Close',v='Volume',window=None):
+    """
+    Volume-Weighted Average Price.
+    VWAP = (Cumulative (Price * Volume)) / (Cumulative Volume)
+    
+    """
+    if window == None:
+        df['AP'] = (df[[h,l,c]].mean(axis=1))
+        # Cumulative price * volume:
+        df['CPV'] = (df['AP'] * df[v]).cumsum()
+        df['Cum_Volume'] = df[v].cumsum()
+        df['VWAP'] = df['CPV']/df['Cum_Volume']
+        df.drop(columns=['CPV','Cum_Volume'])
+                
+    else:
+        # Average price:
+        df['AP'] = (df[['High','Low','Close']].mean(axis=1))
+        # Cumulative price * volume:
+        df['CPV'] = (df['AP'] * df[v]).rolling(window, min_periods=1).sum()
+        df['Cum_Volume'] = df[v].rolling(window, min_periods=1).sum()
+        df['VWAP'] = df['CPV']/df['Cum_Volume']
+        df.drop(columns=['CPV','Cum_Volume'])
+                
+    return;
+
 def return_stats(df, returns='Price_Returns',price='Close', trading_periods=252,market_hours=24,interval='daily', vol_window = 30): 
     # price='Close'):
 #####################################################################################################################
