@@ -168,3 +168,46 @@ def df_to_csv(df,symbol,market=None,interval=None,outputsize=None):
     print (f"Saved csv to {file_path}")
     return;
     
+def nan_percent(df):
+    nans = df.isnull().sum(axis = 0)
+    nan_percent = nans/len(df)
+    nan_percent = pd.Series(["{0:.2%}".format(val) for val in nan_percent], index = nan_percent.index) 
+    return nan_percent;
+
+def delete_none(_dict):
+    """
+    Deletes dict keys if their value is None.
+    """
+    for key, value in list(_dict.items()):
+        if isinstance(value, dict):
+            delete_none(value)
+        elif value is None:
+            del _dict[key]
+        elif isinstance(value, list):
+            for v_i in value:
+                delete_none(v_i)
+
+    return _dict;
+
+def resample_ohlc(df,interval='1H',o='Open',h='High',l='Low',c='Close',v='Volume',
+                  v2=None,msc=None, msc_method='mean'):
+    """
+    Resamples ohcl data to a different interval.
+    interval : The desired interval. default ='1H'
+    v2 : An option second volume for some securities expressed in price.
+    msc : a miscellaneous column. Specify the name.
+    msc_method : How to resample to msc column. Default = mean.
+    
+    Read the below link to get correct market trading hours when resampling:
+    https://atekihcan.com/blog/codeortrading/changing-timeframe-of-ohlc-candlestick-data-in-pandas/
+    
+    """
+    if msc == None:
+        msc_method = None
+    ohlc = {o: 'first',h: 'max',l: 'min',c: 'last',v: 'sum',v2: 'sum',msc: msc_method}
+    ohlc_dict = delete_none(ohlc)
+        
+    for x in ohlc_dict:
+        df = df.resample(interval, offset=0).apply(ohlc_dict) # origin=0
+    
+    return df;

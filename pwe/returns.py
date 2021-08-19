@@ -58,6 +58,23 @@ def vwap(df, h='High',l='Low',c='Close',v='Volume',window=None):
         df.drop(columns=['CPV','Cum_Volume'])
                 
     return;
+    
+def vwp(df,price,volume): 
+    """
+    Support function for vwap_close:
+    """
+    return ((df[price]*df[volume]).sum()/df[volume].sum()).round(2)
+
+def vwap_close(df,window=1, price='Close', volume='Volume'):
+    """
+    Returns the Volume-Weighted Average Price for Close prices or Adj. Close prices.
+    """
+    vwap = pd.concat([ (pd.Series(vwp(df.iloc[i:i+window],price,volume),
+                               index=[df.index[i+window]])) for i in range(len(df)-window) ]);
+    vwap = pd.DataFrame(vwap, columns=['Close_VWAP'])
+    df = df.join(vwap, how='left')
+    
+    return df;
 
 def return_stats(df, returns='Price_Returns',price='Close', trading_periods=252,market_hours=24,interval='daily', vol_window = 30): 
     # price='Close'):
@@ -132,7 +149,7 @@ def return_stats(df, returns='Price_Returns',price='Close', trading_periods=252,
     print ('\n')
     print (f'{df} Return Stats:')
     print(f"Dates: {start_date} - {end_date}")
-    periods = df[returns].count()
+    periods = df[returns].count()   
     years = periods/ann_factor
     print (f"Periods: {periods} {t}")
     print (f"Trading Periods: {trading_periods} days a year")
@@ -255,16 +272,23 @@ def return_stats(df, returns='Price_Returns',price='Close', trading_periods=252,
     print ('')
     return stats;
 
-
-td = date.today()
-today = td.strftime("%d-%m-%Y")
-
-utc_now = datetime.utcnow()
-chart_start = utc_now - timedelta(days=365)
-auto_start = chart_start.strftime("%d-%m-%Y")
-
-def get_sub_series(df, start_date=auto_start, end_date=today):
-    start_date = pd.to_datetime(start_date)        
+def get_sub_series(df, start_date=None, end_date=None):
+    """
+	df: dataframe to split
+	
+	start_date: Default DateTime is one year from now in UTC.
+	
+	end_date: Default DateTime is now in UTC.
+    """
+    if start_date==None:
+        utc_now = datetime.utcnow()
+        auto_start = utc_now - timedelta(days=365)
+        start_date = auto_start
+        
+    if end_date==None:
+        end_date = datetime.utcnow()
+        
+    start_date = pd.to_datetime(start_date)     
     end_date = pd.to_datetime(end_date)
         
     df['DateTime'] = pd.DatetimeIndex(df.index)

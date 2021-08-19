@@ -207,7 +207,7 @@ def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start
     #qf.iplot(rangeslider=False)
     
     theme = qf.theme['theme']
-    return;
+    return qf;
 
 #def quant_chart_int(df, theme='henanigans'):
 
@@ -238,7 +238,7 @@ def add_tags(qf,tags=None,auto_start=auto_start,auto_end=today,theme='white',sho
         #qf.iplot(xrange=[auto_start,auto_ensd])
     else:
         pass
-    return;
+    return qf;
     
 def pwe_format(f_name):
     print(f_name)
@@ -330,7 +330,7 @@ def pwe_format(f_name):
     
 def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_start=auto_start,auto_end=today,asPlot=True,
                     showlegend=True,boll_std=2,boll_periods=20,showboll=False,showrsi=False,rsi_periods=14,
-                   showama=False,ama_periods=9,showvol=False,show_price_range=False,tags=None,textangle=0):
+                   showama=False,ama_periods=9,showvol=False,show_price_range=False,sets=None,textangle=0):
     """
     
     df : The Pandas dataframe used for the chart. It must contain open, high, low and close, and may also contain volume. Anything else will be ignored, unless specified.
@@ -387,6 +387,12 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
     
     #Add an annotation:
     add_tags(qf, tags=tags)
+    # Add an annotation:
+    #qf.layout['annotations']['values']=[]
+    qf.add_annotations(sets,
+                   showarrow=True,y=0,
+                   arrowhead=6,arrowcolor=arrowcolor,fontcolor=fontcolor,
+                   fontsize=6,anntextangle=0,yanchor="bottom", fontfamily='Roboto')
 
     
     # Add a support or resistance line:
@@ -438,7 +444,7 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
     return chart_html, chart_file;
 
 
-def single_chart(df,start_date,end_date,columns=None,kind='scatter',title=None,ticker=None,yTitle=None,showlegend=False,asPlot=False,
+def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None,ticker=None,yTitle=None,showlegend=False,asPlot=False,
                       theme='white',auto_start=auto_start,auto_end=today,connectgaps=False):
     """
     
@@ -964,7 +970,7 @@ def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start
     #qf.iplot(rangeslider=False)
     
     theme = qf.theme['theme']
-    return;
+    return qf;
 
 #def quant_chart_int(df, theme='henanigans'):
 
@@ -1208,7 +1214,7 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
     
     chart_html, chart_file = pwe_format(f_name)
     
-    return chart_html, chart_file;
+    return qf, chart_html, chart_file;
 
 
 def single_chart(df,start_date,end_date,columns=None,kind='scatter',title=None,ticker=None,yTitle=None,showlegend=False,asPlot=False,
