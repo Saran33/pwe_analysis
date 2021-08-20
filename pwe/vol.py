@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+	#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Tue Aug 17 02:07:49 2021
@@ -74,32 +74,29 @@ def get_vol(df, window=21, column='Price_Returns', trading_periods=252, interval
     trading_periods : the number of trading days in a year.
     
     """ 
-    ann_factor, t, p = get_ann_factor(interval,trading_periods,market_hours)
+    af, t, p = get_ann_factor(interval,trading_periods,market_hours)
     
     # Standard deviation:
     df['Std_{}_{}'.format(window,p)] = (df[column].rolling(window).std())
     std = df['Std_{}_{}'.format(window,p)]
-    df['Ann_Std_{}_{}'.format(window,p)] = (df[column].rolling(window).std())*np.sqrt(ann_factor)
+    df['Ann_Std_{}_{}'.format(window,p)] = (df[column].rolling(window).std())*np.sqrt(af)
     an_std = df['Ann_Std_{}_{}'.format(window,p)]
     
     # Volatility of log returns:
     df['Vol_{}_{}'.format(window,p)] = (df['Log_Returns'].rolling(window).std())
     vol = df['Vol_{}_{}'.format(window,p)]
-    df['Ann_Vol_{}_{}'.format(window,p)] = (df['Log_Returns'].rolling(window).std())*np.sqrt(ann_factor) 
+    df['Ann_Vol_{}_{}'.format(window,p)] = (df['Log_Returns'].rolling(window).std())*np.sqrt(af) 
     an_vol = df['Ann_Vol_{}_{}'.format(window,p)]
     
-    ann_factor = (trading_periods / window)
-    #ann_factor = (trading_periods)
-    
     # Variance Swaps (returns are not demeaned):
-    df['Ann_VS_Var_{}_{}'.format(window,p)] = np.square(df['Log_Returns']).rolling(window).sum() * ann_factor
+    df['Ann_VS_Var_{}_{}'.format(window,p)] = np.square(df['Log_Returns']).rolling(window).sum() * af
     vs_var = df['Ann_VS_Var_{}_{}'.format(window,p)]
     df['Ann_VS_Vol_{}_{}'.format(window,p)] = np.sqrt(vs_var)
     vs_vol = df['Ann_VS_Vol_{}_{}'.format(window,p)]
     
     # Classic by period (returns are demeaned, dof=1)
-    df['Realized_Var_{}_{}'.format(window,p)] = (df['Log_Returns'].rolling(window).var())* ann_factor
-    #df['Realized_Var_{}_{}'.format(window,p)] = (df['Log_Returns'].rolling(window).var())* ann_factor
+    df['Realized_Var_{}_{}'.format(window,p)] = (df['Log_Returns'].rolling(window).var())* af
+    #df['Realized_Var_{}_{}'.format(window,p)] = (df['Log_Returns'].rolling(window).var())* af
     r_var = df['Realized_Var_{}_{}'.format(window,p)]
     df['Realized_Vol_{}_{}'.format(window,p)] = np.sqrt(r_var)
     r_vol = df['Realized_Vol_{}_{}'.format(window,p)]
@@ -121,7 +118,7 @@ def YangZhang_estimator(df, window=6, trading_periods=252, clean=True, interval=
             (largely irrelevent for Pandas analysis as nans are dropped automatically)
     """
     
-    ann_factor, t, p = get_ann_factor(interval,trading_periods,market_hours)
+    af, t, p = get_ann_factor(interval,trading_periods,market_hours)
 
     log_ho = (df['High'] / df['Open']).apply(np.log)
     log_lo = (df['Low'] / df['Open']).apply(np.log)
@@ -142,7 +139,7 @@ def YangZhang_estimator(df, window=6, trading_periods=252, clean=True, interval=
     k = 0.34 / (1.34 + (window + 1) / (window - 1))
     df['YangZhang_{}_{}'.format(window,p)] = (open_vol + k * close_vol + (1 - k) * window_rs).apply(np.sqrt)
     yz = df['YangZhang_{}_{}'.format(window,p)]
-    df['YangZhang{}_{}_Ann'.format(window,p)] = (open_vol + k * close_vol + (1 - k) * window_rs).apply(np.sqrt) * math.sqrt(ann_factor)
+    df['YangZhang{}_{}_Ann'.format(window,p)] = (open_vol + k * close_vol + (1 - k) * window_rs).apply(np.sqrt) * math.sqrt(af)
     yz_an = df['YangZhang{}_{}_Ann'.format(window,p)]
 
     if clean:

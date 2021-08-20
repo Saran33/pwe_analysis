@@ -32,46 +32,71 @@ def check_quandl_key(key=None):
         
         return quandl_api_key;
 
-def q_get(ticker,start_date=None,end_date=None, key=None):
+def q_get(symbol,start_date=None,end_date=None, key=None):
     
     quandl_api_key = check_quandl_key(key)
     
-    df = quandl.get(ticker,api_key=quandl_api_key, start_date=start_date, end_date=end_date)
+    df = quandl.get(symbol,api_key=quandl_api_key, start_date=start_date, end_date=end_date)
     
     df = sort_index(df)
     df = format_ohlc(df)
     
     return df;
 
-def quandl_data(ticker,start_date=None,end_date=None,key=None):
+def quandl_data(symbol,start_date=None,end_date=None,key=None, file=None):
     """
     Read data from Quandl and store it to a CSV. If the data is recent, it will read from csv 
     rather than making an API request.
     
     """
-    
-    start_date, end_date = get_dates(start_date=start_date,end_date=end_date)
-    print("Security:", ticker)
-    
-    tkr = ticker.replace('/', '_')
-    
-    if os.path.exists(os.path.abspath(f'csv_files/{tkr}_{start_date}_{end_date}.csv')) == True:
-        file_path = os.path.abspath(f'csv_files/{tkr}_{start_date}_{end_date}.csv')
+    if (file==None) and (start_date!=None):
         
-        print ("Reading recent file from CSV...")
-        print(file_path)
+        start_date, end_date = get_dates(start_date=start_date,end_date=end_date)
+        print("Security:", symbol)
+    
+        tkr = symbol.replace('/', '_')
+    
+        if os.path.exists(os.path.abspath(f'csv_files/{tkr}_{start_date}_{end_date}.csv')) == True:
+            file_path = os.path.abspath(f'csv_files/{tkr}_{start_date}_{end_date}.csv')
         
-        df = pd.read_csv(file_path,low_memory=False, index_col=['Date'], parse_dates=['Date'],infer_datetime_format=True)
+            print ("Reading recent file from CSV...")
+            print(file_path)
+        
+            df = pd.read_csv(file_path,low_memory=False, index_col=['Date'], parse_dates=['Date'],infer_datetime_format=True)
+            
+        else:
+            print ("No CSV found. Downloading data from API") 
+
+            df = q_get(symbol,start_date,end_date,key)
+        
+            check_folder('csv_files')
+            f_name = f'csv_files/{tkr}_{start_date}_{end_date}.csv'
+            print (f"Saving as csv to: {f_name}")
+            df.to_csv(f_name)
             
     else:
-        print ("No CSV found. Downloading data from API") 
-
-        df = q_get(ticker,start_date,end_date,key)
+        file_path = os.path.abspath(file)
+        print (file_path)
+        print("Security:", symbol)
+    
+        tkr = symbol.replace('/', '_')
+    
+        if os.path.exists(file_path) == True:
         
-        check_folder('csv_files')
-        f_name = f'csv_files/{tkr}_{start_date}_{end_date}.csv'
-        print (f"Saving as csv to: {f_name}")
-        df.to_csv(f_name)
+            print ("Reading recent file from CSV...")
+            print(file_path)
+        
+            df = pd.read_csv(file_path,low_memory=False, index_col=['Date'], parse_dates=['Date'],infer_datetime_format=True)
+            
+        else:
+            print ("No CSV found. Downloading data from API") 
+
+            df = q_get(symbol,start_date,end_date,key)
+        
+            check_folder('csv_files')
+            f_name = f'csv_files/{tkr}_{start_date}_{end_date}.csv'
+            print (f"Saving as csv to: {f_name}")
+            df.to_csv(f_name)
     
     return df;
     

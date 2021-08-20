@@ -8,7 +8,7 @@ Created on Tue Aug 17 09:25:47 2021
 
 import pandas as pd
 import numpy as np
-import os
+import sys, os
 from datetime import date,timedelta
 from datetime import datetime,date,timedelta
 
@@ -211,3 +211,29 @@ def resample_ohlc(df,interval='1H',o='Open',h='High',l='Low',c='Close',v='Volume
         df = df.resample(interval, offset=0).apply(ohlc_dict) # origin=0
     
     return df;
+
+def blockPrinting(func):
+    """
+	A decorater used to block function printing to the console.
+	
+	e.g. : 	# This will not print
+			@blockPrinting
+			def helloWorld2():
+    			print("Hello World!")
+			helloWorld2()
+	"""
+    def func_wrapper(*args, **kwargs):
+        # block all printing to the console
+        sys.stdout = open(os.devnull, 'w')
+        # call the method in question
+        value = func(*args, **kwargs)
+        # enable all printing to the console
+        sys.stdout = sys.__stdout__
+        # pass the return value of the method back
+        return value
+
+    return func_wrapper;
+
+def to_utc(date):
+    date = pd.to_datetime(date,utc=True)
+    return date;

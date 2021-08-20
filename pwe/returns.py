@@ -22,7 +22,7 @@ def get_returns1(df, price='Close'):
     else:
         df['Price'] = df[price].copy()
         df['Price_Returns'] = (df['Price'] - df['Price'].shift(1))/df['Price']
-    return df['Price_Returns'];
+    return;
 
 # Period returns:
 def get_returns(df, returns='Price_Returns',price='Close'):
@@ -32,7 +32,11 @@ def get_returns(df, returns='Price_Returns',price='Close'):
     df['Log_Returns'] = np.log(df[price]/df[price].shift(1)).dropna()
     #df['log_ret'] = np.log(df[price]) - np.log(df[price].shift(1))
     # x =  np.around((df1['Log_Returns'] - df1['log_ret']).cumsum(),100)
-    return df[returns], df['Log_Returns'];
+    
+    for row in df.itertuples():
+        df['Cumulative Returns'] = (df[price] - df[price].iloc[0]) / df[price].iloc[0]
+        
+    return;
 
 def vwap(df, h='High',l='Low',c='Close',v='Volume',window=None):
     """
@@ -63,7 +67,7 @@ def vwp(df,price,volume):
     """
     Support function for vwap_close:
     """
-    return ((df[price]*df[volume]).sum()/df[volume].sum()).round(2)
+    return ((df[price]*df[volume]).sum()/df[volume].sum()).round(2);
 
 def vwap_close(df,window=1, price='Close', volume='Volume'):
     """
@@ -77,8 +81,6 @@ def vwap_close(df,window=1, price='Close', volume='Volume'):
     return df;
 
 def return_stats(df, returns='Price_Returns',price='Close', trading_periods=252,market_hours=24,interval='daily', vol_window = 30): 
-    # price='Close'):
-#####################################################################################################################
     """
     returns : A Pandas series of % returns on which to calculate the below statistics.
     
@@ -98,89 +100,67 @@ def return_stats(df, returns='Price_Returns',price='Close', trading_periods=252,
                 e.g. For an hourly series, the vol_window will be multiplied by the number of trading hours.
     
     """
-    stats=pd.DataFrame(index= df.index)
-    
-    if 'DateTime' in df:
-        start_date = df['DateTime'].min()
-        end_date = df['DateTime'].max()
-    elif 'Date' in df:
-        start_date = df['Date'].min()
-        end_date = df['Date'].max()
-    else:
-        df['DateTime'] = df.index.to_series()
-        df['DateTime'] = pd.to_datetime(df['DateTime'])
-        start_date = df['DateTime'].min()
-        end_date = df['DateTime'].max()
+    stats= pd.DataFrame();
+    start_date = df.index.min();
+    end_date = df.index.max();
         
     if interval =='daily':
-        ann_factor = trading_periods
-        t = 'days'
+        ann_factor = trading_periods;
+        t = 'days';
         #vol_window = vol_window
     elif interval =='annual':
-        ann_factor = 1
-        t = 'years'
+        ann_factor = 1;
+        t = 'years';
         #vol_window = vol_window
     elif interval =='hourly':
-        ann_factor = trading_periods*market_hours
-        t = 'hours'
+        ann_factor = trading_periods*market_hours;
+        t = 'hours';
         #vol_window = vol_window*market_hours
     elif interval =='minutes':
-        ann_factor = trading_periods*market_hours*60
-        t = 'minutes'
+        ann_factor = trading_periods*market_hours*60;
+        t = 'minutes';
         #vol_window = vol_window*market_hours*60
     elif interval =='seconds':
-        ann_factor = trading_periods*market_hours*(60**2)
-        t = 'seconds'
+        ann_factor = trading_periods*market_hours*(60**2);
+        t = 'seconds';
         #vol_window = vol_window*market_hours*(60**2)
     elif interval =='weekly':
-        ann_factor = 52
-        t = 'weeks'
+        ann_factor = 52;
+        t = 'weeks';
         #vol_window = vol_window/7
     elif interval =='quarterly':
-        ann_factor = 4
-        t = 'quarters'
+        ann_factor = 4;
+        t = 'quarters';
     elif interval =='semiannual':
-        ann_factor = 2
+        ann_factor = 2;
         t = 'half years'
     elif interval =='monthly':
-        ann_factor = 12
-        t = 'months'
-    
+        ann_factor = 12;
+        t = 'months';
+        
+    print ('')
     print ('\n')
     print (f'{df} Return Stats:')
     print(f"Dates: {start_date} - {end_date}")
-    periods = df[returns].count()   
-    years = periods/ann_factor
+    periods = df[returns].count();
+    years = periods/ann_factor;
     print (f"Periods: {periods} {t}")
     print (f"Trading Periods: {trading_periods} days a year")
     print("Years: {:.3}".format(years))
     print ('')
 
-    for row in df.itertuples():
-        df['Cumulative Returns'] = (df[price] - df[price].iloc[0]) / df[price].iloc[0]
-    #df['Cumulative Return'])
-
     if price in df:
-        
-        # Calculate rolling cumulative P/L:
-        # df['Cumulative Returns'] = df[returns].cumsum()
-        for row in df.itertuples():
-            df['Cumulative Returns'] = (df[price] - df[price].iloc[0]) / df[price].iloc[0]
-            
-            # Cumulative Return:
-            cumulative_returns = (df[price].iloc[-1] / df[price].iloc[0])-1
+        stats.cum_ret = (df[price].iloc[-1] / df[price].iloc[0])-1;
     else:
         raise ValueError('Include a price index in function paramaterss, e.g. price="Close"')
-            
-    #stats.cum_ret = ((1 +df['Cumulative Returns'][-t_steps-1]) /1) -1
-    stats.cum_ret = cumulative_returns
+
     print ('Cumulative Returns:', "{:.2%}".format(stats.cum_ret))
     print ('')
     
 #####################################################################################################################
 
     #Arithmetic average returns:
-    stats.avg_ret = df[returns].mean()
+    stats.avg_ret = df[returns].mean();
     print ('Arithmetic Mean Return:', "{:.6%}".format(stats.avg_ret))
     
     #Geometric average returns:
@@ -270,6 +250,7 @@ def return_stats(df, returns='Price_Returns',price='Close', trading_periods=252,
     print(df[returns].describe()) # Pull up summary statistics
     print('######')
     print ('')
+    
     return stats;
 
 def get_sub_series(df, start_date=None, end_date=None):
