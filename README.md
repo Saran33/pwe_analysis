@@ -17,6 +17,14 @@ from pwe import charts,returns,vol,quan,cmc
 from datetime import date
 import time
 
+security = 'Bitcoin'
+symbol = 'BTC'
+market = 'USD'
+interval = 'daily'
+chart_interval = 'Daily'
+period = 'Day'
+p = 'Day'
+asPlot = True
 start_date = "01-01-2017"
 end_date = date.today().strftime("%d-%m-%Y")
 
@@ -27,15 +35,16 @@ settlements = dict({'2021-01-29': 'CME Exp.', '2021-02-26': 'CME Exp.',
                     '2021-05-28': 'CME Exp.', '2021-06-25': 'CME Exp.', 
                     '2021-07-30': 'CME Exp.'})
 
+# The default range to display on charts:
 auto_start = '2021-01-01'
 auto_end = '2021-08-15'
 
-charts.quant_chart_int(BTC,start_date,end_date,ticker='BTC',
+charts.quant_chart_int(BTC,start_date,end_date,ticker=symbol,
                        theme='white',auto_start=auto_start,auto_end=auto_end,
-                       asPlot=True,showlegend=True,boll_std=2,boll_periods=20,
+                       asPlot=asPlot,showlegend=True,boll_std=2,boll_periods=20,
                        showboll=True,showrsi=True,rsi_periods=14,showama=True,
                        ama_periods=9,showvol=True,show_price_range=True,
-                       textangle=60,tags=settlements)
+                       textangle=60,annots=settlements)
 ```
 #### Download Quandl data:
 ```python
@@ -48,10 +57,10 @@ BTC_Bitfinex = quan.quandl_data(ticker='BITFINEX/BTCUSD',
 # If running all the code on this README page in one block, include the below sleep function:
 time.sleep(1)
 
-charts.pwe_line_chart(BTC_Bitfinex,columns=['Last'],start_date=start_date,end_date=end_date,kind='scatter',
-                      title='Bitfinex Bitcoin Daily Close',
-                  ticker='BTC',yTitle='BTC/USD',asPlot=True,showlegend=False,
-                  theme='white',auto_start='2021-01-01',auto_end=auto_end,
+charts.pwe_line_chart(BTC_Bitfinex,columns=[price],start_date=start_date,end_date=end_date,kind='scatter',
+                      title=f'{exchange} {security} {chart_interval} {price}',
+                  ticker=symbol,yTitle=f'{symbol}/{market}',asPlot=asPlot,showlegend=False,
+                  theme='white',auto_start=auto_start,auto_end=auto_end,
                   connectgaps=False)
 ```
 #### Calculate Returns:
@@ -62,45 +71,46 @@ returns.get_returns(BTC_Bitfinex, price='Last');
 
 #### Calculate 30 Day Volatility:
 ```python
-vol.get_vol(BTC_Bitfinex, window=30, column='Price_Returns',trading_periods=365);
+vol_window = 30
+vol.get_vol(BTC_Bitfinex, window=vol_window, column='Price_Returns',trading_periods=365,interval=interval);
 ```
 #### Calculate 30 Day YangZhang Volatility Estimator (Requires OHLC data):
 ```python
-vol.YangZhang_estimator(BTC, window=30, trading_periods=365, clean=True);
+vol.YangZhang_estimator(BTC, window=vol_window,trading_periods=365, clean=True,interval=interval);
 ```
 #### Returns Profile:
 ```python
 bitfinex_btc_stats = returns.return_stats(BTC_Bitfinex,returns='Price_Returns',price='Last',
-                                          trading_periods=365,interval='daily',market_hours=24)
+                                          trading_periods=365,interval=interval,market_hours=24,vol_window=vol_window)
 ```
 #### Plot the Returns & Volatility Distributions:
 ```python
 asPlot=True
 start_date= '2021-01-01'
 btc_dist = charts.pwe_return_dist_chart(BTC_Bitfinex,start_date,end_date,tseries='Price_Returns',kind='scatter',
-                                    title='Daily Bitcoin Returns on Bitfinex',ticker='BTC',yTitle='BTC/USD (%)',asPlot=asPlot,
-                                    showlegend=False,theme='white',auto_start='2021-01-01', auto_end=end_date,
-                                    connectgaps=False,tickformat='.0%',decimals=2)
+                                    title=f'{chart_interval} {security} Returns on {exchange}',ticker=symbol,
+                                    yTitle=f'{symbol}/{market} (%)',asPlot=asPlot,showlegend=False,theme='white',
+                                    auto_start=auto_start, auto_end=end_date,connectgaps=False,tickformat='.0%',decimals=2)
 
 btc_dist_bar = charts.pwe_return_bar_chart(BTC_Bitfinex,start_date,end_date,tseries='Price_Returns',kind='bar',
-                                             title='Bitfinex Bitcoin Daily Returns',
-                                             ticker='BRTI',yTitle='BTC/USD (%)',xTitle=None,asPlot=asPlot,theme='white',
+                                             title=f'{exchange} {security} {chart_interval} Returns',ticker=symbol,
+                                             yTitle=f'{symbol}/{market} (%)',xTitle=None,asPlot=asPlot,theme='white',
                                              showlegend=False,auto_start=auto_start,auto_end=end_date,tickformat='.0%',
                                              decimals=2,orientation='v',textangle=0)
 
 btc_yz30_dist = charts.pwe_return_dist_chart(BTC,start_date,end_date,
-                                             tseries='YangZhang30_Ann',kind='scatter',
-                                    title='Spot Bitcoin to US Dollars (Bitfinex): Annualized Yang-Zhang 30 Day Volatility',
-                                             ticker='BTC-USD YZ Vol.',yTitle='BTC/USD YZ Vol.',
+                                             tseries=f'YangZhang{vol_window}_{p}_Ann',kind='scatter',
+                                    title=f'Spot {security} to US Dollars ({exchange}): Annualized Yang-Zhang {vol_window} {period} Volatility',
+                                             ticker=f'{symbol}-{market} YZ Vol.',yTitle=f'{symbol}/{market} YZ Vol.',
                                              asPlot=asPlot,showlegend=False,theme='white',
-                                             auto_start='2021-01-01',auto_end=end_date,
+                                             auto_start=auto_start,auto_end=end_date,
                                              connectgaps=False,tickformat='.0%',decimals=2)
 
 btc_vol30_dist = charts.pwe_return_dist_chart(BTC_Bitfinex,start_date,end_date,
-                                              tseries='Ann_Vol_30',kind='scatter',
-                                    title='Spot Bitcoin to US Dollars: Annualized 30 Day Volatility',
-                                             ticker='BTC-USD Vol.',yTitle='BTC/USD Vol.',asPlot=asPlot,
-                                             showlegend=False,theme='white',auto_start='2021-01-01',auto_end=end_date,
+                                              tseries=f'Ann_Vol_{vol_window}_{p}',kind='scatter',
+                                    title=f'Spot {security} to US Dollars: Annualized {vol_window} {period} Volatility',
+                                             ticker=f'{symbol}-{market} Vol.',yTitle=f'{symbol}/{market} Vol.',asPlot=asPlot,
+                                             showlegend=False,theme='white',auto_start=auto_start,auto_end=end_date,
                                              connectgaps=False,tickformat='.0%',decimals=2)
 ```
 #### Returns by Subseries: 
@@ -111,8 +121,8 @@ df_2019.name = 2019
 df_2019
 
 returns.get_returns(df_2019, price='Close');
-vol.YangZhang_estimator(df_2019, window=30, trading_periods=365, clean=True);
-vol.get_vol(df_2019, window=30, column='Price_Returns',trading_periods=365);
+vol.YangZhang_estimator(df_2019, window=vol_window, trading_periods=365, clean=True,interval=interval);
+vol.get_vol(df_2019, window=vol_window, column='Price_Returns',trading_periods=365,interval=interval);
 df_2019
 
 stats_2019 = returns.return_stats(df_2019,returns='Price_Returns',price='Close',trading_periods=365,interval='daily',market_hours=24);
