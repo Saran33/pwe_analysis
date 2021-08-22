@@ -6,14 +6,11 @@ Created on Mon Aug 16 19:59:32 2021
 @author: Saran Connolly saran.c@pwecapital.com
 
 """
-
-import warnings
 import os
 import time
 from datetime import datetime, date, timedelta, timezone
 import pandas as pd
 import numpy as np
-import numpy.ma as ma
 from pandas_summary import DataFrameSummary
 #from isoweek import Week
 from pwe.pwetools import check_folder
