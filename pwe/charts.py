@@ -15,7 +15,7 @@ import numpy as np
 import numpy.ma as ma
 from pandas_summary import DataFrameSummary
 #from isoweek import Week
-from pwetools import check_folder
+from pwe.pwetools import check_folder
 
 import plotly
 import cufflinks as cf
