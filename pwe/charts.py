@@ -15,7 +15,7 @@ import numpy as np
 import numpy.ma as ma
 from pandas_summary import DataFrameSummary
 #from isoweek import Week
-from pwetools import check_folder
+from pwe.pwetools import check_folder
 
 import plotly
 import cufflinks as cf
@@ -694,7 +694,18 @@ def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='s
     elif 'DateTime' in df:
         df['Date_Ret_str'] = df['DateTime'].astype(str)+", "+df['Series_str']
     else:
-        df['Date_Ret_str'] = df['Date'].astype(str)+", "+df['Series_str']
+        try:
+            df['Date_Ret_str'] = df['Date'].astype(str)+", "+df['Series_str']
+        except:
+            pass
+            df['Date'] = df.index.to_series().dt.date.astype(str)
+            pass
+        try:
+            df['Date'] = df.index.to_series().astype(str)
+        except:
+            raise ValueError
+        if 'Date_Ret_str' not in df:
+            df['Date_Ret_str'] = df['Date'].astype(str)+", "+df['Series_str']
         
     text = df['Date_Ret_str'].values.tolist()
     

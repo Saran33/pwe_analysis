@@ -10,7 +10,7 @@ import os
 import pandas as pd
 from cryptocmd import CmcScraper
 from datetime import date,timedelta
-from pwetools import sort_index,format_ohlc,check_folder
+from pwe.pwetools import sort_index,format_ohlc,check_folder
 
 def get_dates(start_date=None,end_date=None):
     # utc_now = datetime.utcnow()

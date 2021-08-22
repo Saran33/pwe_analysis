@@ -10,7 +10,7 @@ import os
 import pandas as pd
 import quandl
 from datetime import datetime,date,timedelta
-from pwetools import sort_index,format_ohlc,check_folder,get_dates
+from pwe.pwetools import sort_index,format_ohlc,check_folder,get_dates
 
 def create_quandl_key(key):
     cwd = os.getcwd()
