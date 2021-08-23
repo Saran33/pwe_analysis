@@ -13,7 +13,7 @@ import math
 class Security:
     def __init__(self, inp):
         if ".csv" in inp:
-            self.df = self.eq1(ip);
+            self.df = self.eq1(inp);
         else:
             self.df = self.eq2(inp);
             
@@ -96,7 +96,7 @@ class Security:
         """
         df = self.df
 
-        vwap = pd.concat([ (pd.Series(vwp(df.iloc[i:i+window],price,volume),
+        vwap = pd.concat([ (pd.Series(self.vwp(df.iloc[i:i+window],price,volume),
                                    index=[df.index[i+window]])) for i in range(len(df)-window) ]);
         vwap = pd.DataFrame(vwap, columns=['Close_VWAP'])
         df = df.join(vwap, how='left')
@@ -364,13 +364,13 @@ class Security:
         if f'Vol_{vol_window}' in df:
             Security.vol_roll_mean = df[f'Vol_{vol_window}'].mean()
         else:
-            std,an_std,vol_roll,vol_roll_an,vs_vol,r_vol=vol.get_vol(df,window=vol_window,column=returns,trading_periods=ann_factor)
+            std,an_std,vol_roll,vol_roll_an,vs_vol,r_vol=self.get_vol(df,window=vol_window,column=returns,trading_periods=ann_factor)
             Security.vol_roll_mean = vol_roll.mean()
         print (f'Mean Volatility ({vol_window}):', "{:.6%}".format(Security.vol_roll_mean))
         
         if ('High' in df) and ('Low' in df) and ('Open' in df) and ('Close' in df):
             # Average {vol_window} Day YangZhang Estimator:
-            yz_roll, yz_roll_an = vol.YangZhang_estimator(df,window=vol_window,trading_periods=trading_periods, clean=True,
+            yz_roll, yz_roll_an = self.YangZhang_estimator(df,window=vol_window,trading_periods=trading_periods, clean=True,
                                                               interval=interval,market_hours=market_hours)
             Security.yz_roll_mean = yz_roll.mean()
             print (f'Mean YangZhang ({vol_window}):', "{:.6%}".format(Security.yz_roll_mean))
