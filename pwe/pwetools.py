@@ -92,13 +92,14 @@ def sort_index(df):
     
     if 'DateTime' in df:
         df.set_index('DateTime')
+        df['Date'] = df.index.to_series().dt.date
         
     elif ('Date' in df) or ('date' in df):
         df.index.names = ['DateTime']
+        df['Date'] = df.index.to_series().dt.date
     else:
         pass
-    
-    df['Date'] = df.index.to_series().dt.date
+
     df.sort_index(ascending=True, inplace=True)
     
     return df;
