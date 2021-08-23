@@ -8,7 +8,8 @@ Created on Tue Aug 17 09:00:18 2021
 
 import pandas as pd
 import numpy as np
-from scipy.stats import ttest_1samp, ttest_ind, shapiro, mannwhitneyu, f_oneway, chi2_contingency
+#from scipy.stats import ttest_1samp, ttest_ind, shapiro, mannwhitneyu, f_oneway, chi2_contingency
+from scipy.stats import ttest_ind
 
 def returns_ttest(group1, group2, group1_stats, group2_stats, returns='Price_Returns',H_1='less', tails=1,
                   median=False,group1_name='Group1',group2_name='Group2'):
@@ -22,7 +23,6 @@ def returns_ttest(group1, group2, group1_stats, group2_stats, returns='Price_Ret
             H_1: the mean return of Group1 is greater than the average return of Group2.
     
     """
-    from scipy.stats import ttest_ind
     
     group1_returns = group1[returns]
     group2_returns = group2[returns]

@@ -63,11 +63,13 @@ def quandl_data(symbol,start_date=None,end_date=None,key=None, file=None):
             print(file_path)
         
             df = pd.read_csv(file_path,low_memory=False, index_col=['Date'], parse_dates=['Date'],infer_datetime_format=True)
+            df.name = symbol
             
         else:
             print ("No CSV found. Downloading data from API") 
 
             df = q_get(symbol,start_date,end_date,key)
+            df.name = symbol
         
             check_folder('csv_files')
             f_name = f'csv_files/{tkr}_{start_date}_{end_date}.csv'
@@ -87,11 +89,13 @@ def quandl_data(symbol,start_date=None,end_date=None,key=None, file=None):
             print(file_path)
         
             df = pd.read_csv(file_path,low_memory=False, index_col=['Date'], parse_dates=['Date'],infer_datetime_format=True)
-            
+            df.name = symbol
+
         else:
             print ("No CSV found. Downloading data from API") 
 
             df = q_get(symbol,start_date,end_date,key)
+            df.name = symbol
         
             check_folder('csv_files')
             f_name = f'csv_files/{tkr}_{start_date}_{end_date}.csv'

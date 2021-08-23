@@ -9,6 +9,8 @@ Created on Tue Aug 17 02:07:49 2021
 import pandas as pd
 import numpy as np
 import math
+from returns import Security
+
 
 def get_ann_factor(interval,trading_periods,market_hours):
 	

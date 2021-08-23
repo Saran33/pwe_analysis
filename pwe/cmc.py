@@ -34,7 +34,7 @@ def get_dates(start_date=None,end_date=None):
     print("End date:", end_date)
     return start_date, end_date;
 
-def cmc_data(ticker="BTC",start_date=None,end_date=None):
+def cmc_data(symbol="BTC",start_date=None,end_date=None):
     """
     Parameters
     ----------
@@ -42,7 +42,7 @@ def cmc_data(ticker="BTC",start_date=None,end_date=None):
         DESCRIPTION.
     end_date : TYPE
         DESCRIPTION.
-    ticker : TYPE, optional
+    symbol : TYPE, optional
         DESCRIPTION. The default is "BTC".
 
     Returns
@@ -55,10 +55,10 @@ def cmc_data(ticker="BTC",start_date=None,end_date=None):
     
     start_date, end_date = get_dates(start_date=start_date,end_date=end_date)
     print('')
-    print("Security:", ticker)
+    print("Security:", symbol)
     print('')
     
-    tkr = ticker.replace('/', '_')
+    tkr = symbol.replace('/', '_')
     
     if os.path.exists(os.path.abspath(f'csv_files/{tkr}_{start_date}_{end_date}.csv')) == True:
         file_path = os.path.abspath(f'csv_files/{tkr}_{start_date}_{end_date}.csv')
@@ -68,11 +68,12 @@ def cmc_data(ticker="BTC",start_date=None,end_date=None):
         
         df = pd.read_csv(file_path,low_memory=False, index_col=['Date'], parse_dates=['Date'],infer_datetime_format=True)
         df= sort_index(df)
+        df.name = symbol
         
     else:
         print ("No CSV found. Downloading data from API") 
 
-        scraper = CmcScraper(ticker,start_date=start_date, end_date=end_date) # start_date=start_date,
+        scraper = CmcScraper(symbol,start_date=start_date, end_date=end_date) # start_date=start_date,
     
         # get raw data as list of list
         headers, data = scraper.get_data()
@@ -85,6 +86,7 @@ def cmc_data(ticker="BTC",start_date=None,end_date=None):
         df = scraper.get_dataframe(date_as_index=True)
         df= sort_index(df)
         df = format_ohlc(df)
+        df.name = symbol
         
         f_name = f'csv_files/{tkr}_{start_date}_{end_date}.csv'
         
