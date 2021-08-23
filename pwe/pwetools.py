@@ -96,7 +96,6 @@ def sort_index(df):
         
     elif ('Date' in df) or ('date' in df):
         df.index.names = ['DateTime']
-        df['Date'] = df.index.to_series().dt.date
     else:
         pass
 
