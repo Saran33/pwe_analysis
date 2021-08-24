@@ -241,24 +241,24 @@ def pwe_format(f_name):
     cwd = os.getcwd()
     file_path_str = f'{cwd}{f_name}'
     file_path = f'{file_path_str}.html'
-    print(file_path_str)
-    print(file_path)
-    print('')
+    # print(file_path_str)
+    # print(file_path)
+    # print('')
     
     # https://www.geeksforgeeks.org/python-os-path-relpath-method/
     prefix = cwd
     relative_path = f'/{os.path.relpath(file_path,prefix)}'
-    print(prefix)
-    print(relative_path)
-    print('')
+    # print(prefix)
+    # print(relative_path)
+    # print('')
     
     local_path_str = f'{f_name}'
     local_file_path = f'/{local_path_str}.html'
     # unf_link = f'http://localhost:8888/view{local_file_path}'
     unf_link = f'http://localhost:8888/view{relative_path}'
-    print(local_path_str)
-    print(local_file_path)
-    print(unf_link,"(unformatted)")
+    # print(local_path_str)
+    # print(local_file_path)
+    # print(unf_link,"(unformatted)")
 
     # Swap between local_path_str and relative_path for the "unf_link" calc and the 'link" clac below if 
     # the charts arent displaying in browser automatically. Or else change cwd.
@@ -315,9 +315,9 @@ def pwe_format(f_name):
     
     #webbrowser.open_new_tab("chrome://newtab")
     webbrowser.open_new_tab(chart_file)
-    print(output_html_path)
-    print(chart_html)
-    print(chart_file)
+    # print(output_html_path)
+    # print(chart_html)
+    # print(chart_file)
     
     # Swap between local_path_str and relative_path for the "chart_html" calc if 
     # the charts aren't displaying in browser automatically. Or else change cwd to match the chart directory.
@@ -364,9 +364,12 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
     
     sdate,edate,chart_dates = define_period(df, start_date, end_date);
     
+    tkr = ticker.replace('/', '_')
+    df_name = df.name.replace('/', '_')
+
     title = ('{}: {}'.format(ticker, chart_dates))
     check_folder('charts')
-    f_name= f'/charts/{ticker}_{sdate}-{edate}_interative_{style}'
+    f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_interative_{style}'
     
     qf = cf.QuantFig(df, title=title,legend='top',name=ticker,
                              rangeslider=False,up_color=PWE_skin,down_color=PWE_grey, fontfamily='Roboto',theme=theme,
@@ -474,10 +477,14 @@ def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=N
     
     sdate,edate,chart_dates = define_period(df, start_date, end_date);
         
+    tkr = ticker.replace('/', '_')
+    df_name = df.name.replace('/', '_')
+    
+    check_folder('charts')
+    f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_singleline_{style}'
+
     #chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
     chart_title = '{} ({})'.format(title,ticker)
-    check_folder('charts')
-    f_name= f'/charts/{ticker}_{sdate}-{edate}_interative_{style}'
 	
     if columns is None:
         if annots == None:
@@ -585,11 +592,15 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
     auto_end = str(auto_end)
     
     sdate,edate,chart_dates = define_period(df, start_date, end_date);
+
+    tkr = ticker.replace('/', '_')
+    df_name = df.name.replace('/', '_')
+
+    check_folder('charts')
+    f_name= f'/charts/{ticker}_{sdate}-{edate}_line_{style}'
         
     #chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
     chart_title = '{} ({})'.format(title,ticker)
-    check_folder('charts')
-    f_name= f'/charts/{ticker}_{sdate}-{edate}_interative_{style}'
     
     if columns is None:
         if annots == None:
@@ -706,11 +717,15 @@ def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='s
             df['Date_Ret_str'] = df['Date'].astype(str)+", "+df['Series_str']
         
     text = df['Date_Ret_str'].values.tolist()
+
+    tkr = ticker.replace('/', '_')
+    df_name = df.name.replace('/', '_')
+
+    check_folder('charts')
+    f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_dist_{style}'
     
     #chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
     chart_title = '{} ({})'.format(title,ticker)
-    check_folder('charts')
-    f_name= f'/charts/{ticker}_{sdate}-{edate}_return_dist_{style}'
     
     plt_int = df[tseries].iplot(kind=kind,showlegend=showlegend,legend='top',rangeslider=False,
                                title=chart_title,xTitle='Date', yTitle=yTitle,
@@ -780,11 +795,15 @@ def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='sc
     else:
         xTitle = 'Date'
         yTitle = yTitle
+
+    tkr = ticker.replace('/', '_')
+    df_name = df.name.replace('/', '_')
+
+    check_folder('charts')
+    f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_bar_chart_{style}'
     
     #chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
     chart_title = '{} ({})'.format(title,ticker)
-    check_folder('charts')
-    f_name= f'/charts/{ticker}_{sdate}-{edate}_return_dist_{style}'
     
     plt_int = df[tseries].iplot(kind=kind,showlegend=showlegend,legend='top',rangeslider=False,
                                title=chart_title,xTitle=xTitle, yTitle=yTitle,

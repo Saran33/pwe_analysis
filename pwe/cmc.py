@@ -59,10 +59,13 @@ def cmc_data(symbol="BTC",start_date=None,end_date=None):
     print('')
     
     tkr = symbol.replace('/', '_')
+
+    print ("Checking if a file for this ticker with the same start and end dates exists...")
     
     if os.path.exists(os.path.abspath(f'csv_files/{tkr}_{start_date}_{end_date}.csv')) == True:
         file_path = os.path.abspath(f'csv_files/{tkr}_{start_date}_{end_date}.csv')
         
+        print ("Matching local file exists.")
         print ("Reading recent file from CSV...")
         print(file_path)
         

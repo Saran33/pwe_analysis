@@ -22,7 +22,10 @@ class Security:
         else:
             raise Exception("Please name the DataFrame first before creating this object. Use df.name = 'Some_Name.'\nUse the ticker or symbol.")
     
-            self.stats 
+        if hasattr(self, 'subseries') == False:
+            self.ticker = self.name
+        else:
+            self.subseries.ticker = None
         
     def eq1(self, inp):
         x = pd.read_csv(inp,low_memory=False,index_col=['Date'], parse_dates=['Date']
@@ -73,7 +76,7 @@ class Security:
                     
         else:
             # Average price:
-            df['AP'] = (df[['High','Low','Close']].mean(axis=1))
+            df['AP'] = (df[[h,l,c]].mean(axis=1))
             # Cumulative price * volume:
             df['CPV'] = (df['AP'] * df[v]).rolling(window, min_periods=1).sum()
             df['Cum_Volume'] = df[v].rolling(window, min_periods=1).sum()
@@ -305,7 +308,11 @@ class Security:
             print ('')
             
         print ('\n')
-        print (f'{self.name} Return stats:')
+        if self.ticker == self.name:
+            print (f'{self.ticker} Return stats:')
+        else:
+            period_str = self.name.replace('_', '', 1)
+            print (f'{self.ticker} {period_str} Return Stats:')
         print(f"Dates: {start_date} - {end_date}")
         periods = df[returns].count();
         years = periods/ann_factor;
@@ -364,13 +371,13 @@ class Security:
         if f'Vol_{vol_window}' in df:
             Security.vol_roll_mean = df[f'Vol_{vol_window}'].mean()
         else:
-            std,an_std,vol_roll,vol_roll_an,vs_vol,r_vol=self.get_vol(df,window=vol_window,column=returns,trading_periods=ann_factor)
+            std,an_std,vol_roll,vol_roll_an,vs_vol,r_vol=self.get_vol(window=vol_window,column=returns,trading_periods=ann_factor)
             Security.vol_roll_mean = vol_roll.mean()
         print (f'Mean Volatility ({vol_window}):', "{:.6%}".format(Security.vol_roll_mean))
         
         if ('High' in df) and ('Low' in df) and ('Open' in df) and ('Close' in df):
             # Average {vol_window} Day YangZhang Estimator:
-            yz_roll, yz_roll_an = self.YangZhang_estimator(df,window=vol_window,trading_periods=trading_periods, clean=True,
+            yz_roll, yz_roll_an = self.YangZhang_estimator(window=vol_window,trading_periods=trading_periods, clean=True,
                                                               interval=interval,market_hours=market_hours)
             Security.yz_roll_mean = yz_roll.mean()
             print (f'Mean YangZhang ({vol_window}):', "{:.6%}".format(Security.yz_roll_mean))
@@ -418,7 +425,6 @@ class Security:
             
         return;
 
-
     def get_sub_series(self, start_date=None, end_date=None):
         """
         df: dataframe to split
@@ -437,12 +443,25 @@ class Security:
         if end_date==None:
             end_date = datetime.utcnow()
 
-        start_date = pd.to_datetime(start_date)     
-        end_date = pd.to_datetime(end_date)
+        sd = pd.to_datetime(start_date)     
+        ed = pd.to_datetime(end_date)
 
         df['DateTime'] = pd.DatetimeIndex(df.index)
         df['DateTime'] = pd.to_datetime(df.index)
-        subseries_df = df[(df['DateTime']>=start_date)&(df['DateTime']<=end_date)]
-        subseries_df.name = f"{start_date}-{end_date}"
+        subseries_df = df[(df['DateTime']>=sd)&(df['DateTime']<=ed)]
+        if ((ed - sd) <= timedelta(days=366)) &  (sd.year == ed.year) :
+            subseries_df.name = f"_{ed.year}"
+        else:
+            subseries_df.name = f"_{sd.year}_{sd.month}_{sd.day}_{ed.year}_{ed.month}_{ed.day}"
+
+        self.subseries = Security(subseries_df)
         
-        return subseries_df;
+        setattr(self, f"{subseries_df.name}", self.subseries)
+
+        #  tkr = self.name.replace('/', '_')
+        tkr = self.name
+        setattr(self.subseries, 'ticker', tkr)
+
+        print (f"Subseries stored as: {subseries_df.name}")
+        
+        return;

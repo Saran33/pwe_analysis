@@ -49,6 +49,8 @@ def quandl_data(symbol,start_date=None,end_date=None,key=None, file=None):
     rather than making an API request.
     
     """
+    print ("Checking if a file for this ticker with the same start and end dates exists...")
+
     if (file==None) and (start_date!=None):
         
         start_date, end_date = get_dates(start_date=start_date,end_date=end_date)
@@ -84,7 +86,8 @@ def quandl_data(symbol,start_date=None,end_date=None,key=None, file=None):
         tkr = symbol.replace('/', '_')
     
         if os.path.exists(file_path) == True:
-        
+
+            print ("Matching local file exists.")
             print ("Reading recent file from CSV...")
             print(file_path)
         

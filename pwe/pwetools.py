@@ -124,11 +124,11 @@ def check_folder(name):
     
     '''
     check_path = os.path.isdir(name)
-    print (f"checking if {name} directory exists...")
+    print (f"Checking if {name} directory exists...")
 
     if not check_path:
         os.makedirs(name)
-        print("created folder : ", name)
+        print("Created folder : ", name)
     else:
         print(name, "folder already exists.")
         return name;
