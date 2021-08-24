@@ -38,8 +38,6 @@ charts.quant_chart_int(BTC,start_date,end_date,ticker='BTC',
                        ama_periods=9,showvol=True,show_price_range=True,
                        textangle=60,annots=settlements)
 ```
-<iframe id="igraph" scrolling="no" style="border:none;" seamless="seamless" src="https://github.com/Saran33/pwe_analysis/blob/main/charts/BTC_01-01-2017-22-08-2021_interative_white_PWE.html" height="525" width="100%"></iframe>
-
 #### Download Quandl data:
 ```python
 # Input your key the first time and then no need to input a key argument again. 
