@@ -102,15 +102,15 @@ cf.set_config_file(offline=False, world_readable=True)
 
 """
 Cuffliks:
-# https://analyticsindiamag.com/beginners-guide-to-data-visualisation-with-plotly-cufflinks/
-# https://coderzcolumn.com/tutorials/data-science/candlestick-chart-in-python-mplfinance-plotly-bokeh
+https://analyticsindiamag.com/beginners-guide-to-data-visualisation-with-plotly-cufflinks/
+https://coderzcolumn.com/tutorials/data-science/candlestick-chart-in-python-mplfinance-plotly-bokeh
 
 Quant Figure:
 Docs: https://jpoles1.github.io/cufflinks/html/cufflinks.quant_figure.html#cufflinks.quant_figure.QuantFig.add_annotations
 https://plotly.com/python/ohlc-charts/
 https://jpoles1.github.io/cufflinks/html/cufflinks.quant_figure.html
 https://plotly.com/python/reference/#layout-annotations
-http://jorgesantos.io/slides/plotcon.qf.slides.html#/8  (Best)
+http://jorgesantos.io/slides/plotcon.qf.slides.html#/8
 https://coderzcolumn.com/tutorials/data-science/candlestick-chart-in-python-mplfinance-plotly-bokeh#5
 https://coderzcolumn.com/tutorials/data-science/cufflinks-how-to-create-plotly-charts-from-pandas-dataframe-with-one-line-of-code
 
@@ -138,6 +138,7 @@ def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start
     """
     
     Plots a chart in an iPython Notebook. This function will not remove Plotly tags or populate as a new browser tab.
+    Use the "quant_chart_int" function to save a plot.
     
     """
     dark = ("henanigans", "solar", "space")
@@ -209,9 +210,8 @@ def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start
 
 def add_tags(qf,tags=None,auto_start=auto_start,auto_end=today,theme='white',showarrow=True,arrowhead=6,fontsize=6,textangle=0,yanchor="bottom",fontfamily='Roboto'):
     """
-    For some reaso, this will not format the textangle correctly. Copy and paste the function into a otebook andit will work correcty.
     Add settlement dates or other annotations to a figure.
-    Pass in a column of annotations  in string format.
+    Pass in a column of annotations in string format.
     
     """
     if tags!=None:
@@ -326,7 +326,7 @@ def pwe_format(f_name):
     
 def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_start=auto_start,auto_end=today,asPlot=True,
                     showlegend=True,boll_std=2,boll_periods=20,showboll=False,showrsi=False,rsi_periods=14,
-                   showama=False,ama_periods=9,showvol=False,show_price_range=False,annots=None,textangle=0):
+                   showama=False,ama_periods=9,showvol=False,show_price_range=False,annots=None,textangle=0,file_tag=None):
     """
     
     df : The Pandas dataframe used for the chart. It must contain open, high, low and close, and may also contain volume. Anything else will be ignored, unless specified.
@@ -363,13 +363,23 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
     auto_end = str(auto_end)
     
     sdate,edate,chart_dates = define_period(df, start_date, end_date);
-    
-    tkr = ticker.replace('/', '_')
-    df_name = df.name.replace('/', '_')
 
     title = ('{}: {}'.format(ticker, chart_dates))
+
     check_folder('charts')
-    f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_interative_{style}'
+
+    tkr = ticker.replace('/', '_')
+
+    if file_tag==None:
+
+        if hasattr(df, 'name'):  
+            df_name = df.name.replace('/', '_')
+            f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_interative_{style}'
+        else:
+            f_name= f'/charts/{tkr}_{sdate}-{edate}_interative_{style}'
+    
+    else:
+        f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_interative_{style}'
     
     qf = cf.QuantFig(df, title=title,legend='top',name=ticker,
                              rangeslider=False,up_color=PWE_skin,down_color=PWE_grey, fontfamily='Roboto',theme=theme,
@@ -448,7 +458,7 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
 def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None,
                       ticker=None,yTitle=None,showlegend=False,legend='top',asPlot=False,
                       theme='white',fontsize=6,arrowhead=6,auto_start=auto_start,
-                      auto_end=today,connectgaps=False,annots=None,annot_col='Close'):
+                      auto_end=today,connectgaps=False,annots=None,annot_col='Close',file_tag=None):
     """
     
     Plots a line or scatter chart within an iPython notebook. It will not format HTML with PWE style or open in a browser window.
@@ -476,12 +486,21 @@ def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=N
     auto_end = str(auto_end)
     
     sdate,edate,chart_dates = define_period(df, start_date, end_date);
-        
-    tkr = ticker.replace('/', '_')
-    df_name = df.name.replace('/', '_')
-    
+
     check_folder('charts')
-    f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_singleline_{style}'
+
+    tkr = ticker.replace('/', '_')
+
+    if file_tag==None:
+
+        if hasattr(df, 'name'):  
+            df_name = df.name.replace('/', '_')
+            f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_singleline_{style}'
+        else:
+            f_name= f'/charts/{tkr}_{sdate}-{edate}_singleline_{style}'
+
+    else:
+        f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_singleline_{style}'
 
     #chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
     chart_title = '{} ({})'.format(title,ticker)
@@ -564,7 +583,7 @@ def get_cf_annots(df,annotations,annot_col='Close',fontsize=6,arrowhead=6,arrowc
 def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None,ticker=None,
                    yTitle=None,asPlot=False,theme='white',showlegend=False,legend='top',
                    auto_start=auto_start,auto_end=today,connectgaps=False,annots=None,
-                   anntextangle=0,fontsize=6,arrowhead=6,annot_col=None):
+                   anntextangle=0,fontsize=6,arrowhead=6,annot_col=None,file_tag=None):
     """
     
     Plots an interactive line or scatter chart and opens it in a new browser. It also formats HTML with PWE style.
@@ -593,11 +612,20 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
     
     sdate,edate,chart_dates = define_period(df, start_date, end_date);
 
-    tkr = ticker.replace('/', '_')
-    df_name = df.name.replace('/', '_')
-
     check_folder('charts')
-    f_name= f'/charts/{ticker}_{sdate}-{edate}_line_{style}'
+
+    tkr = ticker.replace('/', '_')
+
+    if file_tag==None:
+
+        if hasattr(df, 'name'):  
+            df_name = df.name.replace('/', '_')
+            f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_line_{style}'
+        else:
+            f_name= f'/charts/{tkr}_{sdate}-{edate}_line_{style}'
+
+    else:
+        f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_line_{style}'
         
     #chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
     chart_title = '{} ({})'.format(title,ticker)
@@ -661,7 +689,7 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
 
 def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='scatter',title=None, ticker=None,yTitle=None,asPlot=False,theme='white',
                           showlegend=False,auto_start=auto_start,auto_end=today,connectgaps=False,
-                         tickformat='%',decimals=2): # text=None hovermode='x', hovertemplate="%{y:.6%}",
+                         tickformat='%',decimals=2,file_tag=None): # text=None hovermode='x', hovertemplate="%{y:.6%}",
     """
 	*Put start_date ad end_date after df and before other arguemets, with no = to any value or it will throw an error.
     
@@ -718,11 +746,20 @@ def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='s
         
     text = df['Date_Ret_str'].values.tolist()
 
-    tkr = ticker.replace('/', '_')
-    df_name = df.name.replace('/', '_')
-
     check_folder('charts')
-    f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_dist_{style}'
+
+    tkr = ticker.replace('/', '_')
+
+    if file_tag==None:
+
+        if hasattr(df, 'name'):  
+            df_name = df.name.replace('/', '_')
+            f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_dist_{style}'
+        else:
+            f_name= f'/charts/{tkr}_{sdate}-{edate}_dist_{style}'
+
+    else:
+        f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_dist_{style}'
     
     #chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
     chart_title = '{} ({})'.format(title,ticker)
@@ -747,7 +784,7 @@ def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='s
 
 def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='scatter',title=None,ticker=None,yTitle=None,xTitle=None,asPlot=False,theme='white',
                           showlegend=False,auto_start=auto_start,auto_end=today,
-                         tickformat='%',decimals=2,orientation='v',textangle=0): # text=None hovermode='x', hovertemplate="%{y:.6%}",
+                         tickformat='%',decimals=2,orientation='v',textangle=0,file_tag=None): # text=None hovermode='x', hovertemplate="%{y:.6%}",
     """
     
     Plots an interactive bar chart with the HTML formatted to the PWE style. It opens the plot in a new browser tab.
@@ -796,11 +833,20 @@ def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='sc
         xTitle = 'Date'
         yTitle = yTitle
 
-    tkr = ticker.replace('/', '_')
-    df_name = df.name.replace('/', '_')
-
     check_folder('charts')
-    f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_bar_chart_{style}'
+
+    tkr = ticker.replace('/', '_')
+
+    if file_tag==None:
+
+        if hasattr(df, 'name'):  
+            df_name = df.name.replace('/', '_')
+            f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_bar_chart_{style}'
+        else:
+            f_name= f'/charts/{tkr}_{sdate}-{edate}_bar_chart_{style}'
+
+    else:
+        f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_bar_chart_{style}'
     
     #chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
     chart_title = '{} ({})'.format(title,ticker)
@@ -870,4 +916,4 @@ def add_range_selector(layout, axis_name='xaxis', ranges=None, default=None):
             (count, step) = range_split(default)
             step = step_map[step] + 's'  # relativedelta needs plurals
             start_date = (end_date - dateutil.relativedelta.relativedelta(**{step: count}))
-        axis.setdefault('range', [start_date, end_date])#!/usr/bin/env python3
+        axis.setdefault('range', [start_date, end_date])

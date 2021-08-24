@@ -46,15 +46,15 @@ def returns_ttest(group1, group2, group1_stats, group2_stats, returns='Price_Ret
     print (f"Mean {group2_name} returns:", group2_mean)
     print("")
     
-    group1_std = group1_stats.std_ret
-    group2_std = group2_stats.std_ret
+    group1_std = group1_stats.vol
+    group2_std = group2_stats.vol
     print(f"{group1_name} returns σ:", group1_std)
     print (f"{group2_name} returns σ:", group2_std)
     print("")
     
     ttest,pval = ttest_ind(group1_returns,group2_returns,nan_policy='omit')
     
-    if tails == 1:
+    if tails == 2:
         
         if H_1=='less':
             print("p-value:",pval)
@@ -67,7 +67,7 @@ def returns_ttest(group1, group2, group1_stats, group2_stats, returns='Price_Ret
         else:
             print("We fail to reject null hypothesis.")
             
-    elif tails == 2:
+    elif tails == 1:
         
         if H_1=='less':
             one_tailed_p = pval/2

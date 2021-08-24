@@ -74,7 +74,7 @@ BTC_Bitfinex.vwap(c='Last',window=60)
 #### Calculate 30 Day Volatility:
 ```python
 vol_window = 30
-BTC_Bitfinex.get_vol(window=vol_window, column='Price_Returns',trading_periods=365,interval=interval)
+BTC_Bitfinex.get_vol(window=vol_window, returns='Price_Returns',trading_periods=365,interval=interval)
 ```
 #### Calculate 30 Day YangZhang Volatility Estimator (Requires OHLC data):
 ```python

@@ -27,6 +27,9 @@ class Security:
         else:
             self.subseries.ticker = None
         
+        self.df.name = self.name
+        #self.df._metadata += ['name']
+        
     def eq1(self, inp):
         x = pd.read_csv(inp,low_memory=False,index_col=['Date'], parse_dates=['Date']
                         ,infer_datetime_format=True,)
@@ -161,7 +164,7 @@ class Security:
         
         return ann_factor, t, p;
 
-    def get_vol(self, window=21, column='Price_Returns', trading_periods=252, interval='daily',
+    def get_vol(self, window=21, returns='Price_Returns', trading_periods=252, interval='daily',
                 market_hours=24):
         """
         1 month window = 21
@@ -175,9 +178,9 @@ class Security:
         af, t, p = self.get_ann_factor(interval,trading_periods,market_hours)
         
         # Standard deviation:
-        df['Std_{}_{}'.format(window,p)] = (df[column].rolling(window).std())
+        df['Std_{}_{}'.format(window,p)] = (df[returns].rolling(window).std())
         std = df['Std_{}_{}'.format(window,p)]
-        df['Ann_Std_{}_{}'.format(window,p)] = (df[column].rolling(window).std())*np.sqrt(af)
+        df['Ann_Std_{}_{}'.format(window,p)] = (df[returns].rolling(window).std())*np.sqrt(af)
         ann_vol = df['Ann_Std_{}_{}'.format(window,p)]
         
         # Volatility of log returns:
@@ -309,7 +312,7 @@ class Security:
             
         print ('\n')
         if self.ticker == self.name:
-            print (f'{self.ticker} Return stats:')
+            print (f'{self.ticker} Return Stats:')
         else:
             period_str = self.name.replace('_', '', 1)
             print (f'{self.ticker} {period_str} Return Stats:')
@@ -371,7 +374,7 @@ class Security:
         if f'Vol_{vol_window}' in df:
             Security.vol_roll_mean = df[f'Vol_{vol_window}'].mean()
         else:
-            std,ann_vol,vol_roll,vol_roll_an,vs_vol,r_vol=self.get_vol(window=vol_window,column=returns,trading_periods=ann_factor)
+            std,ann_vol,vol_roll,vol_roll_an,vs_vol,r_vol=self.get_vol(window=vol_window,returns=returns,trading_periods=ann_factor)
             Security.vol_roll_mean = vol_roll.mean()
         print (f'Mean Volatility ({vol_window}):', "{:.6%}".format(Security.vol_roll_mean))
         
@@ -464,4 +467,4 @@ class Security:
 
         print (f"Subseries stored as: {subseries_df.name}")
         
-        return;
+        return self.subseries;
