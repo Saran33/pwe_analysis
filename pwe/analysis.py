@@ -178,7 +178,7 @@ class Security:
         df['Std_{}_{}'.format(window,p)] = (df[column].rolling(window).std())
         std = df['Std_{}_{}'.format(window,p)]
         df['Ann_Std_{}_{}'.format(window,p)] = (df[column].rolling(window).std())*np.sqrt(af)
-        an_std = df['Ann_Std_{}_{}'.format(window,p)]
+        ann_vol = df['Ann_Std_{}_{}'.format(window,p)]
         
         # Volatility of log returns:
         df['Vol_{}_{}'.format(window,p)] = (df['Log_Returns'].rolling(window).std())
@@ -199,7 +199,7 @@ class Security:
         df['Realized_Vol_{}_{}'.format(window,p)] = np.sqrt(r_var)
         r_vol = df['Realized_Vol_{}_{}'.format(window,p)]
         
-        return std,an_std,vol,an_vol,vs_vol,r_vol; #,vs_var,r_var;
+        return std,ann_vol,vol,an_vol,vs_vol,r_vol; #,vs_var,r_var;
 
     def YangZhang_estimator(self, window=6, trading_periods=252, clean=True, interval='daily',market_hours=24):
         """
@@ -364,14 +364,14 @@ class Security:
 #####################################################################################################################
     
         # Volatility of returns:
-        Security.std_ret = df['Log_Returns'].std()
-        print ('Vol. of Period Returns:', "{:.6%}".format(Security.std_ret))
+        Security.vol = df['Log_Returns'].std()
+        print ('Vol. of Period Returns:', "{:.6%}".format(Security.vol))
         
         # Average {vol_window} Day Volatility:
         if f'Vol_{vol_window}' in df:
             Security.vol_roll_mean = df[f'Vol_{vol_window}'].mean()
         else:
-            std,an_std,vol_roll,vol_roll_an,vs_vol,r_vol=self.get_vol(window=vol_window,column=returns,trading_periods=ann_factor)
+            std,ann_vol,vol_roll,vol_roll_an,vs_vol,r_vol=self.get_vol(window=vol_window,column=returns,trading_periods=ann_factor)
             Security.vol_roll_mean = vol_roll.mean()
         print (f'Mean Volatility ({vol_window}):', "{:.6%}".format(Security.vol_roll_mean))
         
@@ -386,8 +386,8 @@ class Security:
             pass
         
         # Annualized Volatility:
-        Security.ann_std_ret = Security.std_ret*np.sqrt(ann_factor)
-        print ('Annualized Vol:', "{:.2%}".format(Security.ann_std_ret))
+        Security.ann_vol = Security.vol*np.sqrt(ann_factor)
+        print ('Annualized Vol:', "{:.2%}".format(Security.ann_vol))
         
         # Average Annualized {vol_window} Volatility:
         Security.vol_roll_an = Security.vol_roll_mean*np.sqrt(ann_factor)
@@ -407,11 +407,11 @@ class Security:
 #####################################################################################################################
     
         # Compute Simple Sharpe (No RFR)
-        Security.sharpe_ratio_ar = Security.avg_annualaized / (Security.ann_std_ret)
+        Security.sharpe_ratio_ar = Security.avg_annualaized / (Security.ann_vol)
         print ('Arithmetic Sharpe Ratio:', "{:.2f}".format(Security.sharpe_ratio_ar))
         
         # Compute Geometric Sharpe (No RFR)
-        Security.sharpe_ratio_geo = Security.avg_annualized_geometric / (Security.ann_std_ret)
+        Security.sharpe_ratio_geo = Security.avg_annualized_geometric / (Security.ann_vol)
         print ('Geometric Sharpe Ratio:', "{:.2f}".format(Security.sharpe_ratio_geo))
         print (' ')
     

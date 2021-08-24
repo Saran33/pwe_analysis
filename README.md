@@ -82,16 +82,29 @@ BTC.YangZhang_estimator(window=vol_window,trading_periods=365, clean=True,interv
 ```python
 BTC.df
 ```
+
+| Date                |     Open |    High |      Low |    Close |      Volume |   Market Cap |    Price |   Price_Returns |   Log_Returns |   Cumulative Returns |       AP |         CPV |   Cum_Volume |     VWAP |   YangZhang_30_Day |   YangZhang30_Day_Ann |   Std_30_Day |   Ann_Std_30_Day |   Vol_30_Day |   Ann_Vol_30_Day |   Ann_VS_Var_30_Day |   Ann_VS_Vol_30_Day |   Realized_Var_30_Day |   Realized_Vol_30_Day |
+|:--------------------|---------:|--------:|---------:|---------:|------------:|-------------:|---------:|----------------:|--------------:|---------------------:|---------:|------------:|-------------:|---------:|-------------------:|----------------------:|-------------:|-----------------:|-------------:|-----------------:|--------------------:|--------------------:|----------------------:|----------------------:|
+| 2017-01-01 00:00:00 |  963.658 | 1003.08 |  958.699 |  998.325 | 1.47775e+08 |  1.60504e+10 |  998.325 |     nan         |   nan         |            0         |  986.701 | 1.4581e+11  |  1.47775e+08 |  986.701 |                nan |                   nan |          nan |              nan |          nan |              nan |                 nan |                 nan |                   nan |                   nan |
+| 2017-01-02 00:00:00 |  998.617 | 1031.39 |  996.702 | 1021.75  | 2.22185e+08 |  1.6429e+10  | 1021.75  |       0.0234643 |     0.0231932 |            0.0234643 | 1016.61  | 3.71686e+11 |  3.6996e+08  | 1004.67  |                nan |                   nan |          nan |              nan |          nan |              nan |                 nan |                 nan |                   nan |                   nan |
+| 2017-01-03 00:00:00 | 1021.6   | 1044.08 | 1021.6   | 1043.84  | 1.85168e+08 |  1.67864e+10 | 1043.84  |       0.0216197 |     0.0213893 |            0.0455913 | 1036.51  | 5.63614e+11 |  5.55128e+08 | 1015.29  |                nan |                   nan |          nan |              nan |          nan |              nan |                 nan |                 nan |                   nan |                   nan |
+| 2021-08-21 00:00:00 | 49327.1 | 49717   | 48312.2 | 48905.5 | 4.05852e+10 |  9.19092e+11 | 48905.5 |     -0.00878988 |   -0.00882874 |              47.9875 | 48978.2 | 6.97137e+16 |  1.8175e+12  | 38356.8 |          0.039166  |              0.748265 |    0.0335002 |         0.640021 |    0.0329806 |         0.630093 |             13.603  |             3.68823 |              0.397017 |              0.630093 |
+| 2021-08-22 00:00:00 | 48869.1 | 49471.6 | 48199.9 | 49321.7 | 2.5371e+10  |  9.26962e+11 | 49321.7 |      0.00850954 |    0.00847354 |              48.4044 | 48997.7 | 6.9409e+16  |  1.79656e+12 | 38634.5 |          0.0390771 |              0.746567 |    0.0331838 |         0.633976 |    0.0326595 |         0.623959 |             13.0881 |             3.61775 |              0.389325 |              0.623959 |
+| 2021-08-23 00:00:00 | 49291.7 | 50482.1 | 49074.6 | 49546.1 | 3.43051e+10 |  9.31244e+11 | 49546.1 |      0.00455162 |    0.0045413  |              48.6293 | 49700.9 | 6.99848e+16 |  1.79774e+12 | 38929.4 |          0.03913   |              0.747577 |    0.0331887 |         0.634069 |    0.032656  |         0.623891 |             12.9354 |             3.59659 |              0.38924  |              0.623891 |
+
 ### Return the ticker:
 ```python
 BTC_Bitfinex.ticker
+```
+```zsh
+'BITFINEX/BTCUSD'
 ```
 #### Returns Profile:
 ```python
 BTC.stats(returns='Price_Returns',price='Close',
                                           trading_periods=365,interval=interval,market_hours=24,vol_window=vol_window)
 ```
-```console
+```zsh
 BTC/USD Return Stats:
 Dates: 2017-01-01 00:00:00 - 2021-08-23 00:00:00
 Periods: 1695 days
@@ -134,7 +147,7 @@ Name: Price_Returns, dtype: float64
 ```python
 BTC.avg_annualaized, BTC.cum_ret, BTC.ann_vol, BTC.sharpe_ratio_geo
 ```
-```console
+```zsh
 (2.2281516218402473,
  48.629276138996694,
  0.8178195890242521,
@@ -175,21 +188,21 @@ btc_vol30_dist = charts.pwe_return_dist_chart(BTC_Bitfinex,start_date,end_date,
 ```python
 BTC.get_sub_series(start_date='2020-1-1',end_date='2020-12-31')
 ```
-```console
+```zsh
 Subseries stored as: _2020
 ```
-###### The ```get_sub_series``` method returns an instance of the Security class, which is an attribute of the original Security object.
+The ```get_sub_series``` method returns an instance of the Security class, which is an attribute of the original Security object.
 ```python
 type(BTC._2020), BTC._2020.ticker, BTC._2020.name
 ```
-```console
+```zsh
 (pwe.analysis.Security, 'BTC', '_2020')
 ```
 ##### 2020 Stats:
 ```python
 BTC._2020.stats(returns='Price_Returns',price='Close',trading_periods=365,interval='daily',market_hours=24);
 ```
-```console
+```zsh
 BTC 2020 Return Stats:
 Dates: 2020-01-01 00:00:00 - 2020-12-31 00:00:00
 Periods: 366 days
@@ -242,7 +255,7 @@ BTC._2020.df
 ```python
 BTC._2020.stats(returns='Price_Returns',price='Close',trading_periods=365,interval='daily',market_hours=24);
 ```
-```console
+```zsh
 BTC 2020 Return Stats:
 Dates: 2020-01-01 00:00:00 - 2020-12-31 00:00:00
 Periods: 365 days
@@ -286,6 +299,6 @@ To access the stats or other attributes for a specific time interval:
 ```python
 BTC._2020.avg_annualaized, BTC._2020.cum_ret, BTC._2020.ann_vol, BTC._2020.sharpe_ratio_geo
 ```
-```console
+```zsh
 (4.323912901598581, 3.027919080879859, 0.7666323477904143, 3.9496364712589016)
 ```
