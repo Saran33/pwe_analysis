@@ -91,7 +91,7 @@ BTC_Bitfinex.ticker
 BTC.stats(returns='Price_Returns',price='Close',
                                           trading_periods=365,interval=interval,market_hours=24,vol_window=vol_window)
 ```
-```console
+```zsh
 BTC/USD Return Stats:
 Dates: 2017-01-01 00:00:00 - 2021-08-23 00:00:00
 Periods: 1695 days
