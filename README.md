@@ -63,7 +63,7 @@ BTC.get_returns(price='Close')
 BTC_Bitfinex = Security(BTC_Bitfinex)
 BTC_Bitfinex.get_returns(price='Last')
 ```
-### Calculate Volume-Weighted Average Price:
+#### Calculate Volume-Weighted Average Price:
 ```python
 BTC.vwap(window=60)
 
@@ -78,7 +78,7 @@ BTC_Bitfinex.get_vol(window=vol_window, column='Price_Returns',trading_periods=3
 ```python
 BTC.YangZhang_estimator(window=vol_window,trading_periods=365, clean=True,interval=interval)
 ```
-### View the DataFrame of a security:
+#### View the DataFrame of a security:
 ```python
 BTC.df
 ```
@@ -92,7 +92,7 @@ BTC.df
 | 2021-08-22 00:00:00 | 48869.1 | 49471.6 | 48199.9 | 49321.7 | 2.5371e+10  |  9.26962e+11 | 49321.7 |      0.00850954 |    0.00847354 |              48.4044 | 48997.7 | 6.9409e+16  |  1.79656e+12 | 38634.5 |          0.0390771 |              0.746567 |    0.0331838 |         0.633976 |    0.0326595 |         0.623959 |             13.0881 |             3.61775 |              0.389325 |              0.623959 |
 | 2021-08-23 00:00:00 | 49291.7 | 50482.1 | 49074.6 | 49546.1 | 3.43051e+10 |  9.31244e+11 | 49546.1 |      0.00455162 |    0.0045413  |              48.6293 | 49700.9 | 6.99848e+16 |  1.79774e+12 | 38929.4 |          0.03913   |              0.747577 |    0.0331887 |         0.634069 |    0.032656  |         0.623891 |             12.9354 |             3.59659 |              0.38924  |              0.623891 |
 
-### Return the ticker:
+#### Return the ticker:
 ```python
 BTC_Bitfinex.ticker
 ```
