@@ -38,9 +38,7 @@ charts.quant_chart_int(BTC,start_date,end_date,ticker='BTC',
                        ama_periods=9,showvol=True,show_price_range=True,
                        textangle=60,annots=settlements)
 ```
-
 ![Candle Chart](img/BTC_BTC_01-01-2017-24-08-2021_interative_white_PWE.png)
-
 #### Download Quandl data:
 ```python
 # Input your key the first time and then no need to input a key argument again. 
@@ -58,9 +56,7 @@ charts.pwe_line_chart(BTC_Bitfinex,columns=['Last'],start_date=start_date,end_da
                   theme='white',auto_start='2021-01-01',auto_end=auto_end,
                   connectgaps=False)
 ```
-
 ![Line (scatter) Chart](img/BTC_01-01-2017-24-08-2021_line_white_PWE.png)
-
 #### Initialize Securities & Calculate Returns:
 ```python
 BTC = Security(BTC)
@@ -168,9 +164,7 @@ btc_dist = charts.pwe_return_dist_chart(BTC_Bitfinex,start_date,end_date,tseries
                                     showlegend=False,theme='white',auto_start='2021-01-01', auto_end=end_date,
                                     connectgaps=False,tickformat='.0%',decimals=2)
 ```
-
 ![Distribution Chart](img/BTC_BITFINEX_BTCUSD_01-01-2017-24-08-2021_dist_white_PWE.png)
-
 ```python
 btc_dist_bar = charts.pwe_return_bar_chart(BTC_Bitfinex,start_date,end_date,tseries='Price_Returns',kind='bar',
                                              title='Bitfinex Bitcoin Daily Returns',
@@ -178,9 +172,7 @@ btc_dist_bar = charts.pwe_return_bar_chart(BTC_Bitfinex,start_date,end_date,tser
                                              showlegend=False,auto_start=auto_start,auto_end=end_date,tickformat='.0%',
                                              decimals=2,orientation='v',textangle=0)
 ```
-
 ![Bar Chart](img/BTC_BITFINEX_BTCUSD_01-01-2017-24-08-2021_bar_chart_white_PWE.png)
-
 ```python
 btc_yz30_dist = charts.pwe_return_dist_chart(BTC,start_date,end_date,
                                              tseries='YangZhang30_Ann',kind='scatter',
@@ -190,9 +182,7 @@ btc_yz30_dist = charts.pwe_return_dist_chart(BTC,start_date,end_date,
                                              auto_start='2021-01-01',auto_end=end_date,
                                              connectgaps=False,tickformat='.0%',decimals=2)
 ```
-
 ![Yang-Zhang](img/BTC-USD YZ Vol._BTC_01-01-2017-24-08-2021_dist_white_PWE.png)
-
 ```python
 btc_vol30_dist = charts.pwe_return_dist_chart(BTC_Bitfinex,start_date,end_date,
                                               tseries='Ann_Vol_30',kind='scatter',
