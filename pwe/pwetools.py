@@ -237,3 +237,26 @@ def blockPrinting(func):
 def to_utc(date):
     date = pd.to_datetime(date,utc=True)
     return date;
+
+def split_datetime(df, day=True,month=True,year=True,time=True):
+    if day:
+        df['Day'] = df.index.day
+    if month:
+        df['Month'] = df.index.month
+    if year:
+        df['Year'] = df.index.year
+    if time:
+        df['Time'] = df.index.time
+    return;
+
+def last_fridays(df):
+    split_datetime(df, time=False)
+    df['Day'] = df.index.day
+    df['Month'] = df.index.month
+    df['Year'] = df.index.year
+    #df['Time'] = df.index.time
+    df['Date'] = pd.to_datetime(df[['Year','Month','Day']])
+    #df['DateTime'] = pd.to_datetime(df[['Year','Month','Day','Time']])
+    last_fris = pd.DataFrame(df.apply(lambda x: x['Date'] + pd.offsets.LastWeekOfMonth(n=1,weekday=4), axis=1), columns=['Date'])
+    #last_fridays = pd.DataFrame(df.apply(lambda x: x['DateTime'] + pd.offsets.LastWeekOfMonth(n=1,weekday=4), axis=1), columns=['DateTime'])
+    return last_fris;
