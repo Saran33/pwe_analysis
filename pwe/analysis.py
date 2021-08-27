@@ -6,9 +6,12 @@ Created on Mon Aug 23 08:33:53 2021
 @author: Saran Connolly saran.c@pwecapital.com
 """
 from datetime import datetime, date, timedelta
+from os import error
+import sys
 import pandas as pd
 import numpy as np
 import math
+from pwe.pwetools import first_day_of_current_year, last_day_of_current_year, sort_index
 
 class Security:
     def __init__(self, inp):
@@ -451,8 +454,8 @@ class Security:
 
         df['DateTime'] = pd.DatetimeIndex(df.index)
         df['DateTime'] = pd.to_datetime(df.index)
-        subseries_df = df[(df['DateTime']>=sd)&(df['DateTime']<=ed)]
-        if ((ed - sd) <= timedelta(days=366)) &  (sd.year == ed.year) :
+        subseries_df = df[(df['DateTime']>=sd) & (df['DateTime']<=ed)]
+        if ((ed - sd) <= timedelta(days=366)) and (sd.year == ed.year):
             subseries_df.name = f"_{ed.year}"
         else:
             subseries_df.name = f"_{sd.year}_{sd.month}_{sd.day}_{ed.year}_{ed.month}_{ed.day}"
@@ -468,3 +471,110 @@ class Security:
         print (f"Subseries stored as: {subseries_df.name}")
         
         return self.subseries;
+
+    def get_fibs(self,start=None,end=None,period=None,utc=True):
+        """
+        Calculate Fibonacci retracement levels, expressed as support and resistance.
+        kwargs:
+        period :    If None, calculate for the entire DataFrame.
+                        If 'ytd', calcualte based on year-to-date high and low.
+                        If 'whole', calcualte based on the high and low of entire series.
+        start,end : If 'period' not set, alternatively, select a timeframe for highs and lows.
+                    The 'period' setting will override start and end.
+        If no period, start, or end are provided, the default setting is 'whole.'
+
+        utc :   If True, it will convert all datetimes to UTC.
+        """
+        from pwe.phi import phi
+        df = self.df
+        φ = phi(22)
+        errors = {}
+        while True:
+            try:
+                if ('High' in df) and ('Low' in df) and ('Open' in df) and ('Close' in df):
+
+                    if ((start==None) and (end==None) and (period==None)):
+                        period='whole'
+
+                    if period=='whole':
+                        
+                        range_df = df
+                        start_dt = df.index.min()
+                        end_dt = df.index.max()
+
+                    elif (period=='ytd') and (start==None):
+                        start_dt = first_day_of_current_year(time=True,utc=utc)
+                        end_dt = pd.to_datetime(datetime.now(),utc=utc)
+
+                    elif (period==None) and (start==None):
+                        start_dt = df.index.min()
+                        start_dt = pd.to_datetime(start_dt,utc=utc)
+
+                    elif (period==None) and (start!=None):
+                        start_dt = pd.to_datetime(start,utc=utc)
+
+                    elif (period!=None) and (start!=None):
+                        errors[0] = ("\nEnsure that either 'period' or 'start' and 'end' are set, or else neither")
+                        errors[1] = ("(if neither, then the high and low of the past year will be used).")
+                        raise NotImplementedError
+                        
+                    if (period==None) and (end==None):
+                        end_dt = df.index.max()
+                        end_dt = pd.to_datetime(end_dt,utc=utc)
+                        
+                    elif (period==None) and (end!=None):
+                        end_dt = pd.to_datetime(end,utc=utc)
+                        
+                    elif (period!=None) and (end!=None):
+                        errors[0] = ("\nEnsure that either 'period' or 'start' and 'end' are set, or else neither")
+                        errors[1] = ("(if neither, then the high and low of the past year will be used).")
+                        raise NotImplementedError
+
+                    if (period==None) or (period=='ytd'):
+                        try:
+                            range_df = df.loc[(df.index >= start_dt) & (df.index <=end_dt)]
+                        except:
+                            TypeError
+                            print("\nThere may be a timezone mismatch or other date format issue here.")
+                            print(f"Coverting the timezone to UTC. Please verify the times are correct. To check: input: {self.name}.df.head() \n")
+                            df.index = pd.to_datetime(df.index,utc=utc)
+                            range_df = df.loc[(df.index >= start_dt) & (df.index <=end_dt)]
+
+                    elif period!=None:
+                        if not (period=='whole') or (period=='ytd'):
+                            errors[0] = ("\nEnsure that the 'period' setting is correct - either 'whole' or 'ytd'.")
+                            errors[1] = ("Alternatively,input start and end dates instead.")
+                            raise NotImplementedError
+                        
+                elif not ('High' in df) and ('Low' in df) and ('Open' in df) and ('Close' in df):
+                    errors[0] = ("\nInvalid price data. Please provide OHLC as 'Open','High','Low,'Close'")
+                    raise NotImplementedError
+
+
+                print (f"{start_dt} - {end_dt}\n")
+
+                self.high = np.round(range_df['High'].max(),2)
+                self.low = np.round(range_df['Low'].min(),2)
+                self.f_236 = np.round(self.high-((self.high-self.low )*0.236),2)
+                self.f_382 = np.round(self.high-((self.high-self.low )*(1-(1/φ))),2)
+                self.f_50 = np.round(self.high-((self.high-self.low )*0.5),2)
+                self.f_618 = np.round(self.high-((self.high-self.low )*(1/φ)),2)
+
+                print(f"high= {self.high}  f_236= {self.f_236}  f_382= {self.f_382}  f_50= {self.f_50}  f_618= {self.f_618}  low= {self.low}")
+                return
+
+            except Exception as error:
+                exception_type, exception_object, exception_traceback = sys.exc_info()
+                filename = exception_traceback.tb_frame.f_code.co_filename
+                line_number = exception_traceback.tb_lineno
+                print("Exception type: ", exception_type)
+                print("File name: ", filename)
+                print("Line number: ", line_number)
+                # print ("Exception object:", exception_object)
+                print (error)
+                for e in errors.values():
+                    if e is not None:
+                        print (e)
+                break
+        return
+
