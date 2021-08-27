@@ -14,6 +14,19 @@ import pytz
 from datetime import date,timedelta
 from datetime import datetime,date,timedelta
 
+def last_col_first(df):
+    """
+    Reorders the columns of a pandas DataFrame.
+    Brings the last column to the start (left) of the table.
+    Leaves the other columns in their original order.
+    df  :   a padas DataFrame.
+    """
+    cols = df.columns.tolist()
+    cols = cols[-1:] + cols[:-1]
+    # df = df[cols]
+    df = df.loc[:, cols]
+    return df;
+
 def change_tz_now(from_tz, to_tz):
     """
     Change the tz of the current datetime now with a tzinfo attribute.
@@ -60,36 +73,52 @@ def change_tz(arg,from_tz, to_tz):
             tz2 = pytz.timezone(to_tz)
 
         except pytz.UnknownTimeZoneError:
-                zones = pytz.common_timezones
-                for z in list(zones):
-                    if (from_tz in z) and (from_tz not in list(zones)):
-                        from_tz = z
-                    elif (to_tz in z) and (to_tz not in list(zones)):
-                        to_tz = z
-                tz1 = pytz.timezone(from_tz)
-                tz2 = pytz.timezone(to_tz)
+            print("Searching for TZ...")
+            zones = pytz.common_timezones
+            for z in list(zones):
+                if (from_tz in z) and (from_tz not in list(zones)):
+                    from_tz = z
+                    print (f"Timezone: {z}")
+                elif (to_tz in z) and (to_tz not in list(zones)):
+                    to_tz = z
+                    print (f"Timezone: {z}")
+            tz1 = pytz.timezone(from_tz)
+            tz2 = pytz.timezone(to_tz)
 
         if type(arg) is pd.DatetimeIndex:
             idx = arg
-            tz1_idx = idx.tz_localize(tz1)
+            try:
+                tz1_idx = idx.tz_localize(tz1)
+            except TypeError as error:
+                already_tz = "Already tz-aware, use tz_convert to convert."
+                if already_tz in error.args[0]:
+                    print ("Existing datetimes already localized... Proceeding to change TZ.")
+
+                    tz1_idx = idx
+        
             df = pd.DataFrame(index=tz1_idx)
 
         elif type(arg) is pd.DataFrame:
             df = arg
-            tz1_idx = df.index.tz_localize(tz1)
-            df.index = tz1_idx
+            try:
+                tz1_idx = df.index.tz_localize(tz1)
+            except TypeError as error:
+                already_tz = "Already tz-aware, use tz_convert to convert."
+                if already_tz in error.args[0]:
+                    print ("Existing datetimes already localized... Proceeding to change TZ.")
 
-            df.index=pd.DatetimeIndex(tz1_idx)
+                    tz1_idx = df.index
+                    df.index=pd.DatetimeIndex(tz1_idx)
 
         elif type(arg[1]) is datetime:
-
-            daate_lst = list(arg)
-            df = pd.DataFrame(index=daate_lst)
+            date_lst = list(arg)
+            df = pd.DataFrame(index=date_lst)
 
         elif type(arg[0]) is str:
             try:
                 for d in arg:
                     date_lst = datetime.strptime(d,'%Y-%m-%d')
+                    df = pd.DataFrame(index=date_lst)
 
             except ValueError as error:
                 errmsgs = ("please use the date format '%Y-%m-%d' to avoid ambiguity")
@@ -103,15 +132,24 @@ def change_tz(arg,from_tz, to_tz):
                 print (error)
                 print (errmsgs)
 
-        df = pd.DataFrame(index=date_lst)
         df.sort_index(ascending=True, inplace=True)
 
-        tz1_idx = df.index.tz_localize(tz1)
-        df.tz1_series = tz1_idx.to_series()
+        try:    
+            tz1_idx = df.index.tz_localize(tz1)
+        except TypeError as error:
+            already_tz = "Already tz-aware, use tz_convert to convert."
+            if already_tz in error.args[0]:
+                print ("Existing datetimes already localized... Proceeding to change TZ.")
+                tz1_idx = df.index
+
+        tz1_ame = from_tz.replace('/', '_')
+        df[f"Dt_{tz1_ame}"] = tz1_idx
 
         tz2_idx =  tz1_idx.tz_convert(tz2)
         df.index = tz2_idx
         df.index.names = ['DateTime']
+        if df.columns[0] != f"Dt_{tz1_ame}":
+            df = last_col_first(df)
 
         return df;
 
