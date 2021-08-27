@@ -311,7 +311,7 @@ def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles
 
     if settles=='last_fri':
         
-        sd, ed = get_dates(start_date=start_date,end_date=end_date, utc=utc)
+        sd, ed = get_str_dates(start_date=start_date,end_date=end_date, utc=utc)
 
         if (start_date==None) and (df!=None):
             start_date = df.index.min()
@@ -353,8 +353,8 @@ def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles
 
                 dates_to_remove = last_fris_date.loc[(~last_fris_date['Date'].astype(str).isin(date_range_df['Date'].astype(str)))]
                 dates_to_remove = dates_to_remove['Date'].unique().tolist()
-                for date in dates_to_remove:
-                    settlements.pop(date, None)
+                for nul_date in dates_to_remove:
+                    settlements.pop(nul_date, None)
                 print ("Last settle date:",next(reversed(settlements.items())))
 
                 last_fris['DateTime'] = last_fris.index.to_series()
@@ -378,11 +378,3 @@ def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles
                     print (e)
             break
         return
-
-
-
-
-
-
-
-
