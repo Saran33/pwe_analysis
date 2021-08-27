@@ -9,8 +9,111 @@ Created on Tue Aug 17 09:25:47 2021
 import pandas as pd
 import numpy as np
 import sys, os
+from pandas.core.frame import DataFrame
+import pytz
 from datetime import date,timedelta
 from datetime import datetime,date,timedelta
+
+def change_tz_now(from_tz, to_tz):
+    """
+    Change the tz of the current datetime now with a tzinfo attribute.
+    Display the current time in two timezones.
+
+    dates   :   list of dates.
+    from_tz :   timezone to change.
+    to_tz   :   desired timezone.
+
+    e.g.    from_tz = 'US/Pacific'
+            to_tz = 'US/Eastern'
+    To see all, enter: pytz.all_timezones
+                   or: pytz.common_timezones
+    """
+    tz1 = pytz.timezone(from_tz)
+    tz1_now = datetime.now(tz1)
+    print (tz1_now)
+
+    tz2 = pytz.timezone(to_tz)
+    tz2_now = tz1_now.astimezone(tz2)
+    print (tz2_now)
+    return tz2_now
+
+def change_tz(arg,from_tz, to_tz):
+    """
+    Change the tz of a date or an array of dates the index of pandas DataFrame.
+    Retrun a new Pandas DateTime index and either return the old DateTime index as a series or drop it.
+
+    arg   :   list of dates or pandas datetime index or pandas series.
+    from_tz :   timezone to change.
+    to_tz   :   desired timezone.
+
+    e.g.    from_tz = 'US/Pacific'
+            to_tz = 'US/Eastern'
+
+    To see all, enter: pytz.all_timezones
+                   or: pytz.common_timezones
+    """
+    errmsgs = {}
+    # pytz.utc
+    while True:
+        try:
+            tz1 = pytz.timezone(from_tz)
+            tz2 = pytz.timezone(to_tz)
+
+        except pytz.UnknownTimeZoneError:
+                zones = pytz.common_timezones
+                for z in list(zones):
+                    if (from_tz in z) and (from_tz not in list(zones)):
+                        from_tz = z
+                    elif (to_tz in z) and (to_tz not in list(zones)):
+                        to_tz = z
+                tz1 = pytz.timezone(from_tz)
+                tz2 = pytz.timezone(to_tz)
+
+        if type(arg) is pd.DatetimeIndex:
+            idx = arg
+            tz1_idx = idx.tz_localize(tz1)
+            df = pd.DataFrame(index=tz1_idx)
+
+        elif type(arg) is pd.DataFrame:
+            df = arg
+            tz1_idx = df.index.tz_localize(tz1)
+            df.index = tz1_idx
+
+            df.index=pd.DatetimeIndex(tz1_idx)
+
+        elif type(arg[1]) is datetime:
+
+            daate_lst = list(arg)
+            df = pd.DataFrame(index=daate_lst)
+
+        elif type(arg[0]) is str:
+            try:
+                for d in arg:
+                    date_lst = datetime.strptime(d,'%Y-%m-%d')
+
+            except ValueError as error:
+                errmsgs = ("please use the date format '%Y-%m-%d' to avoid ambiguity")
+                exception_type, exception_object, exception_traceback = sys.exc_info()
+                filename = exception_traceback.tb_frame.f_code.co_filename
+                line_number = exception_traceback.tb_lineno
+                print("Exception type: ", exception_type)
+                print("File name: ", filename)
+                print("Line number: ", line_number)
+                # print ("Exception object:", exception_object)
+                print (error)
+                print (errmsgs)
+
+        df = pd.DataFrame(index=date_lst)
+        df.sort_index(ascending=True, inplace=True)
+
+        tz1_idx = df.index.tz_localize(tz1)
+        df.tz1_series = tz1_idx.to_series()
+
+        tz2_idx =  tz1_idx.tz_convert(tz2)
+        df.index = tz2_idx
+        df.index.names = ['DateTime']
+
+        return df;
 
 def get_str_dates(start_date=None,end_date=None,utc=False):
     # utc_now = datetime.utcnow()
