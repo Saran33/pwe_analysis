@@ -12,23 +12,30 @@ import sys, os
 from datetime import date,timedelta
 from datetime import datetime,date,timedelta
 
-def get_dates(start_date=None,end_date=None):
+def get_str_dates(start_date=None,end_date=None,utc=False):
     # utc_now = datetime.utcnow()
     today = date.today()
     td = today.strftime("%d-%m-%Y")
     today_dmy = str(td)
-    if end_date is None:
+    if end_date==None:
         end_date = today_dmy
-    else:
-        pass
-    if start_date is None:
+
+    elif type(end_date) is not str:
+        end_date = end_date.strftime("%d-%m-%Y")
+
+    if start_date==None:
         start_date = today - timedelta(days=365)
         start_date = start_date.strftime("%d-%m-%Y")
         start_date = str(start_date)
-    else:
-        pass
+
+    elif type(start_date) is not str:
+        start_date = start_date.strftime("%d-%m-%Y")
+
+    if utc:
+        start_date = to_utc(start_date)
+        end_date = to_utc(end_date)
     
-    print("Today's date:", today_dmy)
+    print("Today's local TZ date:", today_dmy)
     print(" ")
     print("Start date:", start_date)
     print("End date:", end_date)
@@ -89,6 +96,7 @@ def rid_na(arr):
 
 def sort_index(df):
     df.index=pd.DatetimeIndex(df.index)
+    pd.to_datetime(df.index)
     
     if 'DateTime' in df:
         df.set_index('DateTime')
@@ -235,8 +243,37 @@ def blockPrinting(func):
     return func_wrapper;
 
 def to_utc(date):
+    """
+    Convert a date or datetime object to UTC datetime.
+    """
     date = pd.to_datetime(date,utc=True)
     return date;
+
+def first_day_of_current_year(time=False, utc=False):
+    """
+    Calculate the first date or datetime of the current year.
+    If time=True, it will return the first microsecond of the current year.
+    """
+    if time:
+        fdocy = datetime.now().replace(month=1,day=1,hour=0,minute=0,second=0,microsecond=0)
+    else:
+        fdocy = datetime.now().date().replace(month=1, day=1)
+    if utc:
+        fdocy = to_utc(fdocy)
+    return fdocy;
+
+def last_day_of_current_year(time=False,utc=False):
+    """
+    Calculate the first date or datetime of the current year.
+    If time=True, it will return the last microsecond of the current year.
+    """
+    if time:
+        ldocy = datetime.now().replace(month=12, day=31,hour=23,minute=59,second=59,microsecond=999999)
+    else:
+        ldocy = datetime.now().date().replace(month=12, day=31)
+    if utc:
+        ldocy = to_utc(ldocy)
+    return ldocy;
 
 def split_datetime(df, day=True,month=True,year=True,time=True):
     if day:
@@ -259,4 +296,93 @@ def last_fridays(df):
     #df['DateTime'] = pd.to_datetime(df[['Year','Month','Day','Time']])
     last_fris = pd.DataFrame(df.apply(lambda x: x['Date'] + pd.offsets.LastWeekOfMonth(n=1,weekday=4), axis=1), columns=['Date'])
     #last_fridays = pd.DataFrame(df.apply(lambda x: x['DateTime'] + pd.offsets.LastWeekOfMonth(n=1,weekday=4), axis=1), columns=['DateTime'])
+
     return last_fris;
+
+def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles='last_fri',utc=False):
+    """
+    Add a Series of futures settlement dates for the DataFrame of a given security.
+
+    If a DataFrame is passed and no start_date and end_date passed, the settle dates for the entire series is returned.
+
+    If utc=True, the datetimestamp of settlement will be in UTC timezone format.
+    """
+    errors = {}
+
+    if settles=='last_fri':
+        
+        sd, ed = get_dates(start_date=start_date,end_date=end_date, utc=utc)
+
+        if (start_date==None) and (df!=None):
+            start_date = df.index.min()
+        else:
+            start_date = sd
+
+        if (end_date==None) and (df!=None):
+            end_date = df.index.max()
+        else:
+            end_date = ed
+
+        if utc==True:
+            tz= 'UTC'
+        else:
+            tz= None
+
+        date_range_df = pd.DataFrame(index=pd.date_range(start=start_date, end=end_date, freq='D',tz=tz))
+        # date_range['Date'] = date_range.index.to_series()
+        # date_range_df['DateTime'] = date_range_df.index.to_series()
+        date_range_df['Date'] = date_range_df.index.date
+        date_range_df
+
+    while True:
+        try:
+            if settles=='last_fri':
+
+                last_fris = last_fridays(date_range_df)
+                last_fris = last_fris.drop_duplicates(ignore_index=False)
+                last_fris_date = last_fris.set_index('Date', drop=False, inplace=False)
+                last_fris_date.index = last_fris_date.index.strftime('%Y-%m-%d')
+                last_fris_date['Date'] = last_fris_date.index.to_series()
+
+                # settle_dt_lst = last_fris_date['Date'].unique().tolist()
+                # settlements = pd.Series(last_fris_date['Date'].values,index=last_fris_date.Date).to_dict()
+                settlements = pd.Series(last_fris_date['Date'].values,index=last_fris_date['Date']).to_dict()
+                for key in list(settlements.keys()):
+                    settlements[key] = 'CME Exp.'
+                print("First settle date:",next(iter(settlements.items())))
+
+                dates_to_remove = last_fris_date.loc[(~last_fris_date['Date'].astype(str).isin(date_range_df['Date'].astype(str)))]
+                dates_to_remove = dates_to_remove['Date'].unique().tolist()
+                for date in dates_to_remove:
+                    settlements.pop(date, None)
+                print ("Last settle date:",next(reversed(settlements.items())))
+
+                last_fris['DateTime'] = last_fris.index.to_series()
+
+            elif settles!='last_fri':
+                errors[0] = ("\nInvalid settlement date type.")
+                errors[1] = ("\nPlease input paramater: settles='last_fri or ask Saran to edit the source code to add more dates.'\n")
+                raise NotImplementedError
+
+        except Exception as error:
+            exception_type, exception_object, exception_traceback = sys.exc_info()
+            filename = exception_traceback.tb_frame.f_code.co_filename
+            line_number = exception_traceback.tb_lineno
+            print("Exception type: ", exception_type)
+            print("File name: ", filename)
+            print("Line number: ", line_number)
+            # print ("Exception object:", exception_object)
+            print (error)
+            for e in errors.values():
+                if e is not None:
+                    print (e)
+            break
+        return
+
+
+
+
+
+
+
+

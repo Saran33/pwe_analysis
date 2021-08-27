@@ -10,7 +10,7 @@ import os
 import pandas as pd
 import quandl
 from datetime import datetime,date,timedelta
-from pwe.pwetools import sort_index,format_ohlc,check_folder,get_dates
+from pwe.pwetools import sort_index,format_ohlc,check_folder,get_str_dates
 
 def create_quandl_key(key):
     cwd = os.getcwd()
@@ -53,7 +53,7 @@ def quandl_data(symbol,start_date=None,end_date=None,key=None, file=None):
 
     if (file==None) and (start_date!=None):
         
-        start_date, end_date = get_dates(start_date=start_date,end_date=end_date)
+        start_date, end_date = get_str_dates(start_date=start_date,end_date=end_date)
         print("Security:", symbol)
     
         tkr = symbol.replace('/', '_')
