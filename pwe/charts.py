@@ -32,28 +32,68 @@ import webbrowser
 import dateutil
 import re
 
-# https://strftime.org/
-td = date.today()
-today = td.strftime("%d-%m-%Y")
-today_dmy = str(today)
+def get_chart_dates(start_date=None,end_date=None,utc=True, **kwargs):
+    """
+    Get dates for chart functions.
+    More info on date string formats at: https://strftime.org/
+    """
+    now = datetime.now()
+    today_dmy = now.strftime("%d-%m-%Y")
 
-utc_now = datetime.utcnow()
-utc_now.isoformat()
-today_utc = utc_now.strftime("%d-%m-%Y")
+    utc_now = datetime.utcnow()
+    utc_now.isoformat()
 
-end_date = today_dmy
-end = datetime.strptime(td.strftime('%Y-%m-%d'),'%Y-%m-%d')
+    if end_date==None:
+        end_date = today_dmy
+        end = datetime.strptime(td.strftime('%Y-%m-%d'),'%Y-%m-%d')
 
-# utc_end = pd.to_datetime(utc_end)
-utc_end = pd.Timestamp.utcnow()
+    elif end_date!=None:
+        end_date
 
-interval = timedelta(1)
-yesterday = td - interval
-yest = yesterday.strftime("%d-%m-%Y")
-yesterday_dmy = str(yest)
 
-chart_start = utc_now - timedelta(days=365)
-auto_start = chart_start.strftime("%d-%m-%Y")
+
+    # utc_end = pd.to_datetime(utc_end)
+    utc_end = pd.Timestamp.utcnow()
+
+    interval = timedelta(1)
+    yesterday = td - interval
+    yest = yesterday.strftime("%d-%m-%Y")
+    yesterday_dmy = str(yest)
+    print("Yesterday:",yesterday_dmy)
+    print("")
+
+    start_date = "01-01-2017"
+    start = datetime.strptime("2017-01-01",'%Y-%m-%d')
+    utc_start = f"{start_date} 16:00:00.000 UTC"
+    #utc_start = datetime.strptime(utc_start,'%d-%m-%Y %H:%M:%S.%f %Z')
+    utc_start = pd.to_datetime(utc_start)
+    #utc_start = start.isoformat()
+
+    chart_start = utc_now - timedelta(days=365)
+    auto_start = chart_start.strftime("%d-%m-%Y")
+
+    print ("autostart:",auto_start)
+    print("")
+
+    print("Today's date:", today_dmy)
+    print (utc_now, "UTC")
+    print("")
+    print("Start date:", start_date)
+    print("Start time:",utc_start, "UTC")
+    print("")
+    print("End date:", end_date)
+    print (utc_end, "UTC")
+    print("")
+    print("Security:", symbol)
+    return
+
+now = datetime.now()
+local_now = now.astimezone()
+local_tz = local_now.tzinfo
+local_tzname = local_tz.tzname(local_now)
+print(local_now)
+print (local_tz)
+print(local_tzname)
 
 def define_period(df, start_date, end_date):
     dates = pd.date_range(start_date,end_date)
