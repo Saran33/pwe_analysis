@@ -50,6 +50,25 @@ def change_tz_now(from_tz, to_tz):
     print (tz2_now)
     return tz2_now
 
+def utc_tz(date):
+    utc_tz = pytz.timezone("UTC")
+
+    if type(date) is str:
+        date = datetime.strptime(date,'%Y-%m-%d')
+        utc_date = date.astimezone(utc_tz)
+
+    elif type(date) is datetime:
+        date = date
+        utc_date = date.astimezone(utc_tz)
+
+    elif type(date) is pd.Timestamp:
+        date = pd.to_datetime(date)
+        utc_date = date.tz_convert(utc_tz)
+        
+    return utc_date;
+
+
+
 def change_tz(arg,from_tz, to_tz):
     """
     Change the tz of a date or an array of dates the index of pandas DataFrame.

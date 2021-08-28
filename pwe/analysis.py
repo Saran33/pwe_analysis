@@ -11,7 +11,7 @@ import sys
 import pandas as pd
 import numpy as np
 import math
-from pwe.pwetools import first_day_of_current_year, last_day_of_current_year, sort_index
+from pwe.pwetools import first_day_of_current_year, last_day_of_current_year, sort_index, utc_tz
 
 class Security:
     def __init__(self, inp):
@@ -449,8 +449,10 @@ class Security:
         if end_date==None:
             end_date = datetime.utcnow()
 
-        sd = pd.to_datetime(start_date)     
-        ed = pd.to_datetime(end_date)
+        # sd = pd.to_datetime(start_date) 
+        sd = utc_tz(start_date)
+        # ed = pd.to_datetime(end_date)
+        ed = utc_tz(end_date)
 
         df['DateTime'] = pd.DatetimeIndex(df.index)
         df['DateTime'] = pd.to_datetime(df.index)
