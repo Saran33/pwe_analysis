@@ -14,6 +14,16 @@ import pytz
 from datetime import date,timedelta
 from datetime import datetime,date,timedelta
 
+def to_csv(df, f_name, folder='csv_files'):
+
+    check_folder(folder)
+    df.to_csv(f_name)
+
+    f_path = os.path.abspath(f_name)
+
+    print (f"saved csv to {f_path}")
+    return f_path;
+
 def last_col_first(df):
     """
     Reorders the columns of a pandas DataFrame.
