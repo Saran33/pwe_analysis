@@ -101,7 +101,7 @@ def check_for_recent(dir='csv_files',file_type='csv', horizon='today'):
     utc_now = datetime.utcnow()
     utc_today = utc_now.date()
     utc_now_str = utc_now.strftime('%Y-%m-%d,%M,%H,%S,%Z')
-    utc_today_str = today.strftime('%Y-%m-%d')
+    utc_today_str = utc_today.strftime('%Y-%m-%d')
 
     if horizon=='today':
         valid_date = re.compile(f'_{utc_today_str}..............{file_type}$')
@@ -241,6 +241,23 @@ def get_recent(dir='csv_files',file_type='csv', horizon='today'):
     
     elif latest_file!='NA':
         return latest_file;
+
+def append_non_duplicates(df1, df2, col=None):
+    if ((df1 is not None and not isinstance(df1, pd.core.frame.DataFrame)) or (df2 is not None and not isinstance(df2, pd.core.frame.DataFrame))):
+        raise ValueError('df1 and df2 must be of type pandas.core.frame.DataFrame.')
+    if (df1 is None):
+        return(df2)
+    if (df2 is None):
+        return(df1)
+    if(col is not None):
+        aind = df1.iloc[:,col].values
+        bind = df2.iloc[:,col].values
+    else:
+        aind = df1.index.values
+        bind = df2.index.values
+    take_rows = list(set(bind)-set(aind))
+    take_rows = [i in take_rows for i in bind]
+    return(df1.append( df2.iloc[take_rows,:] ))
 
 def last_col_first(df):
     """
