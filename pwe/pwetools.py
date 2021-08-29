@@ -147,7 +147,7 @@ def check_for_recent(dir='csv_files',file_type='csv', horizon='today'):
 
     return latest_file;
 
-def get_recent(dir='csv_files',file_type='csv', horizon='today'):
+def find_recent(dir='csv_files',file_type='csv', horizon='today'):
     """
     Get the most recent file from a directory, up to an acceptable threshold.
 
@@ -184,6 +184,63 @@ def get_recent(dir='csv_files',file_type='csv', horizon='today'):
 
     return latest_file;
 
+def get_recent(dir='csv_files',file_type='csv', horizon='today'):
+    """
+    Get the most recent file from a directory, up to an acceptable threshold.
+
+    Arguements:
+    dir         :   The local directory to check. Default is csv_files.
+    file_type   :   The file extension. Default is csv.
+    horizon     :   What is to be accepted as a recent file. 
+                    Default='today' returns a local file if it matches today's date.
+                    'now' will reject a local file if does not match the current datetime.
+                    'yesterday' will accept a file from yesterday.
+                    'week' will return a local file if it is less than a week old.
+                    'any' will return the most recent file, if any exist.
+    """
+    latest_file = find_recent(dir=dir,file_type='csv', horizon=horizon)
+
+    if latest_file=='NA':
+        while latest_file=='NA':
+            print (f"No local file exists for the horizon: '{horizon}'")
+            try:
+                get_older = input ("Would you like to try for an older file? Y/N? ").strip().strip('"')
+
+                if get_older.lower().startswith('y'):
+                    print ("What horizon would you like to try for?")
+                    wht_hzn = input ("today, yesterday, week or any? Or Q to quit.  ").strip().strip('"')
+                    
+                    if wht_hzn.lower().startswith('t'):
+                        latest_file = get_recent(dir=dir,file_type='csv', horizon='today')
+
+                    elif wht_hzn.lower().startswith('y'):
+                        latest_file = get_recent(dir=dir,file_type='csv', horizon='yesterday')
+
+                    elif wht_hzn.lower().startswith('w'):
+                        latest_file = get_recent(dir=dir,file_type='csv', horizon='week')
+
+                    elif wht_hzn.lower().startswith('a'):
+                        latest_file = get_recent(dir=dir,file_type='csv', horizon='any')
+
+                    elif wht_hzn.lower().startswith('q'):
+                        return;
+                    else:
+                        raise NotImplementedError
+                    
+                elif get_older.lower().startswith('n'):
+                    print ("No further action.")
+                    return;
+                else:
+                    raise NotImplementedError
+
+            except Exception as error:
+                print('Invalid Input. Please enter "today,"(t) "yesterday,"(y) "week"(w) or "any"(a). Or "Q" to quit.')
+                print (error)
+                print ("")
+                continue
+    
+    elif latest_file!='NA':
+        return latest_file;
 
 def last_col_first(df):
     """
