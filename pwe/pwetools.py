@@ -14,6 +14,18 @@ import pytz
 from datetime import date,timedelta
 from datetime import datetime,date,timedelta
 
+def daterange(start_dt, end_dt):
+    dates = []
+    for d in range(int ((end_dt - start_dt).days)+1):
+        dates.append(start_dt + timedelta(d))
+    return dates;
+
+def daterange_str(start_dt, end_dt):
+    dates = []
+    for d in range(int ((end_dt - start_dt).days)+1):
+        dates.append((start_dt + timedelta(d)).strftime("%Y-%m-%d"))
+    return dates;
+
 def to_csv(df, f_name, folder='csv_files'):
 
     check_folder(folder)
