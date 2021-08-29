@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='pwe',
     packages=find_packages(include=['pwe']),
-    version='0.1.0.1.618033988749894848204586834',
+    version='0.1.0.1.6180339887498948482045868343',
 	author='Saran Connolly',
     description='PWE Capital security analysis and charting package.',
 	long_description=long_description,
@@ -23,8 +23,9 @@ setup(
 	install_requires = [
   'cufflinks @ git+https://github.com/Saran33/cufflynx.git@Saran33#egg=cufflinks',
   'alpha_vantage @ git+git://github.com/Saran33/alpha_vantage.git@develop#egg=alpha_vantage',
-		'cryptocmd @ git+https://github.com/guptarohit/cryptoCMD.git','pandas',
-        'numpy','pandas_summary','plotly','quandl','TA-Lib','ta',
+		'cryptocmd @ git+https://github.com/guptarohit/cryptoCMD.git',
+        'datamine @ git+https://github.com/Saran33/datamine_python.git',
+        'pandas','numpy','pandas_summary','plotly','quandl','TA-Lib','ta',
 ],
 	#package_dir={"": "src"},
     #packages=find_packages(where="pwe"),

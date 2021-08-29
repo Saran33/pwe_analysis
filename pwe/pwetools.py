@@ -13,6 +13,8 @@ from pandas.core.frame import DataFrame
 import pytz
 from datetime import date,timedelta
 from datetime import datetime,date,timedelta
+import re
+import glob
 
 def daterange(start_dt, end_dt):
     dates = []
@@ -35,6 +37,153 @@ def to_csv(df, f_name, folder='csv_files'):
 
     print (f"saved csv to {f_path}")
     return f_path;
+
+def check_for_recent(dir='csv_files',file_type='csv', horizon='today'):
+    """
+    Check a directory for a file matching todays's date or the current datetime
+    Arguments:
+    dir         :   The local directory to check. Default is csv_files.
+    file_type   :   The file extension. Default is csv.
+    horizon     :   What is to be accepted as a recent file. 
+                    Default='today' returns a local file if it matches today's date.
+                    'now' will reject a local file if does not match the current datetime.
+                    'yesterday' will accept a file from yesterday.
+                    'week' will return a local file if it is less than a week old.
+                    'any' will return the most recent file, if any exist.
+    """
+    abs_path = os.path.abspath(dir)
+
+    if os.path.exists(abs_path) == True:
+        print ("directory exists")
+        print (abs_path)
+    
+    elif os.path.exists(abs_path) == False:
+        print (f"No directory exists called: '{abs_path}'")
+        while True:
+            try:
+                mk_new_dir = input ("Would you like to create one? ").strip().strip('"')
+                if mk_new_dir.lower().startswith('y'):
+                    os.makedirs(abs_path)
+                    print (f"Created empty folder '{dir}'")
+                    break;
+                elif mk_new_dir.lower().startswith('n'):
+                    print ("No further action.")
+                    return;
+
+            except Exception as error:
+                print('Invalid Input. Please enter "Y" or "N" or "yes" or "no"')
+                print (error)
+                print ("")
+                continue
+    while True:
+            try:
+                f_type = f'*{file_type}'
+                files = glob.glob(f"{abs_path}/{f_type}")
+
+                oldest_file = min(files, key=os.path.getctime)
+                latest_file = max(files, key=os.path.getctime)
+
+                print (abs_path)
+                print ("Oldest file:",oldest_file)
+                print ("Latest file:",latest_file)
+
+                if horizon=='any':
+                    return latest_file;
+                elif horizon!='any':
+                    break;
+
+            except ValueError as error:
+                if str(error) == "min() arg is an empty sequence":
+                    return;
+                else:
+                    raise error
+    
+    utc_now = datetime.utcnow()
+    utc_today = utc_now.date()
+    utc_now_str = utc_now.strftime('%Y-%m-%d,%M,%H,%S,%Z')
+    utc_today_str = today.strftime('%Y-%m-%d')
+
+    if horizon=='today':
+        valid_date = re.compile(f'_{utc_today_str}..............{file_type}$')
+        if (latest_file.endswith(f"{utc_today_str}.{file_type}")) or (valid_date.findall(latest_file)):
+            print ("A file from today UTC exists.")
+
+        elif not (latest_file.endswith(f"{utc_today_str}.{file_type}")) or not (valid_date.findall(latest_file)):
+            print ("No existing file from today UTC.")
+            latest_file = 'NA'
+
+    elif horizon=='now':
+        if utc_now_str in latest_file:
+            print ("A file from current datetime UTC exists.")
+        elif utc_now_str not in latest_file:
+            print ("No existing file from right now UTC.")
+            latest_file = 'NA'
+
+    elif horizon=='yesterday':
+        utc_yest = utc_today - timedelta(days=1)
+        utc_yest_str = utc_yest.strftime('%Y-%m-%d')
+        valid_date = re.compile(f'{utc_yest_str}..............{file_type}$')
+        
+        if (latest_file.endswith(f"{utc_yest_str}.{file_type}")) or (valid_date.findall(latest_file)):
+            print ("A file from yesterday UTC exists.")
+        elif not (latest_file.endswith(f"{utc_yest_str}.{file_type}")) or not (valid_date.findall(latest_file)):
+            print ("No existing file from yesterday UTC.")
+            latest_file = 'NA'
+
+    elif horizon=='week':
+        t_minus_7d = utc_now - timedelta(days=7)
+        last_7_days = daterange_str(t_minus_7d, utc_now)
+
+        valid_dates = []
+        for day in last_7_days:
+            valid_dates.append(re.compile(f'{day}..............{file_type}$'))
+
+        if any (latest_file.endswith(f"{day}.{file_type}") for day in last_7_days) or (any (valid_date.findall(latest_file) for valid_date in valid_dates)):
+            print (f"A file from the past 7 days UTC exists.")
+
+        elif not any (latest_file.endswith(f"{day}.{file_type}") for day in last_7_days) or not (any (valid_date.findall(latest_file) for valid_date in valid_dates)):
+            print ("No existing file from the past 7 days UTC.")
+            latest_file = 'NA'
+
+    return latest_file;
+
+def get_recent(dir='csv_files',file_type='csv', horizon='today'):
+    """
+    Get the most recent file from a directory, up to an acceptable threshold.
+
+    Arguements:
+    dir         :   The local directory to check. Default is csv_files.
+    file_type   :   The file extension. Default is csv.
+    horizon     :   What is to be accepted as a recent file. 
+                    Default='today' returns a local file if it matches today's date.
+                    'now' will reject a local file if does not match the current datetime.
+                    'yesterday' will accept a file from yesterday.
+                    'week' will return a local file if it is less than a week old.
+                    'any' will return the most recent file, if any exist.
+    """
+    if horizon=='now':
+        latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='today')
+
+    elif horizon=='today':
+        latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='today')
+
+    elif horizon=='yesterday':
+        latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='today')
+        if latest_file=='NA':
+            latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='yesterday')
+
+    elif horizon=='week':
+        latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='today')
+        if latest_file=='NA':
+            latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='yesterday')
+            if latest_file=='NA':
+                latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='week')
+
+    elif horizon=='any':
+        latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='any')
+
+    return latest_file;
+
 
 def last_col_first(df):
     """
