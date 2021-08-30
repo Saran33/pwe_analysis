@@ -32,31 +32,101 @@ import webbrowser
 import dateutil
 import re
 
-# https://strftime.org/
-td = date.today()
-today = td.strftime("%d-%m-%Y")
-today_dmy = str(today)
+def get_chart_dates(df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None):
+    """
+    Get dates for chart functions.
+    More info on date string formats at: https://strftime.org/
+    Parameters:
+    df              :   The dataframe for the chart, needed to acertain start and end dates, if none are provided.
+    start_date      :   The start date for the entire series to be contained in the chart (start of max range).
+    end_date        :   The end date for the entire series to be contained in the chart (end of max range).
+    auto_start      :   The start of the default range to display on charts, until a user clicks a differnt range.
+    auto_end        :   The end of the default range to display on charts, until a user clicks a differnt range.
+    """
+    now = datetime.now()
+    td_dmy_str = now.strftime("%d-%m-%Y")
 
-utc_now = datetime.utcnow()
-utc_now.isoformat()
-today_utc = utc_now.strftime("%d-%m-%Y")
+    utc_now = datetime.utcnow()
+    utc_now.isoformat()
+    utc_td_dmy_str = now.strftime("%d-%m-%Y")
 
-end_date = today_dmy
-end = datetime.strptime(td.strftime('%Y-%m-%d'),'%Y-%m-%d')
+    if utc:
+        t = utc_now
+        t_dmy_str = utc_td_dmy_str
+    elif not utc:
+        t = now
+        t_dmy_str = td_dmy_str        
 
-# utc_end = pd.to_datetime(utc_end)
-utc_end = pd.Timestamp.utcnow()
+    # End date:
+    if end_date==None:
+        end = df.index.max()
+        chart_end = end.strftime("%d-%m-%Y")
+    elif (end_date!=None) and (isinstance(end_date, str)):
+        end = datetime.strptime(end_date,'%Y-%m-%d')
+        chart_end = end.strftime("%d-%m-%Y")
+    elif (end_date!=None) and (type(end_date) == datetime):
+        end = end_date
+        chart_end = end.strftime("%d-%m-%Y")
+    elif (end_date!=None) and (type(end_date) == date):
+        end = end_date
+        chart_end = end.strftime("%d-%m-%Y")
+    elif isinstance(end_date, pd.Timestamp):
+        end = pd.to_datetime(end_date)
+        chart_end = end.strftime("%d-%m-%Y")
 
-interval = timedelta(1)
-yesterday = td - interval
-yest = yesterday.strftime("%d-%m-%Y")
-yesterday_dmy = str(yest)
+    # Start date:
+    if start_date==None:
+        start = df.index.min()
+        chart_start = start.strftime("%d-%m-%Y")
+    elif (end_date!=None) and (isinstance(end_date, str)):
+        end = datetime.strptime(end_date,'%Y-%m-%d')
+        chart_end = end.strftime("%d-%m-%Y")
+    elif (end_date!=None) and (type(end_date) == datetime):
+        end = end_date
+        chart_end = end.strftime("%d-%m-%Y")
+    elif (end_date!=None) and (type(end_date) == date):
+        end = end_date
+        chart_end = end.strftime("%d-%m-%Y")
+    elif isinstance(end_date, pd.Timestamp):
+        end = pd.to_datetime(end_date)
+        chart_end = end.strftime("%d-%m-%Y")
 
-chart_start = utc_now - timedelta(days=365)
-auto_start = chart_start.strftime("%d-%m-%Y")
+    # Auto end
+    if auto_end==None:
+        auto_end = t_dmy_str
+    elif (auto_end!=None) and (isinstance(auto_end, str)):
+        at_end = datetime.strptime(auto_end,'%Y-%m-%d')
+        chart_at_end = at_end.strftime("%d-%m-%Y")
+    elif (auto_end!=None) and (type(auto_end) == datetime):
+        at_end = auto_end
+        chart_at_end = at_end.strftime("%d-%m-%Y")
+    elif (auto_end!=None) and (type(auto_end) == date):
+        at_end = auto_end
+        chart_at_end = at_end.strftime("%d-%m-%Y")
+    elif isinstance(auto_end, pd.Timestamp):
+        at_end = pd.to_datetime(auto_end)
+        chart_at_end = at_end.strftime("%d-%m-%Y")
+
+    # Auto start
+    if auto_start == None:
+        at_st = t - timedelta(days=365)
+        auto_start = at_st.strftime("%d-%m-%Y")
+    elif (auto_start!=None) and (isinstance(auto_start, str)):
+        at_start = datetime.strptime(auto_start,'%Y-%m-%d')
+        chart_at_start = at_start.strftime("%d-%m-%Y")
+    elif (auto_start!=None) and (type(auto_start) == datetime):
+        at_start = auto_start
+        chart_at_start = at_start.strftime("%d-%m-%Y")
+    elif (auto_start!=None) and (type(auto_start) == date):
+        at_start = auto_start
+        chart_at_start = at_start.strftime("%d-%m-%Y")
+    elif isinstance(auto_start, pd.Timestamp):
+        at_start = pd.to_datetime(auto_start)
+        chart_at_start = at_start.strftime("%d-%m-%Y")
+
+    return chart_start, chart_end, chart_at_start, chart_at_end;
 
 def define_period(df, start_date, end_date):
-    dates = pd.date_range(start_date,end_date)
     sdate = str(start_date)
     edate = str(end_date)
     chart_dates = str(sdate+" - "+edate)
@@ -134,7 +204,7 @@ Use: cf.help() or cf.help(figure) to see paramaters
 
 """
 
-def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start=auto_start,auto_end=today):
+def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start=None,auto_end=None):
     """
     
     Plots a chart in an iPython Notebook. This function will not remove Plotly tags or populate as a new browser tab.
@@ -155,9 +225,8 @@ def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start
         boll_color = vic_teal #PWE_ig_light_grey
         
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
-    
-    auto_start = str(auto_start)
-    auto_end = str(auto_end)
+
+    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
     
     sdate,edate,chart_dates = define_period(df, start_date, end_date);
     
@@ -208,7 +277,7 @@ def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start
     theme = qf.theme['theme']
     return qf;
 
-def add_tags(qf,tags=None,auto_start=auto_start,auto_end=today,theme='white',showarrow=True,arrowhead=6,fontsize=6,textangle=0,yanchor="bottom",fontfamily='Roboto'):
+def add_tags(qf,tags=None,theme='white',showarrow=True,arrowhead=6,fontsize=6,textangle=0,yanchor="bottom",fontfamily='Roboto'):
     """
     Add settlement dates or other annotations to a figure.
     Pass in a column of annotations in string format.
@@ -324,7 +393,7 @@ def pwe_format(f_name):
     
     return chart_html, chart_file;
     
-def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_start=auto_start,auto_end=today,asPlot=True,
+def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_start=None,auto_end=None,asPlot=True,
                     showlegend=True,boll_std=2,boll_periods=20,showboll=False,showrsi=False,rsi_periods=14,
                    showama=False,ama_periods=9,showvol=False,show_price_range=False,annots=None,textangle=0,file_tag=None):
     """
@@ -359,8 +428,7 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
         
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
     
-    auto_start = str(auto_start)
-    auto_end = str(auto_end)
+    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
     
     sdate,edate,chart_dates = define_period(df, start_date, end_date);
 
@@ -457,8 +525,8 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
 
 def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None,
                       ticker=None,yTitle=None,showlegend=False,legend='top',asPlot=False,
-                      theme='white',fontsize=6,arrowhead=6,auto_start=auto_start,
-                      auto_end=today,connectgaps=False,annots=None,annot_col='Close',file_tag=None):
+                      theme='white',fontsize=6,arrowhead=6,auto_start=None,
+                      auto_end=None,connectgaps=False,annots=None,annot_col='Close',file_tag=None):
     """
     
     Plots a line or scatter chart within an iPython notebook. It will not format HTML with PWE style or open in a browser window.
@@ -482,8 +550,7 @@ def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=N
         
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
     
-    auto_start = str(auto_start)
-    auto_end = str(auto_end)
+    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
     
     sdate,edate,chart_dates = define_period(df, start_date, end_date);
 
@@ -582,7 +649,7 @@ def get_cf_annots(df,annotations,annot_col='Close',fontsize=6,arrowhead=6,arrowc
 
 def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None,ticker=None,
                    yTitle=None,asPlot=False,theme='white',showlegend=False,legend='top',
-                   auto_start=auto_start,auto_end=today,connectgaps=False,annots=None,
+                   auto_start=None,auto_end=None,connectgaps=False,annots=None,
                    anntextangle=0,fontsize=6,arrowhead=6,annot_col=None,file_tag=None):
     """
     
@@ -607,8 +674,7 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
         
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
     
-    auto_start = str(auto_start)
-    auto_end = str(auto_end)
+    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
     
     sdate,edate,chart_dates = define_period(df, start_date, end_date);
 
@@ -688,7 +754,7 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
     return chart_html, chart_file;
 
 def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='scatter',title=None, ticker=None,yTitle=None,asPlot=False,theme='white',
-                          showlegend=False,auto_start=auto_start,auto_end=today,connectgaps=False,
+                          showlegend=False,auto_start=None,auto_end=None,connectgaps=False,
                          tickformat='%',decimals=2,file_tag=None): # text=None hovermode='x', hovertemplate="%{y:.6%}",
     """
 	*Put start_date ad end_date after df and before other arguemets, with no = to any value or it will throw an error.
@@ -716,8 +782,7 @@ def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='s
         
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
     
-    auto_start = str(auto_start)
-    auto_end = str(auto_end)
+    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
     
     sdate,edate,chart_dates = define_period(df, start_date, end_date);
     
@@ -783,7 +848,7 @@ def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='s
     return chart_html, chart_file;
 
 def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='scatter',title=None,ticker=None,yTitle=None,xTitle=None,asPlot=False,theme='white',
-                          showlegend=False,auto_start=auto_start,auto_end=today,
+                          showlegend=False,auto_start=None,auto_end=None,
                          tickformat='%',decimals=2,orientation='v',textangle=0,file_tag=None): # text=None hovermode='x', hovertemplate="%{y:.6%}",
     """
     
@@ -807,8 +872,8 @@ def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='sc
         
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
     
-    auto_start = str(auto_start)
-    auto_end = str(auto_end)
+
+    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
     
     sdate,edate,chart_dates = define_period(df,start_date,end_date);
     

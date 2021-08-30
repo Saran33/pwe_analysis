@@ -11,7 +11,6 @@ import numpy as np
 import sys, os
 from pandas.core.frame import DataFrame
 import pytz
-from datetime import date,timedelta
 from datetime import datetime,date,timedelta
 import re
 import glob
