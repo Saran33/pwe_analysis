@@ -21,10 +21,16 @@ def daterange(start_dt, end_dt):
         dates.append(start_dt + timedelta(d))
     return dates;
 
-def daterange_str(start_dt, end_dt):
+def daterange_str_ymd(start_dt, end_dt):
     dates = []
     for d in range(int ((end_dt - start_dt).days)+1):
         dates.append((start_dt + timedelta(d)).strftime("%Y-%m-%d"))
+    return dates;
+
+def daterange_str_dmy(start_dt, end_dt):
+    dates = []
+    for d in range(int ((end_dt - start_dt).days)+1):
+        dates.append((start_dt + timedelta(d)).strftime("%d-%m-%Y"))
     return dates;
 
 def to_csv(df, f_name, folder='csv_files'):
@@ -34,7 +40,7 @@ def to_csv(df, f_name, folder='csv_files'):
 
     f_path = os.path.abspath(f_name)
 
-    print (f"saved csv to {f_path}")
+    print (f"\nSaved csv to: \n{f_path}")
     return f_path;
 
 def check_for_recent(dir='csv_files',file_type='csv', horizon='today'):
@@ -103,7 +109,7 @@ def check_for_recent(dir='csv_files',file_type='csv', horizon='today'):
     utc_today_str = utc_today.strftime('%Y-%m-%d')
 
     if horizon=='today':
-        valid_date = re.compile(f'_{utc_today_str}..............{file_type}$')
+        valid_date = re.compile(f'{utc_today_str}..............{file_type}$')
         if (latest_file.endswith(f"{utc_today_str}.{file_type}")) or (valid_date.findall(latest_file)):
             print ("A file from today UTC exists.")
 
@@ -131,7 +137,9 @@ def check_for_recent(dir='csv_files',file_type='csv', horizon='today'):
 
     elif horizon=='week':
         t_minus_7d = utc_now - timedelta(days=7)
-        last_7_days = daterange_str(t_minus_7d, utc_now)
+        last_7_days_ymd = daterange_str_ymd(t_minus_7d, utc_now)
+        last_7_days_dmy = daterange_str_dmy(t_minus_7d, utc_now)
+        last_7_days = last_7_days_ymd + last_7_days_dmy
 
         valid_dates = []
         for day in last_7_days:
@@ -161,26 +169,21 @@ def find_recent(dir='csv_files',file_type='csv', horizon='today'):
                     'any' will return the most recent file, if any exist.
     """
     if horizon=='now':
-        latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='today')
+        latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='now')
 
     elif horizon=='today':
         latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='today')
 
     elif horizon=='yesterday':
-        latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='today')
-        if latest_file=='NA':
-            latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='yesterday')
+        latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='yesterday')
 
     elif horizon=='week':
-        latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='today')
-        if latest_file=='NA':
-            latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='yesterday')
-            if latest_file=='NA':
-                latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='week')
+        latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='week')
 
     elif horizon=='any':
         latest_file = check_for_recent(dir=dir,file_type=file_type, horizon='any')
 
+    print ("find_recent:", latest_file)
     return latest_file;
 
 def get_recent(dir='csv_files',file_type='csv', horizon='today'):
@@ -197,49 +200,78 @@ def get_recent(dir='csv_files',file_type='csv', horizon='today'):
                     'week' will return a local file if it is less than a week old.
                     'any' will return the most recent file, if any exist.
     """
-    latest_file = find_recent(dir=dir,file_type='csv', horizon=horizon)
+    latest_file = find_recent(dir=dir,file_type=file_type, horizon=horizon)
 
     if latest_file=='NA':
-        while latest_file=='NA':
-            print (f"No local file exists for the horizon: '{horizon}'")
+        print (f"No local file exists for the horizon: '{horizon}'")
+        while True:
             try:
-                get_older = input ("Would you like to try for an older file? Y/N? ").strip().strip('"')
+                if latest_file=='NA':
+                    get_older = input ("Would you like to try for an older file? Y/N? ").strip().strip('"')
 
-                if get_older.lower().startswith('y'):
-                    print ("What horizon would you like to try for?")
-                    wht_hzn = input ("today, yesterday, week or any? Or Q to quit.  ").strip().strip('"')
-                    
-                    if wht_hzn.lower().startswith('t'):
-                        latest_file = get_recent(dir=dir,file_type='csv', horizon='today')
+                    if get_older.lower().startswith('y'):
+                        print ("What horizon would you like to try for?")
+                        wht_hzn = input ("today, yesterday, week or any? Or Q to quit.  ").strip().strip('"')
+                        
+                        if wht_hzn.lower().startswith('t'):
+                            hrzn = 'today'
+                            latest_file = find_recent(dir=dir,file_type=file_type, horizon=hrzn)
+                            if latest_file =='NA':
+                                print (f"No local file exists for the horizon: '{hrzn}'")
+                                continue
+                            elif latest_file !='NA':
+                                return latest_file;
 
-                    elif wht_hzn.lower().startswith('y'):
-                        latest_file = get_recent(dir=dir,file_type='csv', horizon='yesterday')
+                        elif wht_hzn.lower().startswith('y'):
+                            hrzn = 'yesterday'
+                            latest_file = find_recent(dir=dir,file_type=file_type, horizon=hrzn)
+                            if latest_file =='NA':
+                                print (f"No local file exists for the horizon: '{hrzn}'")
+                                continue
+                            elif latest_file !='NA':
+                                return latest_file;
 
-                    elif wht_hzn.lower().startswith('w'):
-                        latest_file = get_recent(dir=dir,file_type='csv', horizon='week')
+                        elif wht_hzn.lower().startswith('w'):
+                            hrzn = 'week'
+                            latest_file = find_recent(dir=dir,file_type=file_type, horizon=hrzn)
+                            if latest_file =='NA':
+                                print (f"No local file exists for the horizon: '{hrzn}'")
+                                continue
+                            elif latest_file !='NA':
+                                return latest_file;
 
-                    elif wht_hzn.lower().startswith('a'):
-                        latest_file = get_recent(dir=dir,file_type='csv', horizon='any')
+                        elif wht_hzn.lower().startswith('a'):
+                            hrzn = 'any'
+                            latest_file = find_recent(dir=dir,file_type=file_type, horizon=hrzn)
+                            if latest_file =='NA':
+                                print (f"No local file exists for the horizon: '{hrzn}'")
+                                continue
+                            elif latest_file !='NA':
+                                return latest_file;
 
-                    elif wht_hzn.lower().startswith('q'):
+                        elif wht_hzn.lower().startswith('q'):
+                            return latest_file =='NA';
+                        else:
+                            raise NotImplementedError("Invalid Input")
+                        
+                    elif get_older.lower().startswith('n'):
+                        print ("No further action.")
                         return;
                     else:
-                        raise NotImplementedError
-                    
-                elif get_older.lower().startswith('n'):
-                    print ("No further action.")
-                    return;
-                else:
-                    raise NotImplementedError
+                        raise NotImplementedError("Invalid Input")
 
-            except Exception as error:
-                print('Invalid Input. Please enter "today,"(t) "yesterday,"(y) "week"(w) or "any"(a). Or "Q" to quit.')
+                elif latest_file=='NA':
+                    return latest_file;
+
+            except NotImplementedError as error:
                 print (error)
+                print('Please enter "today,"(t) "yesterday,"(y) "week"(w) or "any"(a). Or "Q" to quit.')
                 print ("")
                 continue
     
     elif latest_file!='NA':
-        return latest_file;
+        print ("get_recent:", latest_file)
+        return str(latest_file);
 
 def concat_non_dupe_idx(df1, df2):
     """
@@ -259,10 +291,10 @@ def concat_non_dupe_idx(df1, df2):
         df = df1
         return df1;
 
-    elif((df1 is not None) and (df2 is not None)):
+    elif(df1 is not None) and (df2 is not None):
         df = pd.concat([df1, df2])
 
-        dupes_bool = df.index.duplicated(keep=False)
+        dupes_bool = df.index.duplicated(keep='first')
 
         # dupes = np.sum(dupes_bool)
         bin_count =  np.bincount(dupes_bool)
@@ -280,6 +312,8 @@ def concat_non_dupe_idx(df1, df2):
             print ("Removing duplicates...")    
             # new_idx = df.index.drop_duplicates(keep=False)
             df = df[~dupes_bool]
+            df.sort_index(ascending=True, inplace=True)
+            print ("Removed duplicates.") 
             return df;
 
 def last_col_first(df):
@@ -805,4 +839,18 @@ def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles
                 if e is not None:
                     print (e)
             break
-        return
+    if 'Date' not in df:
+        df['Date'] = df.index.date
+    df['Settlement Date'] = df['Date'].astype(str).isin(last_fris_date['Date'])
+    df.tail()
+    df['Settlement Date'].value_counts()
+    print ("Last fridays in rannge:", last_fris_date['Date'].count()*24)
+
+    found_set_dates = pd.DataFrame(df.loc[df['Settlement Date']==True, 'Date'])
+    print ("found settle dates:")
+    found_set_dates
+
+    missing_set_date = last_fris_date.loc[(~last_fris_date['Date'].isin(found_set_dates['Date'].astype(str)))]
+    print ("Missing sett dates:")
+    missing_set_date
+    return settlements, 
