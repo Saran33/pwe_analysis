@@ -122,6 +122,10 @@ processes=1, resample=True, interval='1h'):
     resample    :   If True, any minute timeseries will be resampled to a 1h timeseries and both the 1m and 1h series will be saved to csvs. 
     interval    :   If '1h' is selected, and horizon='any', 1h data will be returned, and the comutationally expensive reading of 1m data wil be forgone.
                     If '1h' is selected, and horizon is not 'any', then the resample arguemet will =True.
+
+    Returns     :   For cryptocurrency: it returns a dataframe for BRR and BRTI 1h. It also saves the entire crypto dataset, as well as BRR, BRTI 1m and BRTI 1h.
+                                        Currrently, to access ETH, the dataset can be read from CSV manually.
+
     """
     if dataset=='CRYPTOCURRENCY':
 
