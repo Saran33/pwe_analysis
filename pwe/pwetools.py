@@ -242,22 +242,46 @@ def get_recent(dir='csv_files',file_type='csv', horizon='today'):
     elif latest_file!='NA':
         return latest_file;
 
-def append_non_duplicates(df1, df2, col=None):
+def concat_non_dupe_idx(df1, df2):
+    """
+    Concatenate two dataframes.
+    If any duplicated index rows exist, display the start and end (date) of the duplicated range, and display the % of duplicates.
+    Remove the duplicates, if any exist.
+    Useful for updating a dataset periodically without needing to know the last entry in the existing local dataset.
+    """
     if ((df1 is not None and not isinstance(df1, pd.core.frame.DataFrame)) or (df2 is not None and not isinstance(df2, pd.core.frame.DataFrame))):
         raise ValueError('df1 and df2 must be of type pandas.core.frame.DataFrame.')
+
     if (df1 is None):
-        return(df2)
+        df = df2
+        return df;
+
     if (df2 is None):
-        return(df1)
-    if(col is not None):
-        aind = df1.iloc[:,col].values
-        bind = df2.iloc[:,col].values
-    else:
-        aind = df1.index.values
-        bind = df2.index.values
-    take_rows = list(set(bind)-set(aind))
-    take_rows = [i in take_rows for i in bind]
-    return(df1.append( df2.iloc[take_rows,:] ))
+        df = df1
+        return df1;
+
+    elif((df1 is not None) and (df2 is not None)):
+        df = pd.concat([df1, df2])
+
+        dupes_bool = df.index.duplicated(keep=False)
+
+        # dupes = np.sum(dupes_bool)
+        bin_count =  np.bincount(dupes_bool)
+        dupes = bin_count[1]
+
+        if dupes > 0:
+            non_dupes = bin_count[0]
+            dupe_perc = dupes / non_dupes
+
+            df_dupes = df.loc[dupes_bool]
+            dupe_start = df_dupes.index.date.min()
+            dupe_end = df_dupes.index.date.max()
+
+            print (f"Duplicate rows: {dupes}","({:.6%})".format(dupe_perc), f"between {dupe_start} and {dupe_end}")
+            print ("Removing duplicates...")    
+            # new_idx = df.index.drop_duplicates(keep=False)
+            df = df[~dupes_bool]
+            return df;
 
 def last_col_first(df):
     """

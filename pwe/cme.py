@@ -11,7 +11,7 @@ import time
 import numpy as np
 import pandas as pd
 from datetime import datetime, date, timedelta, tzinfo
-from pwe.pwetools import to_csv,get_recent,append_non_duplicates
+from pwe.pwetools import to_csv,get_recent,concat_non_dupe_idx
 
 import datamine.io as dm
 from pprint import pprint as pp
@@ -96,20 +96,32 @@ def extract_cme_df(cme_df, symbol):
     return df;
 
 
-def get_cme(username, password, dataset='CRYPTOCURRENCY',horizon='yesterday', dir='csv_files/CME/Crypto', index_col='DateTime', limit=2,
-processes=1, resample=True):
+def get_cme(username, password, dataset='CRYPTOCURRENCY',horizon='any', dir='csv_files/CME/Crypto', index_col='DateTime', limit=2,
+processes=1, resample=True, interval='1h'):
     """
     Establish an object to interact with CME Datamine.
     Supply Credentials per Documentation: http://www.cmegroup.com/market-data/datamine-api.html
     Download CME Datamine data, import it into a project in a padas dataframe and save it to csv.
     If the data already exists locally, combine the new data with the most recent existing csv.
     If no new data exists, and a local file exists, import from local file.
-    Params:
-    dataset : The desired dataset, as per CME Datamine API name.
-    limit : the number of most recent items to downnload. Default is 2 (metadata item and the most recet day of data.)
-    path : the ame of local directory for savig the unformatted JSON data.
-    processes: The pulls are multithreaded to speed them up; you can adjust this by adjusting the processes in the MyDatamine object.
-    horizon : the acceptable timeframe for existing local data. If 'today', if no local file exists today, it will download new data.
+
+    Arguements:
+    dataset     :   The desired dataset, as per CME Datamine API name.
+    limit       :   The number of most recent items to downnload. Default is 2 (metadata item and the most recet day of data.)
+    path        :   The name of local directory for savig the unformatted JSON data.
+    processes   :   The pulls are multithreaded to speed them up; you can adjust this by adjusting the processes in the MyDatamine object.
+    horizon     :   The acceptable timeframe for existing local data. If 'today', if no local file exists today, it will download new data.
+    dir         :   The local directory to check. Default is csv_files.
+    file_type   :   The file extension. Default is csv.
+    horizon     :   The oldest datetime to be accepted as a "recent" file. 
+                    Default='today' returns a local file if it matches today's date.
+                    'now' will reject a local file if does not match the current datetime.
+                    'yesterday' will accept a file from yesterday.
+                    'week' will return a local file if it is less than a week old.
+                    'any' will return the most recent local file, if any exist.
+    resample    :   If True, any minute timeseries will be resampled to a 1h timeseries and both the 1m and 1h series will be saved to csvs. 
+    interval    :   If '1h' is selected, and horizon='any', 1h data will be returned, and the comutationally expensive reading of 1m data wil be forgone.
+                    If '1h' is selected, and horizon is not 'any', then the resample arguemet will =True.
     """
     if dataset=='CRYPTOCURRENCY':
 
@@ -118,53 +130,60 @@ processes=1, resample=True):
         brr_old = pd.read_csv(brr_old_f,low_memory=False, index_col=[index_col], parse_dates=[index_col],infer_datetime_format=True)
         brr_old.name = 'BRR'
 
-        brti_1m_dir = f"{dir}/BRTI/1m"
-        brti_1m_old_f = get_recent(dir=brti_1m_dir,file_type='csv', horizon=horizon)
-        brti_old_1m = pd.read_csv(brti_1m_old_f,low_memory=False, index_col=[index_col], parse_dates=[index_col],infer_datetime_format=True)
-        brti_old_1m.name = 'BRTI_1M'
+        if (interval=='1m') or ((interval=='1h') and (horizon!='any')):
+            brti_1m_dir = f"{dir}/BRTI/1m"
+            brti_1m_old_f = get_recent(dir=brti_1m_dir,file_type='csv', horizon=horizon)
+            brti_old_1m = pd.read_csv(brti_1m_old_f,low_memory=False, index_col=[index_col], parse_dates=[index_col],infer_datetime_format=True)
+            brti_old_1m.name = 'BRTI_1M'
 
-        cme_df = download_cme(username, password, path='./data/', folder='csv_files/CME/Crypto/full_datasets', limit=limit,dataset=dataset,
-        processes=processes)
-
-        brr_new = extract_cme_df(cme_df, 'BRR')
-        brti_new = extract_cme_df(cme_df, 'BRTI')
-
-        if resample==True:
+        elif (horizon=='any') or (interval=='1h') or (resample==True):
             brti_1h_dir = f"{dir}/BRTI/1h"
             brti_1h_old_f = get_recent(dir=brti_1h_dir,file_type='csv', horizon=horizon)
             brti_old_1h = pd.read_csv(brti_1h_old_f,low_memory=False, index_col=[index_col], parse_dates=[index_col],infer_datetime_format=True)
             brti_old_1h.name = 'BRTI_1H'
 
-            brti_1h_new = brti_new['BRTI'].resample('1H').ohlc()
-            brti_1h_new.index=pd.DatetimeIndex(brti_1h_new.index)
-            brti_1h_new.sort_index(ascending=True, inplace=True)
-            brti_1h_new.index.names = ['DateTime']
-            brti_1h_new.rename(columns={'mdEntryPx': 'BRTI'},inplace=True)
-            brti_1h_new.columns = brti_1h_new.columns.str.strip().str.capitalize().str.replace(' ', '_').str.replace('(', '').str.replace(')', '')
+        if horizon=='any':
+            brr = brr_old
+            brti_1h = brti_old_1h
+            return brr, brti_1h;
+        else:
+            cme_df = download_cme(username, password, path='./data/', folder='csv_files/CME/Crypto/full_datasets', limit=limit,dataset=dataset,
+            processes=processes)
 
-        if limit==2:
-            brr = pd.concat([brr_old, brr_new])
-            brti_1m = pd.concat([brti_old_1m, brti_new])
-            brti_1h = pd.concat([brti_old_1h, brti_1h_new])
-        elif limit>2:
-            brr = append_non_duplicates(brr_old, brr_new, col=None)
-            brti_1m = append_non_duplicates(brti_old_1m, brti_new, col=None)
-            brti_1h = append_non_duplicates(brti_old_1h, brti_1h_new, col=None)
-        elif limit==1:
-            raise NotImplementedError("Setting limit to 1 will erroneously append metadata to the file. Set limit>=2.")
+            brr_new = extract_cme_df(cme_df, 'BRR')
+            brti_new = extract_cme_df(cme_df, 'BRTI')
 
-        # Save files:
-        brr_f_path = new_cme_fpath(brr, dataset='BRR', dir=brr_dir)
-        brti_1m_f_path = new_cme_fpath(brti_1m, dataset='BRTI_1H', dir=brti_1m_dir)
-        brti_1h_f_path = new_cme_fpath(brti_1h, dataset='BRR', dir=brti_1h_dir)
+            if (interval=='1h') and (horizon!='any'):
+                resample==True
 
-        brr.to_csv(brr_f_path)
-        print (f"saved csv to {brr_f_path}")
+            if resample==True:
 
-        brti_1m.to_csv(brti_1m_f_path)
-        print (f"saved csv to {brti_1m_f_path}")
+                brti_1h_new = brti_new['BRTI'].resample('1H').ohlc()
+                brti_1h_new.index=pd.DatetimeIndex(brti_1h_new.index)
+                brti_1h_new.sort_index(ascending=True, inplace=True)
+                brti_1h_new.index.names = ['DateTime']
+                brti_1h_new.rename(columns={'mdEntryPx': 'BRTI'},inplace=True)
+                brti_1h_new.columns = brti_1h_new.columns.str.strip().str.capitalize().str.replace(' ', '_').str.replace('(', '').str.replace(')', '')
 
-        brti_1h.to_csv(brti_1h_f_path)
-        print (f"saved csv to {brti_1h_f_path}")
+            if limit>=2:
+                brr = concat_non_dupe_idx(brr_old, brr_new)
+                brti_1m = concat_non_dupe_idx(brti_old_1m, brti_new)
+                brti_1h = concat_non_dupe_idx(brti_old_1h, brti_1h_new)
+            elif limit==1:
+                raise NotImplementedError("Setting limit to 1 will erroneously append metadata to the file. Set limit>=2.")
 
-        return brr, brti_1h
+            # Save files:   
+            brr_f_path = new_cme_fpath(brr, dataset='BRR', dir=brr_dir)
+            brti_1m_f_path = new_cme_fpath(brti_1m, dataset='BRTI_1H', dir=brti_1m_dir)
+            brti_1h_f_path = new_cme_fpath(brti_1h, dataset='BRR', dir=brti_1h_dir)
+
+            brr.to_csv(brr_f_path)
+            print (f"saved csv to {brr_f_path}")
+
+            brti_1m.to_csv(brti_1m_f_path)
+            print (f"saved csv to {brti_1m_f_path}")
+
+            brti_1h.to_csv(brti_1h_f_path)
+            print (f"saved csv to {brti_1h_f_path}")
+
+            return brr, brti_1h
