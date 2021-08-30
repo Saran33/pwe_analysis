@@ -110,11 +110,11 @@ processes=1, resample=True, interval='1h'):
     limit       :   The number of most recent items to downnload. Default is 2 (metadata item and the most recet day of data.)
     path        :   The name of local directory for savig the unformatted JSON data.
     processes   :   The pulls are multithreaded to speed them up; you can adjust this by adjusting the processes in the MyDatamine object.
-    horizon     :   The acceptable timeframe for existing local data. If 'today', if no local file exists today, it will download new data.
+
     dir         :   The local directory to check. Default is csv_files.
     file_type   :   The file extension. Default is csv.
     horizon     :   The oldest datetime to be accepted as a "recent" file. 
-                    Default='today' returns a local file if it matches today's date.
+                    Default='today' returns a local file if it matches today's date. If no local file exists from today, it will check for new data.
                     'now' will reject a local file if does not match the current datetime.
                     'yesterday' will accept a file from yesterday.
                     'week' will return a local file if it is less than a week old.
