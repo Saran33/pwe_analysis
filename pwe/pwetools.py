@@ -273,49 +273,6 @@ def get_recent(dir='csv_files',file_type='csv', horizon='today'):
         print ("get_recent:", latest_file)
         return str(latest_file);
 
-def concat_non_dupe_idx(df1, df2):
-    """
-    Concatenate two dataframes.
-    If any duplicated index rows exist, display the start and end (date) of the duplicated range, and display the % of duplicates.
-    Remove the duplicates, if any exist.
-    Useful for updating a dataset periodically without needing to know the last entry in the existing local dataset.
-    """
-    if ((df1 is not None and not isinstance(df1, pd.core.frame.DataFrame)) or (df2 is not None and not isinstance(df2, pd.core.frame.DataFrame))):
-        raise ValueError('df1 and df2 must be of type pandas.core.frame.DataFrame.')
-
-    if (df1 is None):
-        df = df2
-        return df;
-
-    if (df2 is None):
-        df = df1
-        return df1;
-
-    elif(df1 is not None) and (df2 is not None):
-        df = pd.concat([df1, df2])
-
-        dupes_bool = df.index.duplicated(keep='first')
-
-        # dupes = np.sum(dupes_bool)
-        bin_count =  np.bincount(dupes_bool)
-        dupes = bin_count[1]
-
-        if dupes > 0:
-            non_dupes = bin_count[0]
-            dupe_perc = dupes / non_dupes
-
-            df_dupes = df.loc[dupes_bool]
-            dupe_start = df_dupes.index.date.min()
-            dupe_end = df_dupes.index.date.max()
-
-            print (f"Duplicate rows: {dupes}","({:.6%})".format(dupe_perc), f"between {dupe_start} and {dupe_end}")
-            print ("Removing duplicates...")    
-            # new_idx = df.index.drop_duplicates(keep=False)
-            df = df[~dupes_bool]
-            df.sort_index(ascending=True, inplace=True)
-            print ("Removed duplicates.") 
-            return df;
-
 def last_col_first(df):
     """
     Reorders the columns of a pandas DataFrame.
@@ -532,9 +489,6 @@ def loops_fill(arr):
                 out[row_idx, col_idx] = out[row_idx, col_idx - 1]
     return out
 
-
-    return out
-
 def pandas_fill(arr):
     df = pd.DataFrame(arr)
     df.fillna(method='ffill', axis=1, inplace=True)
@@ -570,7 +524,6 @@ def sort_index(df):
         pass
 
     df.sort_index(ascending=True, inplace=True)
-    
     return df;
 
 def format_ohlc(df):
@@ -737,7 +690,9 @@ def last_day_of_current_year(time=False,utc=False):
         ldocy = to_utc(ldocy)
     return ldocy;
 
-def split_datetime(df, day=True,month=True,year=True,time=True):
+def split_datetime(df, date=True,day=True,month=True,year=True,time=True):
+    if date:
+        df['Date'] = df.index.date
     if day:
         df['Day'] = df.index.day
     if month:
@@ -747,6 +702,131 @@ def split_datetime(df, day=True,month=True,year=True,time=True):
     if time:
         df['Time'] = df.index.time
     return;
+
+def diff_between_df(df1,df2):
+    diff = pd.concat([df1,df2]).drop_duplicates(keep=False)
+    return diff;
+
+def missing_from_df(df1,df2):
+    diff =  diff_between_df(df1,df2)
+
+    df1_miss = df1.loc[(df1.index.isin(diff.index.astype(str)))]
+    n_df1_miss = len(df1_miss.index)
+    print ("Missing from df1:", n_df1_miss)
+
+    df2_miss = df2.loc[(df2.index.isin(diff.index.astype(str)))]
+    n_df2_miss = len(df2_miss.index)
+    print ("Missing from df2:", n_df2_miss)
+
+    return df1_miss, df2_miss;
+
+def get_unique_dates(df):
+    uniq = df.index.date
+    uni = pd.DataFrame(uniq, index=uniq)
+    unique = pd.DataFrame(uni.index.unique(), index=uni.index.unique(), columns=['Unique Date'])
+    unique.index = pd.to_datetime(unique.index)
+    unique.index.names = ['DateTime']
+    print ("Unique dates:", len(unique.index))
+    return unique;
+
+def count_df_dupes_idx(df, keep='first'):
+    dupes_bool = df.index.duplicated(keep=keep)
+    dupes = np.sum(dupes_bool)
+
+    if dupes > 0:
+        bin_count = np.bincount(dupes_bool)
+        dupes = bin_count[1]
+        non_dupes = bin_count[0]
+        dupe_perc = dupes / non_dupes
+
+        df_dupes = df.loc[dupes_bool]
+        dupe_start = df_dupes.index.date.min()
+        dupe_end = df_dupes.index.date.max()
+
+        print (f"Duplicate rows: {dupes}","({:.6%})".format(dupe_perc), f"between {dupe_start} and {dupe_end}")
+    elif dupes == 0:
+        print ("No duplicate rows.")
+    return dupes;
+
+def get_dupes_df(df):
+    dupes_df = df.loc[df.duplicated()==True]
+    return dupes_df;
+
+def concat_non_dupe_idx(df1, df2):
+    """
+    Concatenate two dataframes.
+    If any duplicated index rows exist, display the start and end (date) of the duplicated range, and display the % of duplicates.
+    Remove the duplicates, if any exist.
+    Useful for updating a dataset periodically without needing to know the last entry in the existing local dataset.
+    """
+    if ((df1 is not None and not isinstance(df1, pd.core.frame.DataFrame)) or (df2 is not None and not isinstance(df2, pd.core.frame.DataFrame))):
+        raise ValueError('df1 and df2 must be of type pandas.core.frame.DataFrame.')
+
+    if (df1 is None):
+        df = df2
+        return df;
+
+    if (df2 is None):
+        df = df1
+        return df1;
+
+    elif(df1 is not None) and (df2 is not None):
+        df = pd.concat([df1, df2])
+
+        dupes = count_df_dupes_idx(df, keep='first')
+
+        if dupes > 0:
+            print ("Removing duplicates...")    
+            # new_idx = df.index.drop_duplicates(keep=False)
+            # df = df[~dupes_bool]
+            #df = df.drop_duplicates(keep='first')
+            df_new = df[~df.index.duplicated(keep='first')]
+            df.sort_index(ascending=True, inplace=True)
+            print ("Removed duplicates.") 
+            return df_new;
+
+    
+def get_missing_dates(df):
+    if type(df.index) != 'DatetimeIndex':
+        missing_dates = pd.date_range(start = df.index.min(), end = df.index.max() ).difference(df.index)
+        missing_dates = pd.DataFrame(missing_dates, columns=['Missing DateTime'], index=pd.DatetimeIndex(missing_dates))
+        n_miss = len(missing_dates.index)
+        print ("Missing Datetimes:", n_miss)
+
+        unique = get_unique_dates(missing_dates)
+        unique = unique.rename(columns={'Unique Date': 'Missing Date'})
+        return missing_dates, unique;
+    else:
+        print ("Index is not in Datetime format")
+
+def common_missing_dates(df1,df2):
+    if df1.equals(df2) == False:
+        print ("Dataframes are not equal...")
+    elif df1.equals(df2) == True:
+        print ("Dataframes are equal...")
+    df1_miss,df1_uni_miss = get_missing_dates(df1)
+    df2_miss,df2_uni_miss = get_missing_dates(df2)
+
+    common = df1_miss.loc[(df1_miss.index.astype(str).isin(df2_miss.index.astype(str)))]
+    common = common.rename(columns={'Missing DateTime': 'Common Missing DateTime'})
+    print ("Common missing Datetimes:", len(common.index))
+    common_dates = get_unique_dates(common)
+    print ("Common missing dates:", len(common_dates.index))
+    common_dates = common_dates.rename(columns={'Unique Date': 'Common Missing Date'})
+    return common, common_dates;
+
+def go_to_date(df, date):
+    """
+    Returns a single row based on a provided index name (typically Date or Datetime)
+    date    : (str) e.g. date="2021-02-01 00:00:00+00:00"
+    """
+    return df.loc[df.index.astype(str)==date]
+
+def concat_summary(df_new, df_old):
+    new_miss, new_miss_uni = get_missing_dates(df_new)
+    common_miss, common_miss_dates = common_missing_dates(df_new, df_old)
+    count_df_dupes_idx(df_new)
+    return new_miss, new_miss_uni, common_miss, common_miss_dates
 
 def last_fridays(df):
     split_datetime(df, time=False)
@@ -819,7 +899,7 @@ def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles
                     settlements.pop(nul_date, None)
                 print ("Last settle date:",next(reversed(settlements.items())))
 
-                last_fris['DateTime'] = last_fris.index.to_series()
+                last_fris_date['DateTime'] = last_fris.index.to_series()
 
             elif settles!='last_fri':
                 errors[0] = ("\nInvalid settlement date type.")
@@ -839,6 +919,10 @@ def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles
                 if e is not None:
                     print (e)
             break
+
+    return settlements, last_fris_date;
+
+def add_settle_dates(df, last_fris_date):
     if 'Date' not in df:
         df['Date'] = df.index.date
     df['Settlement Date'] = df['Date'].astype(str).isin(last_fris_date['Date'])
@@ -853,4 +937,4 @@ def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles
     missing_set_date = last_fris_date.loc[(~last_fris_date['Date'].isin(found_set_dates['Date'].astype(str)))]
     print ("Missing sett dates:")
     missing_set_date
-    return settlements, 
+    return df;

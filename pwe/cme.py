@@ -264,7 +264,7 @@ processes=1, resample=True, interval='1h',symbols=None):
             if 'brti_1m'in locals():
                 print("")
                 if brti_1m.equals(brti_old_1m)==False:
-                    brti_1m_f_path = new_cme_fpath(brti_1m, dataset='BRTI_1H', dir=brti_1m_dir)
+                    brti_1m_f_path = new_cme_fpath(brti_1m, dataset='BRTI_1M', dir=brti_1m_dir)
                     brti_1m.to_csv(brti_1m_f_path)
                     print (f"\nSAVED csv to: \n{brti_1m_f_path}\n")
                 else:
@@ -273,7 +273,7 @@ processes=1, resample=True, interval='1h',symbols=None):
             if 'brti_1h' in locals():
                 print("")
                 if brti_1h.equals(brti_old_1h)==False:
-                    brti_1h_f_path = new_cme_fpath(brti_1h, dataset='BRTI_1M', dir=brti_1h_dir)
+                    brti_1h_f_path = new_cme_fpath(brti_1h, dataset='BRTI_1H', dir=brti_1h_dir)
                     brti_1h.to_csv(brti_1h_f_path)
                     print (f"\nSAVED csv to: \n{brti_1h_f_path}\n")
                 else:
