@@ -14,6 +14,31 @@ import pytz
 from datetime import datetime,date,timedelta
 import re
 import glob
+from tqdm import tqdm
+
+def read_pd_csv(f_path,low_memory=False, index_col=['DateTime'], parse_dates=['DateTime'],infer_datetime_format=True):
+    df= pd.read_csv(f_path,low_memory=low_memory, index_col=index_col, parse_dates=parse_dates,infer_datetime_format=infer_datetime_format)
+    tqdm.pandas(desc="Applying Transformation")
+    df.progress_apply(lambda x: x)
+    return df;
+
+def pd_to_csv(df, f_name, folder='csv_files'):
+
+    check_folder(folder)
+    df.to_csv(f_name)
+    tqdm.pandas(desc="Applying Transformation")
+    df.progress_apply(lambda x: x)
+
+    f_path = os.path.abspath(f_name)
+    
+    print (f"\nSaved csv to: \n{f_path}")
+    return f_path;
+
+def idx_to_dt(df):
+    df.index=pd.DatetimeIndex(df.index)
+    df.sort_index(ascending=True, inplace=True)
+    df.index.names = ['DateTime']
+    return df
 
 def daterange(start_dt, end_dt):
     dates = []
@@ -32,16 +57,6 @@ def daterange_str_dmy(start_dt, end_dt):
     for d in range(int ((end_dt - start_dt).days)+1):
         dates.append((start_dt + timedelta(d)).strftime("%d-%m-%Y"))
     return dates;
-
-def to_csv(df, f_name, folder='csv_files'):
-
-    check_folder(folder)
-    df.to_csv(f_name)
-
-    f_path = os.path.abspath(f_name)
-
-    print (f"\nSaved csv to: \n{f_path}")
-    return f_path;
 
 def check_for_recent(dir='csv_files',file_type='csv', horizon='today'):
     """
@@ -103,7 +118,7 @@ def check_for_recent(dir='csv_files',file_type='csv', horizon='today'):
                 else:
                     raise error
     
-    utc_now = datetime.utcnow()
+    utc_now = pytz.utc.localize(datetime.utcnow())
     utc_today = utc_now.date()
     utc_now_str = utc_now.strftime('%Y-%m-%d,%M,%H,%S,%Z')
     utc_today_str = utc_today.strftime('%Y-%m-%d')
@@ -309,29 +324,161 @@ def change_tz_now(from_tz, to_tz):
     print (tz2_now)
     return tz2_now
 
-def utc_tz(date):
+def assign_tz(arg, tz, yearfirst=True, dayfirst=True):
+    """
+    Add a tz attribute to a tz naive date.
+    tz  : a string name of the pytz timezone. e.g. 'UTC', or 'Asia/Dubai'.
+        This function can also infer the timezone from the city, if it is a substring of the timezone. e.g. 'Dubai' will match 'Asia/Dubai.'
+    yearfirst /dayfirst  : see: https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html
+    """
+    while True:
+        try:
+            t_z = pytz.timezone(tz)
+
+        except pytz.UnknownTimeZoneError:
+            print("Searching for TZ...")
+            zones = pytz.common_timezones
+            for z in list(zones):
+                if (tz in z) and (tz not in list(zones)):
+                    tz = z
+                    print (f"Timezone: {z}")
+            t_z = pytz.timezone(tz)
+
+        if type(arg) is str:
+            arg = pd.to_datetime(arg, yearfirst=yearfirst, dayfirst=dayfirst)
+            arg = arg.tz_localize(t_z)
+
+        elif type(arg) is pd.Timestamp and arg.tzinfo == None:
+            arg= arg.tz_localize(t_z)
+
+        elif type(arg) is datetime and arg.tzinfo == None:
+            arg = t_z.localize(arg)
+
+        elif type(arg) is pd.DatetimeIndex:
+            if arg.tzinfo == None:
+                arg = arg.tz_localize(t_z)
+            elif arg.tzinfo != None:
+                print ("Index is already assigned to the timezone:",str(arg.tzinfo))
+                print ("To convert it to a different timezone, use: change_tz")
+
+        elif type(arg) is pd.DataFrame:
+            if arg.index.tzinfo == None:
+                arg.index = arg.index.tz_localize(t_z)
+            elif arg.index.tzinfo != None:
+                print ("Index is already assigned to the timezone:",str(arg.index.tzinfo))
+                print ("To convert it to a different timezone, use: change_tz")
+        
+        elif arg.tzinfo != None:
+            print ("Date is already assigned to the timezone:",str(arg.tzinfo))
+            print ("To convert it to a different timezone, use: change_tz")
+
+        return arg;
+
+def is_utc(date):
+    """
+    Assert that datetime object is UTC and format it as a pandas datetime Timestamp.
+    If it is not already tz aware, make it timezone aware by assigning it UTC a timezone attribute.
+    """
+    date = pd.to_datetime(date,utc=True, dayfirst=True)
+    return date;
+
+def to_utc(arg, yearfirst=True, dayfirst=True):
+    """
+    Convert a datetime object, a Timestamp, a pandas DateTimeIndex to UTC.
+    Pass a dataframe as an arguement and it will convert the DateTimeIndex.
+
+    Check if either a string, datetime or timestamp is TZ aware or TZ naive.
+    Convert to UTC or else assign it to UTC if it is TZ naive.
+    Caution: assumes any naive datetime object is already in UTC.
+    If the time is not already in UTC and doesn't have any tz metadate, first, assign it a timezone attribute with tz_localize
+    yearfirst /dayfirst  : see: https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html
+    """
     utc_tz = pytz.timezone("UTC")
 
-    if type(date) is str:
-        date = datetime.strptime(date,'%Y-%m-%d')
-        utc_date = date.astimezone(utc_tz)
+    if type(arg) is str:
+        try:
+            arg = datetime.strptime(arg,'%Y-%m-%d')
+        except ValueError:
+            try:
+                arg = datetime.strptime(arg,'%d-%m-%Y')
+                print (f"Assuming {arg} is D/M/Y format. Ensure this is correct. Recommend Y/M/D to avoid ambiguity.")
+            except ValueError:
+                try:
+                    arg = datetime.strptime(arg, "%Y-%m-%d %H:%M:%S%z")
+                except ValueError:
+                    try:
+                        arg = datetime.strptime(arg, "%Y-%m-%d %H:%M:%S")
+                    except ValueError:
+                        try:
+                            arg = datetime.strptime(arg, "%Y-%m-%d %H:%M:%S.%f%z")
+                        except ValueError:
+                            try:
+                                arg = datetime.strptime(arg, "%Y-%m-%d %H:%M:%S.%f")
+                            except ValueError:
+                                print (f"Assuming {arg} is D/M/Y format. Ensure this is correct. Recommend Y/M/D to avoid ambiguity.")
+                                arg = pd.to_datetime(arg, yearfirst=yearfirst, dayfirst=dayfirst)
 
-    elif type(date) is datetime:
-        date = date
-        utc_date = date.astimezone(utc_tz)
+        if str(arg.tzinfo) == 'UTC':
+            print (f"{arg} is already in UTC.")
+            return arg;
+        elif arg.tzinfo == None:
+            print (f"Assuming naive datetime: {arg} is already in UTC and labelling it as such. Ensure this is correct.")
+            arg = utc_tz.localize(arg)
+        elif arg.tzinfo!=None:
+            print (f"Converting {arg.tzinfo} to UTC")
+            arg = arg.astimezone(utc_tz)
 
-    elif type(date) is pd.Timestamp:
-        date = pd.to_datetime(date)
-        utc_date = date.tz_convert(utc_tz)
-        
-    return utc_date;
+    elif type(arg) is datetime:
+        if str(arg.tzinfo) == 'UTC':
+            print (f"{arg} already in UTC.")
+            return arg;
+        elif arg.tzinfo == None:
+            print (f"Assuming naive datetime: {arg} is already in UTC and labelling it as such. Ensure this is correct.")
+            arg = utc_tz.localize(arg)
+        elif arg.tzinfo!=None:
+            print (f"Converting {arg.tzinfo} to UTC")
+            arg = arg.astimezone(utc_tz)
 
+    elif type(arg) is pd.Timestamp:
+        if str(arg.tzinfo) == 'UTC' or str(arg.tzinfo) == 'tzutc()':
+            print (f"{arg} already in UTC.")
+            return arg;
+        elif arg.tzinfo == None:
+            print (f"Assuming naive datetime: {arg} is already in UTC and labelling it as such. Ensure this is correct.")
+            arg = pd.to_datetime(arg, utc=True, yearfirst=yearfirst, dayfirst=dayfirst)
+        elif arg.tzinfo!=None:
+            print (f"Converting {arg.tzinfo} to UTC")
+            arg = arg.tz_convert(utc_tz)
 
+    elif type(arg) is pd.DatetimeIndex:
+        if str(arg.tzinfo) == 'UTC':
+            print ("Index already in UTC.")
+            return arg;
+        elif arg.tzinfo == None:
+            print (f"Assuming naive DateTime Index is already in UTC and labelling it as such. Ensure this is correct.")
+            arg = arg.tz_localize(utc_tz)
+        elif arg.tzinfo != None:
+            print (f"Converting {arg.tzinfo} to UTC")
+            arg = arg.tz_convert(utc_tz)
+
+    elif type(arg) is pd.DataFrame:
+        if str(arg.index.tzinfo) == 'UTC':
+            print ("Index already in UTC.")
+            return arg;
+        if arg.index.tzinfo == None:
+            print (f"Assuming naive DateTime Index is already in UTC and labelling it as such. Ensure this is correct.")
+            arg.index = arg.index.tz_localize(utc_tz)
+        elif arg.index.tzinfo != None:
+            print (f"Converting {str(arg.index.tzinfo)} to UTC")
+            arg.index = arg.index.tz_convert(utc_tz)
+
+    return arg;
 
 def change_tz(arg,from_tz, to_tz):
     """
     Change the tz of a date or an array of dates the index of pandas DataFrame.
     Retrun a new Pandas DateTime index and either return the old DateTime index as a series or drop it.
+    This function can also infer the timezone from the city, if it is a substring of the timezone. e.g. 'Dubai' will match 'Asia/Dubai.'
 
     arg   :   list of dates or pandas datetime index or pandas series.
     from_tz :   timezone to change.
@@ -451,8 +598,8 @@ def get_str_dates(start_date=None,end_date=None,utc=False):
         start_date = start_date.strftime("%d-%m-%Y")
 
     if utc:
-        start_date = to_utc(start_date)
-        end_date = to_utc(end_date)
+        start_date = is_utc(start_date)
+        end_date = is_utc(end_date)
     
     print("Today's local TZ date:", today_dmy)
     print(" ")
@@ -512,7 +659,7 @@ def rid_na(arr):
 
 def sort_index(df):
     df.index=pd.DatetimeIndex(df.index)
-    pd.to_datetime(df.index)
+    pd.to_datetime(df.index, dayfirst=True)
     
     if 'DateTime' in df:
         df.set_index('DateTime')
@@ -588,6 +735,8 @@ def df_to_csv(df,symbol,market=None,interval=None,outputsize=None):
         file_path = f'csv_files/{tkr}_{market}_{interval}_{outputsize}_{csv_start}-{csv_end}_asof_{now_dmymh}.csv'
     
     df.to_csv(file_path)
+    tqdm.pandas(desc="Applying Transformation")
+    df.progress_apply(lambda x: x)
     print (f"Saved csv to {file_path}")
     return;
     
@@ -657,13 +806,6 @@ def blockPrinting(func):
 
     return func_wrapper;
 
-def to_utc(date):
-    """
-    Convert a date or datetime object to UTC datetime.
-    """
-    date = pd.to_datetime(date,utc=True)
-    return date;
-
 def first_day_of_current_year(time=False, utc=False):
     """
     Calculate the first date or datetime of the current year.
@@ -674,7 +816,7 @@ def first_day_of_current_year(time=False, utc=False):
     else:
         fdocy = datetime.now().date().replace(month=1, day=1)
     if utc:
-        fdocy = to_utc(fdocy)
+        fdocy = is_utc(fdocy)
     return fdocy;
 
 def last_day_of_current_year(time=False,utc=False):
@@ -687,10 +829,10 @@ def last_day_of_current_year(time=False,utc=False):
     else:
         ldocy = datetime.now().date().replace(month=12, day=31)
     if utc:
-        ldocy = to_utc(ldocy)
+        ldocy = is_utc(ldocy)
     return ldocy;
 
-def split_datetime(df, date=True,day=True,month=True,year=True,time=True):
+def split_datetime(df, date=True,day=False,month=False,year=False,time=False):
     if date:
         df['Date'] = df.index.date
     if day:
@@ -724,7 +866,7 @@ def get_unique_dates(df):
     uniq = df.index.date
     uni = pd.DataFrame(uniq, index=uniq)
     unique = pd.DataFrame(uni.index.unique(), index=uni.index.unique(), columns=['Unique Date'])
-    unique.index = pd.to_datetime(unique.index)
+    unique.index = pd.to_datetime(unique.index, dayfirst=True)
     unique.index.names = ['DateTime']
     print ("Unique dates:", len(unique.index))
     return unique;
@@ -829,12 +971,12 @@ def concat_summary(df_new, df_old):
     return new_miss, new_miss_uni, common_miss, common_miss_dates
 
 def last_fridays(df):
-    split_datetime(df, time=False)
-    df['Day'] = df.index.day
-    df['Month'] = df.index.month
-    df['Year'] = df.index.year
-    #df['Time'] = df.index.time
-    df['Date'] = pd.to_datetime(df[['Year','Month','Day']])
+    split_datetime(df, date=True,day=False,month=False,year=False,time=False)
+    # df['Day'] = df.index.day
+    # df['Month'] = df.index.month
+    # df['Year'] = df.index.year
+    # #df['Time'] = df.index.time
+    # df['Date'] = pd.to_datetime(df[['Year','Month','Day']])
     #df['DateTime'] = pd.to_datetime(df[['Year','Month','Day','Time']])
     last_fris = pd.DataFrame(df.apply(lambda x: x['Date'] + pd.offsets.LastWeekOfMonth(n=1,weekday=4), axis=1), columns=['Date'])
     #last_fridays = pd.DataFrame(df.apply(lambda x: x['DateTime'] + pd.offsets.LastWeekOfMonth(n=1,weekday=4), axis=1), columns=['DateTime'])

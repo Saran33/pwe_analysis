@@ -11,7 +11,7 @@ import time
 import numpy as np
 import pandas as pd
 from datetime import datetime, date, timedelta, tzinfo
-from pwe.pwetools import check_folder, to_csv,get_recent,concat_non_dupe_idx
+from pwe.pwetools import check_folder, pd_to_csv,get_recent,concat_non_dupe_idx,idx_to_dt,read_pd_csv
 
 import datamine.io as dm
 from pprint import pprint as pp
@@ -45,7 +45,7 @@ def download_cme(username, password, path='./data2/', folder='csv_files/CME/Cryp
         cme_df = myDatamine.crypto_DF
 
         new_cme_f_name = new_cme_fpath(cme_df, dataset='CRYPTOCURRENCY',dir=folder)
-        to_csv(df=cme_df, folder=folder,f_name=new_cme_f_name)
+        pd_to_csv(df=cme_df, folder=folder,f_name=new_cme_f_name)
 
         #cme_df.index = pd.to_datetime(cme_df.index)
     
@@ -102,16 +102,13 @@ def extract_cme_df(cme_df, symbol, folder='csv_files/CME/Crypto'):
     df.rename(columns={'mdEntryPx': symbol},inplace=True)
     df.columns = df.columns.str.strip().str.upper().str.replace(' ', '_').str.replace('(', '').str.replace(')', '')
 
-    df.index=pd.DatetimeIndex(df.index)
-    df.sort_index(ascending=True, inplace=True)
-    df.index.names = ['DateTime']
-    df.head()
+    df = idx_to_dt(df)
 
     check_folder(f'{folder}/temp')
     dir_rel = f'{folder}/temp'
     f_path = new_cme_fpath(df, dataset=symbol, dir=dir_rel)
     print (f"\nSaving new {symbol} data to:\n",f_path)
-    df.to_csv(f_path)
+    pd_to_csv(df,f_path,folder=dir_rel)
 
     return df;
 
@@ -163,14 +160,25 @@ processes=1, resample=True, interval='1h',symbols=None):
                 brr_old_f = get_recent(dir=brr_dir,file_type='csv', horizon=hzn)
             except ValueError as error:
                 if str(error) == "Invalid file path or buffer object type: <class 'NoneType'>":
-                    return;
+                    print ("Download aborted.")
+                    ans1 = [None, None]
+                    return ans1;
             print (brr_old_f)
             try:
                 brr_old = pd.read_csv(brr_old_f,low_memory=False, index_col=[index_col], parse_dates=[index_col],infer_datetime_format=True)
-                brr_old.head()
-            except ValueError as error:
-                if str(error) == "Invalid file path or buffer object type: <class 'NoneType'>":
-                    return;
+            except (ValueError, FileNotFoundError, TypeError) as error:
+                check_path = os.path.isdir(brr_old_f)
+                if (str(error) != "Invalid file path or buffer object type: <class 'NoneType'>") and (check_path==False) and (str(error) !="cannot unpack non-iterable NoneType object"):
+                    if (str(error)) == "Missing column provided to 'parse_dates': 'DateTime'":
+                        brr_old = read_pd_csv(brr_old_f,low_memory=False, index_col=[0], parse_dates=[0],infer_datetime_format=True)
+                        brr_old = idx_to_dt(brr_old)
+                    else:
+                        print (error)
+                else:
+                    print ("No file. Download aborted.")
+                    ans1 = [None, None]
+                    return ans1;
+            brr_old.head()
             brr_old.name = 'BRR'
 
         if (symbols==None) or ('BRTI' in symbols):
@@ -182,12 +190,23 @@ processes=1, resample=True, interval='1h',symbols=None):
                     brti_1m_old_f = get_recent(dir=brti_1m_dir,file_type='csv', horizon=hzn)
                 except ValueError as error:
                     if str(error) == "Invalid file path or buffer object type: <class 'NoneType'>":
-                        return;
+                        print ("Download aborted.")
+                        ans1 = [None, None]
+                        return ans1;
                 try:
-                    brti_old_1m = pd.read_csv(brti_1m_old_f,low_memory=False, index_col=[index_col], parse_dates=[index_col],infer_datetime_format=True)
-                except ValueError as error:
-                    if str(error) == "Invalid file path or buffer object type: <class 'NoneType'>":
-                        return;
+                    brti_old_1m = read_pd_csv(brti_1m_old_f,low_memory=False, index_col=[index_col], parse_dates=[index_col],infer_datetime_format=True)
+                except (ValueError, FileNotFoundError, TypeError) as error:
+                    check_path = os.path.isdir(brr_old_f)
+                    if (str(error) != "Invalid file path or buffer object type: <class 'NoneType'>") and (check_path==False) and (str(error) !="cannot unpack non-iterable NoneType object"):
+                        if (str(error)) == "Missing column provided to 'parse_dates': 'DateTime'":
+                            brti_old_1m = read_pd_csv(brti_1m_old_f,low_memory=False, index_col=[0], parse_dates=[0],infer_datetime_format=True)
+                            brti_old_1m = idx_to_dt(brti_old_1m)
+                        else:
+                            print (error)
+                    else:
+                        print ("No file. Download aborted.")
+                        ans1 = [None, None]
+                        return ans1;
                 brti_old_1m.name = 'BRTI_1M'
 
             if (interval=='1h') or (resample==True) or (hzn=='any'):
@@ -197,12 +216,23 @@ processes=1, resample=True, interval='1h',symbols=None):
                     brti_1h_old_f = get_recent(dir=brti_1h_dir,file_type='csv', horizon=hzn)
                 except ValueError as error:
                     if str(error) == "Invalid file path or buffer object type: <class 'NoneType'>":
-                        return;
+                        print ("Download aborted.")
+                        ans1 = [None, None]
+                        return ans1;
                 try:
-                    brti_old_1h = pd.read_csv(brti_1h_old_f,low_memory=False, index_col=[index_col], parse_dates=[index_col],infer_datetime_format=True)
-                except ValueError as error:
-                    if str(error) == "Invalid file path or buffer object type: <class 'NoneType'>":
-                        return;
+                    brti_old_1h = read_pd_csv(brti_1h_old_f,low_memory=False, index_col=[index_col], parse_dates=[index_col],infer_datetime_format=True)
+                except (ValueError, FileNotFoundError, TypeError) as error:
+                    check_path = os.path.isdir(brr_old_f)
+                    if (str(error) != "Invalid file path or buffer object type: <class 'NoneType'>") and (check_path==False) and (str(error) !="cannot unpack non-iterable NoneType object"):
+                        if (str(error)) == "Missing column provided to 'parse_dates': 'DateTime'":
+                            brti_old_1h = read_pd_csv(brti_1h_old_f,low_memory=False, index_col=[0], parse_dates=[0],infer_datetime_format=True)
+                            brti_old_1h = idx_to_dt(brti_old_1h)
+                        else:
+                            print (error)
+                    else:
+                        print ("No file. Download aborted.")
+                        ans1 = [None, None]
+                        return ans1;
                 brti_old_1h.name = 'BRTI_1H'
 
         if hzn=='any':
@@ -256,8 +286,8 @@ processes=1, resample=True, interval='1h',symbols=None):
                 print("")
                 if brr.equals(brr_old)==False:
                     brr_f_path = new_cme_fpath(brr, dataset='BRR', dir=brr_dir)
-                    brr.to_csv(brr_f_path)
-                    print (f"\nSAVED csv to \n{brr_f_path}\n")
+                    pd_to_csv(brr,brr_f_path,folder=brr_dir)
+                    print ("")
                 else:
                     print ("No new updates to BRR")
 
@@ -265,8 +295,8 @@ processes=1, resample=True, interval='1h',symbols=None):
                 print("")
                 if brti_1m.equals(brti_old_1m)==False:
                     brti_1m_f_path = new_cme_fpath(brti_1m, dataset='BRTI_1M', dir=brti_1m_dir)
-                    brti_1m.to_csv(brti_1m_f_path)
-                    print (f"\nSAVED csv to: \n{brti_1m_f_path}\n")
+                    pd_to_csv(brti_1m, brti_1m_f_path, folder=brti_1m_dir)
+                    print ("")
                 else:
                     print ("No new updates to BRTI 1M")
 
@@ -274,8 +304,8 @@ processes=1, resample=True, interval='1h',symbols=None):
                 print("")
                 if brti_1h.equals(brti_old_1h)==False:
                     brti_1h_f_path = new_cme_fpath(brti_1h, dataset='BRTI_1H', dir=brti_1h_dir)
-                    brti_1h.to_csv(brti_1h_f_path)
-                    print (f"\nSAVED csv to: \n{brti_1h_f_path}\n")
+                    pd_to_csv(brti_1h, brti_1h_f_path, folder=brti_1h_dir)
+                    print ("")
                 else:
                     print ("No new updates to BRTI 1H")
 

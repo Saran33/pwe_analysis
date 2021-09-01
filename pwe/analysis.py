@@ -6,12 +6,13 @@ Created on Mon Aug 23 08:33:53 2021
 @author: Saran Connolly saran.c@pwecapital.com
 """
 from datetime import datetime, date, timedelta
+import pytz
 from os import error
 import sys
 import pandas as pd
 import numpy as np
 import math
-from pwe.pwetools import first_day_of_current_year, last_day_of_current_year, sort_index, utc_tz
+from pwe.pwetools import first_day_of_current_year, last_day_of_current_year, sort_index,to_utc
 
 class Security:
     def __init__(self, inp):
@@ -442,17 +443,17 @@ class Security:
         df = self.df
 
         if start_date==None:
-            utc_now = datetime.utcnow()
+            utc_now = pytz.utc.localize(datetime.utcnow())
             auto_start = utc_now - timedelta(days=365)
             start_date = auto_start
 
         if end_date==None:
-            end_date = datetime.utcnow()
+            end_date = pytz.utc.localize(datetime.utcnow())
 
         # sd = pd.to_datetime(start_date) 
-        sd = utc_tz(start_date)
+        sd = to_utc(start_date)
         # ed = pd.to_datetime(end_date)
-        ed = utc_tz(end_date)
+        ed = to_utc(end_date)
 
         df['DateTime'] = pd.DatetimeIndex(df.index)
         df['DateTime'] = pd.to_datetime(df.index)

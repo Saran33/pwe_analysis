@@ -31,6 +31,7 @@ import plotly.graph_objects as go
 import webbrowser
 import dateutil
 import re
+import pytz
 
 def get_chart_dates(df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None):
     """
@@ -46,7 +47,7 @@ def get_chart_dates(df, start_date=None,end_date=None,utc=True, auto_start=None,
     now = datetime.now()
     td_dmy_str = now.strftime("%d-%m-%Y")
 
-    utc_now = datetime.utcnow()
+    utc_now = pytz.utc.localize(datetime.utcnow())
     utc_now.isoformat()
     utc_td_dmy_str = now.strftime("%d-%m-%Y")
 
