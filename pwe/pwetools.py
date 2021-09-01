@@ -374,27 +374,11 @@ def assign_tz(arg, tz, yearfirst=True, dayfirst=True):
 
         return arg;
 
-def is_utc(date):
+def str_to_dt(arg, yearfirst=True, dayfirst=True):
     """
-    Assert that datetime object is UTC and format it as a pandas datetime Timestamp.
-    If it is not already tz aware, make it timezone aware by assigning it UTC a timezone attribute.
+    Convert a string representation of a either a date, datetime object to a string.
+    As a last resort, convert to a pandas datetime using dateutil parser.
     """
-    date = pd.to_datetime(date,utc=True, dayfirst=True)
-    return date;
-
-def to_utc(arg, yearfirst=True, dayfirst=True):
-    """
-    Convert a datetime object, a Timestamp, a pandas DateTimeIndex to UTC.
-    Pass a dataframe as an arguement and it will convert the DateTimeIndex.
-
-    Check if either a string, datetime or timestamp is TZ aware or TZ naive.
-    Convert to UTC or else assign it to UTC if it is TZ naive.
-    Caution: assumes any naive datetime object is already in UTC.
-    If the time is not already in UTC and doesn't have any tz metadate, first, assign it a timezone attribute with tz_localize
-    yearfirst /dayfirst  : see: https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html
-    """
-    utc_tz = pytz.timezone("UTC")
-
     if type(arg) is str:
         try:
             arg = datetime.strptime(arg,'%Y-%m-%d')
@@ -417,6 +401,59 @@ def to_utc(arg, yearfirst=True, dayfirst=True):
                             except ValueError:
                                 print (f"Assuming {arg} is D/M/Y format. Ensure this is correct. Recommend Y/M/D to avoid ambiguity.")
                                 arg = pd.to_datetime(arg, yearfirst=yearfirst, dayfirst=dayfirst)
+    return arg;
+
+def dt_to_str(arg):
+    """
+    Convert a date, datetime to a string. Use isoformat as a last resort.
+    """
+    if type(arg) is datetime:
+        try:
+            arg = datetime.strftime(arg,'%Y-%m-%d')
+        except ValueError:
+            try:
+                arg = datetime.strftime(arg,'%d-%m-%Y')
+                print (f"Assuming {arg} is D/M/Y format. Ensure this is correct. Recommend Y/M/D to avoid ambiguity.")
+            except ValueError:
+                try:
+                    arg = datetime.strftime(arg, "%Y-%m-%d %H:%M:%S%z")
+                except ValueError:
+                    try:
+                        arg = datetime.strftime(arg, "%Y-%m-%d %H:%M:%S")
+                    except ValueError:
+                        try:
+                            arg = datetime.strftime(arg, "%Y-%m-%d %H:%M:%S.%f%z")
+                        except ValueError:
+                            try:
+                                arg = datetime.strftime(arg, "%Y-%m-%d %H:%M:%S.%f")
+                            except ValueError:
+                                print (f"Converting {arg} to isoformat.")
+                                arg = arg.isoformat()
+    return arg;
+
+def is_utc(date, yearfirst=True, dayfirst=True):
+    """
+    Assert that datetime object is UTC and format it as a pandas datetime Timestamp.
+    If it is not already tz aware, make it timezone aware by assigning it UTC a timezone attribute.
+    """
+    date = pd.to_datetime(date,utc=True, yearfirst=yearfirst, dayfirst=dayfirst)
+    return date;
+
+def to_utc(arg, yearfirst=True, dayfirst=True):
+    """
+    Convert a datetime object, a Timestamp, a pandas DateTimeIndex to UTC.
+    Pass a dataframe as an arguement and it will convert the DateTimeIndex.
+
+    Check if either a string, datetime or timestamp is TZ aware or TZ naive.
+    Convert to UTC or else assign it to UTC if it is TZ naive.
+    Caution: assumes any naive datetime object is already in UTC.
+    If the time is not already in UTC and doesn't have any tz metadate, first, assign it a timezone attribute with tz_localize
+    yearfirst /dayfirst  : see: https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html
+    """
+    utc_tz = pytz.timezone("UTC")
+
+    if type(arg) is str:
+        arg = str_to_dt(arg, yearfirst=True, dayfirst=True)
 
         if str(arg.tzinfo) == 'UTC':
             print (f"{arg} is already in UTC.")
@@ -578,30 +615,50 @@ def change_tz(arg,from_tz, to_tz):
 
         return df;
 
-def get_str_dates(start_date=None,end_date=None,utc=False):
-    # utc_now = datetime.utcnow()
-    today = date.today()
-    td = today.strftime("%d-%m-%Y")
-    today_dmy = str(td)
+def blockPrinting(func):
+    """
+	A decorater used to block function printing to the console.
+	
+	e.g. : 	# This will not print
+			@blockPrinting
+			def helloWorld2():
+    			print("Hello World!")
+			helloWorld2()
+	"""
+    def func_wrapper(*args, **kwargs):
+        # block all printing to the console
+        sys.stdout = open(os.devnull, 'w')
+        # call the method in question
+        value = func(*args, **kwargs)
+        # enable all printing to the console
+        sys.stdout = sys.__stdout__
+        # pass the return value of the method back
+        return value
+
+    return func_wrapper;
+        
+@blockPrinting
+def get_str_dates(start_date=None,end_date=None, utc=True):
+    if not utc:
+        today = datetime.now().astimezone()
+    else:
+        today = pytz.utc.localize(datetime.utcnow())
+    today_str = today.isoformat()
+
     if end_date==None:
-        end_date = today_dmy
+        end_date = today_str
 
     elif type(end_date) is not str:
-        end_date = end_date.strftime("%d-%m-%Y")
+        end_date = dt_to_str(end_date)
 
     if start_date==None:
         start_date = today - timedelta(days=365)
-        start_date = start_date.strftime("%d-%m-%Y")
-        start_date = str(start_date)
+        start_date = start_date.isoformat()
 
     elif type(start_date) is not str:
-        start_date = start_date.strftime("%d-%m-%Y")
-
-    if utc:
-        start_date = is_utc(start_date)
-        end_date = is_utc(end_date)
+        start_date = dt_to_str(start_date)
     
-    print("Today's local TZ date:", today_dmy)
+    print("Today's date:", today_str)
     print(" ")
     print("Start date:", start_date)
     print("End date:", end_date)
@@ -657,9 +714,9 @@ def rid_na(arr):
     out = arr[np.arange(idx.shape[0])[:,None], idx]
     return out
 
-def sort_index(df):
+def sort_index(df, utc=True, yearfirst=True, dayfirst=True):
     df.index=pd.DatetimeIndex(df.index)
-    pd.to_datetime(df.index, dayfirst=True)
+    pd.to_datetime(df.index, yearfirst=yearfirst, dayfirst=dayfirst)
     
     if 'DateTime' in df:
         df.set_index('DateTime')
@@ -784,28 +841,6 @@ def resample_ohlc(df,interval='1H',o='Open',h='High',l='Low',c='Close',v='Volume
     
     return df;
 
-def blockPrinting(func):
-    """
-	A decorater used to block function printing to the console.
-	
-	e.g. : 	# This will not print
-			@blockPrinting
-			def helloWorld2():
-    			print("Hello World!")
-			helloWorld2()
-	"""
-    def func_wrapper(*args, **kwargs):
-        # block all printing to the console
-        sys.stdout = open(os.devnull, 'w')
-        # call the method in question
-        value = func(*args, **kwargs)
-        # enable all printing to the console
-        sys.stdout = sys.__stdout__
-        # pass the return value of the method back
-        return value
-
-    return func_wrapper;
-
 def first_day_of_current_year(time=False, utc=False):
     """
     Calculate the first date or datetime of the current year.
@@ -862,11 +897,11 @@ def missing_from_df(df1,df2):
 
     return df1_miss, df2_miss;
 
-def get_unique_dates(df):
+def get_unique_dates(df, yearfirst=True, dayfirst=True):
     uniq = df.index.date
     uni = pd.DataFrame(uniq, index=uniq)
     unique = pd.DataFrame(uni.index.unique(), index=uni.index.unique(), columns=['Unique Date'])
-    unique.index = pd.to_datetime(unique.index, dayfirst=True)
+    unique.index = pd.to_datetime(unique.index, yearfirst=yearfirst, dayfirst=dayfirst)
     unique.index.names = ['DateTime']
     print ("Unique dates:", len(unique.index))
     return unique;
@@ -983,26 +1018,33 @@ def last_fridays(df):
 
     return last_fris;
 
-def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles='last_fri',utc=False):
+def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles='last_fri',utc=True, name='CME Exp.'):
     """
     Add a Series of futures settlement dates for the DataFrame of a given security.
 
     If a DataFrame is passed and no start_date and end_date passed, the settle dates for the entire series is returned.
 
     If utc=True, the datetimestamp of settlement will be in UTC timezone format.
+
+    settles :   A setting to specify the settlemet date interval. Currently only supports 'last_fri' but can easily be expanded.
+
+    name    :   The name of the settlement for chart anotation purposes.
+
+    Returns:    a dict of settlemet dates to use as annotations on a chart.
+                a pandas DataFrame of the settlemt dates as a series.
     """
     errors = {}
 
     if settles=='last_fri':
         
-        sd, ed = get_str_dates(start_date=start_date,end_date=end_date, utc=utc)
+        sd, ed = get_str_dates(start_date=start_date,end_date=end_date, utc=utc);
 
-        if (start_date==None) and (df!=None):
+        if start_date==None and isinstance(df, pd.DataFrame):
             start_date = df.index.min()
         else:
             start_date = sd
 
-        if (end_date==None) and (df!=None):
+        if end_date==None and isinstance(df, pd.DataFrame):
             end_date = df.index.max()
         else:
             end_date = ed
@@ -1024,24 +1066,27 @@ def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles
 
                 last_fris = last_fridays(date_range_df)
                 last_fris = last_fris.drop_duplicates(ignore_index=False)
-                last_fris_date = last_fris.set_index('Date', drop=False, inplace=False)
-                last_fris_date.index = last_fris_date.index.strftime('%Y-%m-%d')
-                last_fris_date['Date'] = last_fris_date.index.to_series()
+                last_fris_df = last_fris.set_index('Date', drop=False, inplace=False)
+                last_fris_df.index = last_fris_df.index.strftime('%Y-%m-%d')
+                last_fris_df['Date'] = last_fris_df.index.to_series()
 
-                # settle_dt_lst = last_fris_date['Date'].unique().tolist()
-                # settlements = pd.Series(last_fris_date['Date'].values,index=last_fris_date.Date).to_dict()
-                settlements = pd.Series(last_fris_date['Date'].values,index=last_fris_date['Date']).to_dict()
+                # settle_dt_lst = last_fris_df['Date'].unique().tolist()
+                # settlements = pd.Series(last_fris_df['Date'].values,index=last_fris_df.Date).to_dict()
+                settlements = pd.Series(last_fris_df['Date'].values,index=last_fris_df['Date']).to_dict()
                 for key in list(settlements.keys()):
-                    settlements[key] = 'CME Exp.'
+                    settlements[key] = name
+                print("")
                 print("First settle date:",next(iter(settlements.items())))
 
-                dates_to_remove = last_fris_date.loc[(~last_fris_date['Date'].astype(str).isin(date_range_df['Date'].astype(str)))]
-                dates_to_remove = dates_to_remove['Date'].unique().tolist()
-                for nul_date in dates_to_remove:
+                dates_to_remove = last_fris_df.loc[(~last_fris_df['Date'].astype(str).isin(date_range_df['Date'].astype(str)))]
+                last_fris_df = last_fris_df.loc[(~last_fris_df['Date'].astype(str).isin(dates_to_remove['Date'].astype(str)))]
+                removal_lst = dates_to_remove['Date'].unique().tolist()
+                for nul_date in removal_lst:
                     settlements.pop(nul_date, None)
                 print ("Last settle date:",next(reversed(settlements.items())))
 
-                last_fris_date['DateTime'] = last_fris.index.to_series()
+                last_fris_df['DateTime'] = last_fris_df.index.to_series()
+                break
 
             elif settles!='last_fri':
                 errors[0] = ("\nInvalid settlement date type.")
@@ -1062,21 +1107,21 @@ def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles
                     print (e)
             break
 
-    return settlements, last_fris_date;
+    df = add_settle_dates(df, last_fris_df)
 
-def add_settle_dates(df, last_fris_date):
+    return settlements, last_fris_df, df;
+
+def add_settle_dates(df, last_fris_df):
     if 'Date' not in df:
         df['Date'] = df.index.date
-    df['Settlement Date'] = df['Date'].astype(str).isin(last_fris_date['Date'])
+    df['Settlement Date'] = df['Date'].astype(str).isin(last_fris_df['Date'])
     df.tail()
     df['Settlement Date'].value_counts()
-    print ("Last fridays in rannge:", last_fris_date['Date'].count()*24)
+    print ("Last fridays in rannge:", last_fris_df['Date'].count()*24)
 
     found_set_dates = pd.DataFrame(df.loc[df['Settlement Date']==True, 'Date'])
-    print ("found settle dates:")
-    found_set_dates
+    print ("found settlement dates:", len(found_set_dates))
 
-    missing_set_date = last_fris_date.loc[(~last_fris_date['Date'].isin(found_set_dates['Date'].astype(str)))]
-    print ("Missing sett dates:")
-    missing_set_date
+    missing_set_date = last_fris_df.loc[(~last_fris_df['Date'].isin(found_set_dates['Date'].astype(str)))]
+    print ("Missing settlement dates:", len(missing_set_date))
     return df;

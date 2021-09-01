@@ -432,7 +432,7 @@ class Security:
             
         return;
 
-    def get_sub_series(self, start_date=None, end_date=None):
+    def get_sub_series(self, start_date=None, end_date=None, utc=True):
         """
         df: dataframe to split
 
@@ -456,7 +456,7 @@ class Security:
         ed = to_utc(end_date)
 
         df['DateTime'] = pd.DatetimeIndex(df.index)
-        df['DateTime'] = pd.to_datetime(df.index)
+        df['DateTime'] = pd.to_datetime(df.index, utc=utc)
         subseries_df = df[(df['DateTime']>=sd) & (df['DateTime']<=ed)]
         if ((ed - sd) <= timedelta(days=366)) and (sd.year == ed.year):
             subseries_df.name = f"_{ed.year}"
