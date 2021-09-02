@@ -324,6 +324,25 @@ def change_tz_now(from_tz, to_tz):
     print (tz2_now)
     return tz2_now
 
+def get_tz(tz):
+    """
+    Pass a string and return  a pytz timezone object.
+    This function can also infer the timezone from the city, if it is a substring of the timezone. e.g. 'Dubai' will return 'Asia/Dubai.'
+    """
+    try:
+        t_z = pytz.timezone(tz)
+
+    except pytz.UnknownTimeZoneError:
+        print("Searching for TZ...")
+        zones = pytz.common_timezones
+        for z in list(zones):
+            if (tz in z) and (tz not in list(zones)):
+                tz = z
+                print (f"Timezone: {z}")
+        t_z = pytz.timezone(tz)
+
+    return t_z;
+
 def assign_tz(arg, tz, yearfirst=True, dayfirst=True):
     """
     Add a tz attribute to a tz naive date.
@@ -332,27 +351,20 @@ def assign_tz(arg, tz, yearfirst=True, dayfirst=True):
     yearfirst /dayfirst  : see: https://pandas.pydata.org/docs/reference/api/pandas.to_datetime.html
     """
     while True:
-        try:
-            t_z = pytz.timezone(tz)
-
-        except pytz.UnknownTimeZoneError:
-            print("Searching for TZ...")
-            zones = pytz.common_timezones
-            for z in list(zones):
-                if (tz in z) and (tz not in list(zones)):
-                    tz = z
-                    print (f"Timezone: {z}")
-            t_z = pytz.timezone(tz)
+        t_z = get_tz(tz)
 
         if type(arg) is str:
             arg = pd.to_datetime(arg, yearfirst=yearfirst, dayfirst=dayfirst)
             arg = arg.tz_localize(t_z)
+            break
 
-        elif type(arg) is pd.Timestamp and arg.tzinfo == None:
+        elif (type(arg) is pd.Timestamp or isinstance(arg, pd._libs.tslibs.timestamps.Timestamp)) and arg.tzinfo == None:
             arg= arg.tz_localize(t_z)
+            break
 
         elif type(arg) is datetime and arg.tzinfo == None:
             arg = t_z.localize(arg)
+            break
 
         elif type(arg) is pd.DatetimeIndex:
             if arg.tzinfo == None:
@@ -360,6 +372,7 @@ def assign_tz(arg, tz, yearfirst=True, dayfirst=True):
             elif arg.tzinfo != None:
                 print ("Index is already assigned to the timezone:",str(arg.tzinfo))
                 print ("To convert it to a different timezone, use: change_tz")
+                break
 
         elif type(arg) is pd.DataFrame:
             if arg.index.tzinfo == None:
@@ -367,10 +380,12 @@ def assign_tz(arg, tz, yearfirst=True, dayfirst=True):
             elif arg.index.tzinfo != None:
                 print ("Index is already assigned to the timezone:",str(arg.index.tzinfo))
                 print ("To convert it to a different timezone, use: change_tz")
+                break
         
         elif arg.tzinfo != None:
             print ("Date is already assigned to the timezone:",str(arg.tzinfo))
             print ("To convert it to a different timezone, use: change_tz")
+            break
 
         return arg;
 
@@ -515,6 +530,7 @@ def change_tz(arg,from_tz, to_tz):
     """
     Change the tz of a date or an array of dates the index of pandas DataFrame.
     Retrun a new Pandas DateTime index and either return the old DateTime index as a series or drop it.
+    If a single datetime or timestamp is passed, it will return a datetime or timestamp.
     This function can also infer the timezone from the city, if it is a substring of the timezone. e.g. 'Dubai' will match 'Asia/Dubai.'
 
     arg   :   list of dates or pandas datetime index or pandas series.
@@ -530,22 +546,35 @@ def change_tz(arg,from_tz, to_tz):
     errmsgs = {}
     # pytz.utc
     while True:
-        try:
-            tz1 = pytz.timezone(from_tz)
-            tz2 = pytz.timezone(to_tz)
+        if issubclass(type(from_tz), pytz.BaseTzInfo):
+            tz1 = from_tz
+        else:
+            try:
+                tz1 = pytz.timezone(from_tz)
 
-        except pytz.UnknownTimeZoneError:
-            print("Searching for TZ...")
-            zones = pytz.common_timezones
-            for z in list(zones):
-                if (from_tz in z) and (from_tz not in list(zones)):
-                    from_tz = z
-                    print (f"Timezone: {z}")
-                elif (to_tz in z) and (to_tz not in list(zones)):
-                    to_tz = z
-                    print (f"Timezone: {z}")
-            tz1 = pytz.timezone(from_tz)
-            tz2 = pytz.timezone(to_tz)
+            except pytz.UnknownTimeZoneError:
+                print("Searching for TZ...")
+                zones = pytz.common_timezones
+                for z in list(zones):
+                    if (from_tz in z) and (from_tz not in list(zones)):
+                        from_tz = z
+                        print (f"Timezone: {z}")
+                tz1 = pytz.timezone(from_tz)
+
+        if issubclass(type(to_tz), pytz.BaseTzInfo):
+            tz2 = to_tz
+        else:
+            try:
+                tz2 = pytz.timezone(to_tz)
+
+            except pytz.UnknownTimeZoneError:
+                print("Searching for TZ...")
+                zones = pytz.common_timezones
+                for z in list(zones):
+                    if (to_tz in z) and (to_tz not in list(zones)):
+                        to_tz = z
+                        print (f"Timezone: {z}")
+                tz2 = pytz.timezone(to_tz)
 
         if type(arg) is pd.DatetimeIndex:
             idx = arg
@@ -572,6 +601,16 @@ def change_tz(arg,from_tz, to_tz):
                     tz1_idx = df.index
                     df.index=pd.DatetimeIndex(tz1_idx)
 
+        elif (type(arg) is pd.Timestamp or isinstance(arg, pd._libs.tslibs.timestamps.Timestamp)):
+            try:
+                arg = arg.tz_localize(tz1)
+            except TypeError as error:
+                already_tz = "Cannot localize tz-aware Timestamp, use tz_convert for conversions"
+                if already_tz in error.args[0]:
+                    print ("Timestamp already localized... Proceeding to change TZ.")
+                    arg.tz_convert(tz2)
+            return arg;
+
         elif type(arg[1]) is datetime:
             date_lst = list(arg)
             df = pd.DataFrame(index=date_lst)
@@ -596,7 +635,7 @@ def change_tz(arg,from_tz, to_tz):
 
         df.sort_index(ascending=True, inplace=True)
 
-        try:    
+        try:
             tz1_idx = df.index.tz_localize(tz1)
         except TypeError as error:
             already_tz = "Already tz-aware, use tz_convert to convert."
@@ -604,13 +643,13 @@ def change_tz(arg,from_tz, to_tz):
                 print ("Existing datetimes already localized... Proceeding to change TZ.")
                 tz1_idx = df.index
 
-        tz1_ame = from_tz.replace('/', '_')
-        df[f"Dt_{tz1_ame}"] = tz1_idx
+        tz1_name = from_tz.replace('/', '_')
+        df[f"Dt_{tz1_name}"] = tz1_idx
 
         tz2_idx =  tz1_idx.tz_convert(tz2)
         df.index = tz2_idx
         df.index.names = ['DateTime']
-        if df.columns[0] != f"Dt_{tz1_ame}":
+        if df.columns[0] != f"Dt_{tz1_name}":
             df = last_col_first(df)
 
         return df;
@@ -636,13 +675,16 @@ def blockPrinting(func):
         return value
 
     return func_wrapper;
-        
-@blockPrinting
-def get_str_dates(start_date=None,end_date=None, utc=True):
-    if not utc:
+
+def get_str_dates(start_date=None,end_date=None, tz=None):
+    if tz==None:
         today = datetime.now().astimezone()
     else:
-        today = pytz.utc.localize(datetime.utcnow())
+        if issubclass(type(tz), pytz.BaseTzInfo):
+            t_z = tz
+        else:
+            t_z = get_tz(tz)
+        today = t_z.localize(datetime.utcnow())
     today_str = today.isoformat()
 
     if end_date==None:
@@ -658,11 +700,12 @@ def get_str_dates(start_date=None,end_date=None, utc=True):
     elif type(start_date) is not str:
         start_date = dt_to_str(start_date)
     
-    print("Today's date:", today_str)
-    print(" ")
-    print("Start date:", start_date)
-    print("End date:", end_date)
+    # print("Today's date:", today_str)
+    # print(" ")
+    # print("Start date:", start_date)
+    # print("End date:", end_date)
     return start_date, end_date;
+    
 
 def commas(number):
     return ("{:,}".format(number))
@@ -1005,92 +1048,163 @@ def concat_summary(df_new, df_old):
     count_df_dupes_idx(df_new)
     return new_miss, new_miss_uni, common_miss, common_miss_dates
 
-def last_fridays(df):
-    split_datetime(df, date=True,day=False,month=False,year=False,time=False)
+def last_fridays(df, time=False):
     # df['Day'] = df.index.day
     # df['Month'] = df.index.month
     # df['Year'] = df.index.year
     # #df['Time'] = df.index.time
     # df['Date'] = pd.to_datetime(df[['Year','Month','Day']])
     #df['DateTime'] = pd.to_datetime(df[['Year','Month','Day','Time']])
-    last_fris = pd.DataFrame(df.apply(lambda x: x['Date'] + pd.offsets.LastWeekOfMonth(n=1,weekday=4), axis=1), columns=['Date'])
-    #last_fridays = pd.DataFrame(df.apply(lambda x: x['DateTime'] + pd.offsets.LastWeekOfMonth(n=1,weekday=4), axis=1), columns=['DateTime'])
+    if time==False:
+        split_datetime(df, date=True,day=False,month=False,year=False,time=False)
+        last_fris = pd.DataFrame(df.apply(lambda x: x['Date'] + pd.offsets.LastWeekOfMonth(n=1,weekday=4), axis=1), columns=['Date'])
+    elif time:
+        last_fris = pd.DataFrame(df.apply(lambda x: x['DateTime'] + pd.offsets.LastWeekOfMonth(n=1,weekday=4), axis=1), columns=['DateTime'])
 
     return last_fris;
 
-def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles='last_fri',utc=True, name='CME Exp.'):
+def get_exp_dates(df=None, start=None, end=None, freq='h', time=None, exp_tz='UTC', expires='last_fri', name='CME Exp.'):
     """
-    Add a Series of futures settlement dates for the DataFrame of a given security.
+    Add a Series of futures expiration dates for the DataFrame of a given security.
 
     If a DataFrame is passed and no start_date and end_date passed, the settle dates for the entire series is returned.
 
-    If utc=True, the datetimestamp of settlement will be in UTC timezone format.
+    If utc=True, the datetimestamp of expiration will be in UTC timezone format.
 
-    settles :   A setting to specify the settlemet date interval. Currently only supports 'last_fri' but can easily be expanded.
+    start, end  : the start and end dates. If a string, the dates are assumed to be in UTC.
 
-    name    :   The name of the settlement for chart anotation purposes.
+    expires :   A setting to specify the expiration date interval. Currently only supports 'last_fri' but can easily be expanded.
+
+    time    :   The expiration time (either local or UTC. Does not need to match tz to tz of dataset)
+                e.g. If the dataset is formatted in UTC and the contract expires at 4pm London time, you can input '16:00:00' and set the tz to 'London.'
+                It will account for daylight saving and return Expiration_DateTimes in UTC.
+                format: string - '%H:%M:%S'
+
+    freq    :   the interval of the timeseries. Defaultis 'h' for hours. 'm' forminutes, 'd'for days. 'ms' for microseconds etc., as per pandas date_range function.
+
+    exp_tz :   The timezone of the expiration time.
+
+    name    :   The name of the expiration for chart anotation purposes.
 
     Returns:    a dict of settlemet dates to use as annotations on a chart.
                 a pandas DataFrame of the settlemt dates as a series.
     """
     errors = {}
 
-    if settles=='last_fri':
-        
-        sd, ed = get_str_dates(start_date=start_date,end_date=end_date, utc=utc);
+    if exp_tz == 'UTC':
+        exp_tz= 'UTC'
+    elif exp_tz != 'UTC' and exp_tz!=None:
+        exp_tz = get_tz(exp_tz)
+    elif exp_tz ==None:
+        exp_tz= None
 
-        if start_date==None and isinstance(df, pd.DataFrame):
+    if expires=='last_fri':
+        
+        if start!=None:
+                sd = pd.to_datetime(start, utc=True)
+                sd = sd.tz_convert(exp_tz)
+        if end!=None:
+            ed = pd.to_datetime(end, utc=True)
+            ed = ed.tz_convert(exp_tz)
+
+        if start==None and isinstance(df, pd.DataFrame):
             start_date = df.index.min()
+            start_date = pd.to_datetime(start_date, utc=True)
+            start_date = start_date.tz_convert(exp_tz)
+
         else:
             start_date = sd
+            print("Start date:", start_date)
 
-        if end_date==None and isinstance(df, pd.DataFrame):
+        if end==None and isinstance(df, pd.DataFrame):
             end_date = df.index.max()
+            end_date = pd.to_datetime(end_date, utc=True)
+            end_date = end_date.tz_convert(exp_tz)
+
         else:
             end_date = ed
+            print("End date:", end_date)
 
-        if utc==True:
-            tz= 'UTC'
-        else:
-            tz= None
+        if (time==None) or (freq=='D'):
+            date_range_df = pd.DataFrame(index=pd.date_range(start=start_date, end=end_date, freq='D',tz=exp_tz))
+            date_range_df.index = pd.to_datetime(date_range_df.index, utc=True)
+            # date_range['Date'] = date_range.index.to_series()
+            # date_range_df['DateTime'] = date_range_df.index.to_series()
+            date_range_df['Date'] = date_range_df.index.date
+            date_range_df['DateTime'] = date_range_df.index
+            range_df = date_range_df
 
-        date_range_df = pd.DataFrame(index=pd.date_range(start=start_date, end=end_date, freq='D',tz=tz))
-        # date_range['Date'] = date_range.index.to_series()
-        # date_range_df['DateTime'] = date_range_df.index.to_series()
-        date_range_df['Date'] = date_range_df.index.date
-        date_range_df
+        elif freq!='D' and time!=None:
+            dt_range_df = pd.DataFrame(index=pd.date_range(start=start_date, end=end_date, freq=freq,tz=exp_tz))
+            dt_range_df['Time'] = dt_range_df.index.time
+            dt_range_df['Exp_DateTime'] = dt_range_df['Time'].astype(str) == time
+            dt_range_df = dt_range_df.loc[dt_range_df['Exp_DateTime'] == True]
+            dt_range_df.index = pd.to_datetime(dt_range_df.index, utc=True)
+            dt_range_df['DateTime'] = dt_range_df.index
+            dt_range_df = dt_range_df.drop(columns=['Time', 'Exp_DateTime'])
+            range_df = dt_range_df
 
     while True:
         try:
-            if settles=='last_fri':
+            if expires=='last_fri':
 
-                last_fris = last_fridays(date_range_df)
-                last_fris = last_fris.drop_duplicates(ignore_index=False)
-                last_fris_df = last_fris.set_index('Date', drop=False, inplace=False)
-                last_fris_df.index = last_fris_df.index.strftime('%Y-%m-%d')
-                last_fris_df['Date'] = last_fris_df.index.to_series()
+                if (time==None) or (freq=='D'):
+                    last_fris = last_fridays(range_df)
+                    last_fris = last_fris.drop_duplicates(ignore_index=False)
+                    last_fris_df = last_fris.set_index('Date', drop=False, inplace=False)
+                    last_fris_df.index = last_fris_df.index.strftime('%Y-%m-%d')
+                    last_fris_df['Date'] = last_fris_df.index.to_series()
 
-                # settle_dt_lst = last_fris_df['Date'].unique().tolist()
-                # settlements = pd.Series(last_fris_df['Date'].values,index=last_fris_df.Date).to_dict()
-                settlements = pd.Series(last_fris_df['Date'].values,index=last_fris_df['Date']).to_dict()
-                for key in list(settlements.keys()):
-                    settlements[key] = name
-                print("")
-                print("First settle date:",next(iter(settlements.items())))
+                    expirations = pd.Series(last_fris_df['Date'].values,index=last_fris_df['Date']).to_dict()
+                    for key in list(expirations.keys()):
+                        expirations[key] = name
 
-                dates_to_remove = last_fris_df.loc[(~last_fris_df['Date'].astype(str).isin(date_range_df['Date'].astype(str)))]
-                last_fris_df = last_fris_df.loc[(~last_fris_df['Date'].astype(str).isin(dates_to_remove['Date'].astype(str)))]
-                removal_lst = dates_to_remove['Date'].unique().tolist()
-                for nul_date in removal_lst:
-                    settlements.pop(nul_date, None)
-                print ("Last settle date:",next(reversed(settlements.items())))
+                    dates_to_remove = last_fris_df.loc[(~last_fris_df['Date'].astype(str).isin(range_df['Date'].astype(str)))]
+                    hist_exp_df = last_fris_df.loc[(~last_fris_df['Date'].astype(str).isin(dates_to_remove['Date'].astype(str)))]
+                    removal_lst = dates_to_remove['Date'].unique().tolist()
+                    for nul_date in removal_lst:
+                        expirations.pop(nul_date, None)
+                    print("")
+                    print("First expiration date:",next(iter(expirations.items())))
+                    print ("Last expiration date:",next(reversed(expirations.items())))
 
-                last_fris_df['DateTime'] = last_fris_df.index.to_series()
-                break
+                    hist_exp_df['Date'] = hist_exp_df.index.to_series()
+                    break
 
-            elif settles!='last_fri':
-                errors[0] = ("\nInvalid settlement date type.")
-                errors[1] = ("\nPlease input paramater: settles='last_fri or ask Saran to edit the source code to add more dates.'\n")
+                elif (time!=None):
+                    last_fris = last_fridays(range_df, time=True)
+                    last_fris = last_fris.drop_duplicates(ignore_index=False)
+                    last_fris_df = last_fris.set_index('DateTime', drop=False, inplace=False)
+                    last_fris_df['DateTime'] = last_fris_df.index.to_series()
+
+                    str_exp_df = pd.DataFrame(last_fris_df.index.strftime('%Y-%m-%d %H:%M:%S'), index= last_fris_df.index.strftime('%Y-%m-%d %H:%M:%S'), columns=['DateTime'])
+
+                    expirations = pd.Series(str_exp_df['DateTime'].values,index=str_exp_df['DateTime']).to_dict()
+                    for key in list(expirations.keys()):
+                        expirations[key] = name
+                    print("")
+                    print("First Expiration_DateTime:",next(iter(expirations.items())))
+
+                    dates_to_remove = last_fris_df.loc[(~last_fris_df['DateTime'].astype(str).isin(range_df['DateTime'].astype(str)))]
+                    hist_exp_df = last_fris_df.loc[(~last_fris_df['DateTime'].astype(str).isin(dates_to_remove['DateTime'].astype(str)))]
+
+                    dates_to_remove['DateTime'] = dates_to_remove['DateTime'].dt.strftime('%Y-%m-%d %H:%M:%S')
+                    removal_lst = dates_to_remove['DateTime'].unique().tolist()
+                    for nul_date in removal_lst:
+                        expirations.pop(nul_date, None)
+                    print ("Last expiration date:",next(reversed(expirations.items())))
+
+                    hist_exp_df['DateTime'] = hist_exp_df.index.to_series()
+                    break
+
+                elif expires!='last_fri':
+                    errors[0] = ("\nInvalid expiration date type.")
+                    errors[1] = ("\nPlease input paramater: expires='last_fri or ask Saran to edit the source code to add more dates.'\n")
+                    raise NotImplementedError
+
+            elif expires!='last_fri':
+                errors[0] = ("\nInvalid expiration date type.")
+                errors[1] = ("\nPlease input paramater: expires='last_fri or ask Saran to edit the source code to add more dates.'\n")
                 raise NotImplementedError
 
         except Exception as error:
@@ -1107,21 +1221,107 @@ def get_settle_dates(df=None, start_date=None, end_date=None, time=None, settles
                     print (e)
             break
 
-    df = add_settle_dates(df, last_fris_df)
+    if (time==None) or (freq=='D'):
+        df = add_settle_dates(df, hist_exp_df)
+    elif freq!='D' and time!=None:
+        df = add_settle_dates(df, hist_exp_df, time=True)
 
-    return settlements, last_fris_df, df;
+    return expirations, last_fris_df, df;
 
-def add_settle_dates(df, last_fris_df):
-    if 'Date' not in df:
-        df['Date'] = df.index.date
-    df['Settlement Date'] = df['Date'].astype(str).isin(last_fris_df['Date'])
-    df.tail()
-    df['Settlement Date'].value_counts()
-    print ("Last fridays in rannge:", last_fris_df['Date'].count()*24)
+def add_settle_dates(df, hist_exp_df, time=False):
+    if time==False:
+        if 'Date' not in df:
+            df['Date'] = df.index.date
+        df['Is_Exp_Date'] = df['Date'].astype(str).isin(hist_exp_df['Date'])
+        df.tail()
+        df['Is_Exp_Date'].value_counts()
+        print ("Expiration dates in range:", hist_exp_df['Date'].count())
 
-    found_set_dates = pd.DataFrame(df.loc[df['Settlement Date']==True, 'Date'])
-    print ("found settlement dates:", len(found_set_dates))
+        df['Exp_Date'] = df[df['Is_Exp_Date']==True]['Date']
+        found_set_dates = pd.DataFrame(df['Exp_Date']).drop_duplicates()
+        print ("Found expiration dates:", found_set_dates.count())
 
-    missing_set_date = last_fris_df.loc[(~last_fris_df['Date'].isin(found_set_dates['Date'].astype(str)))]
-    print ("Missing settlement dates:", len(missing_set_date))
+        missing_set_date = hist_exp_df.loc[(~hist_exp_df['Date'].isin(found_set_dates['Exp_Date'].astype(str)))]
+        print ("Missing expiration dates:", len(missing_set_date))
+
+    elif time:
+        if 'DateTime' not in df:
+            df['DateTime'] = df.index
+        df['Is_Exp_DateTime'] = df['DateTime'].astype(str).isin(hist_exp_df['DateTime'].astype(str))
+        df.tail()
+        df['Is_Exp_DateTime'].value_counts()
+
+        valid_exp_dates = pd.DataFrame(hist_exp_df.index.date, columns=['Date'])
+        valid_exp_dates = valid_exp_dates.drop_duplicates(ignore_index=False)
+
+        print ("Expiration dates in range:", (valid_exp_dates['Date'].count()))
+        print ("Expiration day datetimes in range:", (hist_exp_df['DateTime'].count()))
+
+        df['Exp_DateTime'] = df[df['Is_Exp_DateTime']==True]['DateTime']
+        print ("Found expiration day datetimes:", df['Exp_DateTime'].count())
+
+        missing_set_date = hist_exp_df.loc[(~hist_exp_df['DateTime'].astype(str).isin(df['Exp_DateTime'].astype(str)))]
+        print ("Missing expiration day datetimes:", len(missing_set_date))
+
     return df;
+
+def get_t_delta(interval='h'):
+    if interval=='h':
+        t_delta = 'timedelta64[h]'
+    elif interval=='d':
+        t_delta = 'timedelta64[d]'
+    elif interval=='m':
+        t_delta = 'timedelta64[m]'
+    elif interval=='ms':
+        t_delta = 'timedelta64[ms]'
+    elif interval=='ns':
+        t_delta = 'timedelta64[ns]'
+    return t_delta;
+
+def t_to_exp(df, interval='h'):
+    df['Next_Exp'] = df['Exp_DateTime'].bfill()
+    t_delta = get_t_delta(interval=interval)
+    df['t_to_Exp'] = (df['Next_Exp']-df['DateTime']).astype(t_delta)
+    return df;
+
+def t_since_exp(df, interval='h'):
+    df['Last_Exp'] = df['Exp_DateTime'].ffill()
+    t_delta = get_t_delta(interval=interval)
+    df['t_since_Exp'] = (df['DateTime']-df['Last_Exp']).astype(t_delta)
+    return df;
+
+def expir_delta(df, interval='h'):
+    """
+    Add columns expressing the timedelta since expiration and until the next expiration.
+
+    df          : a pandas DataFrame.
+    interval    : the format to express the timedelta. Default is 'h' for hours.
+                  d, h, m, ms, ns.
+    """
+    t_to_exp(df, interval=interval)
+    t_since_exp(df, interval=interval)
+
+def get_exp_range(df, t=48, t_til=None, t_since=None):
+    """
+    Return a subseries of datetime ranges, either a specified max timeframe before expiry or after expiry.
+    Alternatively, select slices of datetimes before and after expiry.
+    t   :   int. e.g. Enter -20 to get the 20 periods before each expiry date. Or +20 to get the 20 periods after expiry.
+    
+    Alternativly, enter both t_til and t_since values and ignore the t paramater.
+            e.g t_til=20 and t_since=20 will return the 40 periods either side of the expiry date or datetime.
+    """
+    if t!=None and t_since==None and t_til==None:
+        if t < 0:
+            df_t_exp = df.loc[df['t_to_Exp']<=t]
+        if t > 0:
+            df_t_exp = df.loc[df['t_since_Exp']<=t]
+        if t == 0:
+            df_t_exp = df.loc[df['t_since_Exp']==0]
+
+    elif t_since!=None and t_til!=None:
+        df_t_exp = df.loc[(df['t_to_Exp']<=t_til) & (df['t_since_Exp']<=t_since)]
+
+    else:
+        raise NotImplementedError("Input either -t or +t, or else input both +t_til and +t_since.")
+
+    return  df_t_exp;
