@@ -15,6 +15,7 @@ from datetime import datetime,date,timedelta
 import re
 import glob
 from tqdm import tqdm
+from collections import ChainMap, OrderedDict
 
 def read_pd_csv(f_path,low_memory=False, index_col=['DateTime'], parse_dates=['DateTime'],infer_datetime_format=True):
     df= pd.read_csv(f_path,low_memory=low_memory, index_col=index_col, parse_dates=parse_dates,infer_datetime_format=infer_datetime_format)
@@ -1238,8 +1239,8 @@ def add_settle_dates(df, hist_exp_df, time=False):
         print ("Expiration dates in range:", hist_exp_df['Date'].count())
 
         df['Exp_Date'] = df[df['Is_Exp_Date']==True]['Date']
-        found_set_dates = pd.DataFrame(df['Exp_Date']).drop_duplicates()
-        print ("Found expiration dates:", found_set_dates.count())
+        found_set_dates = pd.DataFrame(df['Exp_Date'], columns=['Exp_Date']).drop_duplicates()
+        print ("Found expiration dates:", found_set_dates['Exp_Date'].count())
 
         missing_set_date = hist_exp_df.loc[(~hist_exp_df['Date'].isin(found_set_dates['Exp_Date'].astype(str)))]
         print ("Missing expiration dates:", len(missing_set_date))
@@ -1303,16 +1304,17 @@ def expir_delta(df, interval='h'):
 
 def get_exp_range(df, t=48, t_til=None, t_since=None):
     """
-    Return a subseries of datetime ranges, either a specified max timeframe before expiry or after expiry.
+    Return a subseries of datetime ranges, either a specified max timeframe before expiry or after expiry, for every contract period in the series.
     Alternatively, select slices of datetimes before and after expiry.
-    t   :   int. e.g. Enter -20 to get the 20 periods before each expiry date. Or +20 to get the 20 periods after expiry.
+    t   :   int. e.g. Enter -20 to get the 20 periods before each expiry date. Or +20 to get the 20 periods after expiry, for every contract period in the series..
     
     Alternativly, enter both t_til and t_since values and ignore the t paramater.
             e.g t_til=20 and t_since=20 will return the 40 periods either side of the expiry date or datetime.
     """
     if t!=None and t_since==None and t_til==None:
         if t < 0:
-            df_t_exp = df.loc[df['t_to_Exp']<=t]
+            t_minus = t*-1
+            df_t_exp = df.loc[df['t_to_Exp']<=t_minus]
         if t > 0:
             df_t_exp = df.loc[df['t_since_Exp']<=t]
         if t == 0:
@@ -1325,3 +1327,75 @@ def get_exp_range(df, t=48, t_til=None, t_since=None):
         raise NotImplementedError("Input either -t or +t, or else input both +t_til and +t_since.")
 
     return  df_t_exp;
+
+def get_exp_t(df, t=0, t_til=None, t_since=None):
+    """
+    Return a subseries of single datetimes, at a specified timeframe before expiry or after expiry.
+    Alternatively, select a subseries comprising a datetime before expiry and another one after expiry, for every contract period in the series.
+    t   :   int. e.g. Enter -20 to get a set of the exact t-20 datetime before each expiry date. Or +20 to get a set of the exact t+20 datetimes after expiry.
+    
+    Alternativly, enter both t_til and t_since values and ignore the t paramater.
+            e.g t_til=20 and t_since=20 will return both the exact t-20 datetimes before expiration and the exact t+20 datetimes after expiration.
+    """
+    if t!=None and t_since==None and t_til==None:
+        if t < 0:
+            t_minus = t*-1
+            df_t_exp = df.loc[df['t_to_Exp']==t_minus]
+        if t > 0:
+            df_t_exp = df.loc[df['t_since_Exp']==t]
+        if t == 0:
+            df_t_exp = df.loc[df['t_since_Exp']==0]
+
+    elif t_since!=None and t_til!=None:
+        df_t_exp = df.loc[(df['t_to_Exp']==t_til) & (df['t_since_Exp']==t_since)]
+
+    else:
+        raise NotImplementedError("Input either -t or +t, or else input both +t_til and +t_since.")
+
+    return  df_t_exp;
+
+def get_exp_t_ordered(df, t=24):
+  """
+  Input a pandas DataFrame and specify a timedelta.
+  Returns a ordered dict of DataFrames.
+  Each DataFrame in the ordered dict is a subseries of single datetimes, at a specified timeframe before expiry or after expiry.
+  Alternatively, select a subseries comprising a datetime before expiry and another one after expiry, for every contract period in the series.
+
+  t   :   int. e.g. Enter -20 to get a set of the exact t-20 datetime before each expiry date. Or +20 to get a set of the exact t+20 datetimes after expiry.
+          This function will itterativley create DataFrames for each t+- step from t to t=0. 
+          i.e. if t=20, 20 DataFrames will be created.
+
+    To unpack the dict, use: globals().update(dict_df_exps)
+  """
+  # dict_df_exps = {}
+  dict_df_exps = OrderedDict()
+  df_name = df.name.strip().replace('/', '_').replace(' ', '_').lower()
+  if t>0:
+    t= t+1
+    for t in range(1, t):
+      key = "{name}_t_plus_{t_}".format(name=df_name,t_=t)
+      _df_t = get_exp_t(df, t=t, t_til=None, t_since=None)
+      dict_df_exps[key] = _df_t
+
+  elif t<0:
+    for t in range(t, 1, 1):
+      key = "{name}_t_min_{t_}".format(name=df_name, t_=abs(t))
+      _df_t = get_exp_t(df, t=t, t_til=None, t_since=None)
+      dict_df_exps[key] = _df_t
+
+  elif t==0:
+    print("t=0 is only one subseries. No dict needed. Use: get_exp_t(df, t=0)")
+      
+  print ([*dict_df_exps])
+  return dict_df_exps;
+
+def drop_rows(df, head=False, tail=True, n=1):
+    """
+    Drop either the first n rows or the last n rows (or both) of a pandas DataFrame.
+    Default is set to drop the last row.
+    """
+    if head:
+        df = df.drop(df.head(n).index,inplace=True)
+    if tail:
+        df= df.drop(df.tail(n).index,inplace=True)
+    return df;

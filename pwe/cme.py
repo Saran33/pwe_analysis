@@ -203,6 +203,7 @@ processes=1, resample=True, interval='1h',symbols=None):
                             brti_old_1m = idx_to_dt(brti_old_1m)
                         else:
                             print (error)
+                            return;
                     else:
                         print ("No file. Download aborted.")
                         ans1 = [None, None]
@@ -229,6 +230,7 @@ processes=1, resample=True, interval='1h',symbols=None):
                             brti_old_1h = idx_to_dt(brti_old_1h)
                         else:
                             print (error)
+                            return;
                     else:
                         print ("No file. Download aborted.")
                         ans1 = [None, None]

@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 from pandas_summary import DataFrameSummary
 #from isoweek import Week
-from pwe.pwetools import check_folder
+from pwe.pwetools import check_folder,file_datetime,assign_tz
 
 import plotly
 import cufflinks as cf
@@ -97,16 +97,16 @@ def get_chart_dates(df, start_date=None,end_date=None,utc=True, auto_start=None,
         auto_end = t_dmy_str
     elif (auto_end!=None) and (isinstance(auto_end, str)):
         at_end = datetime.strptime(auto_end,'%Y-%m-%d')
-        chart_at_end = at_end.strftime("%d-%m-%Y")
+        auto_end = at_end.strftime("%d-%m-%Y")
     elif (auto_end!=None) and (type(auto_end) == datetime):
         at_end = auto_end
-        chart_at_end = at_end.strftime("%d-%m-%Y")
+        auto_end = at_end.strftime("%d-%m-%Y")
     elif (auto_end!=None) and (type(auto_end) == date):
         at_end = auto_end
-        chart_at_end = at_end.strftime("%d-%m-%Y")
+        auto_end = at_end.strftime("%d-%m-%Y")
     elif isinstance(auto_end, pd.Timestamp):
         at_end = pd.to_datetime(auto_end)
-        chart_at_end = at_end.strftime("%d-%m-%Y")
+        auto_end = at_end.strftime("%d-%m-%Y")
 
     # Auto start
     if auto_start == None:
@@ -114,24 +114,62 @@ def get_chart_dates(df, start_date=None,end_date=None,utc=True, auto_start=None,
         auto_start = at_st.strftime("%d-%m-%Y")
     elif (auto_start!=None) and (isinstance(auto_start, str)):
         at_start = datetime.strptime(auto_start,'%Y-%m-%d')
-        chart_at_start = at_start.strftime("%d-%m-%Y")
+        auto_start = at_start.strftime("%d-%m-%Y")
     elif (auto_start!=None) and (type(auto_start) == datetime):
         at_start = auto_start
-        chart_at_start = at_start.strftime("%d-%m-%Y")
+        auto_start = at_start.strftime("%d-%m-%Y")
     elif (auto_start!=None) and (type(auto_start) == date):
         at_start = auto_start
-        chart_at_start = at_start.strftime("%d-%m-%Y")
+        auto_start = at_start.strftime("%d-%m-%Y")
     elif isinstance(auto_start, pd.Timestamp):
         at_start = pd.to_datetime(auto_start)
-        chart_at_start = at_start.strftime("%d-%m-%Y")
+        auto_start = at_start.strftime("%d-%m-%Y")
 
-    return chart_start, chart_end, chart_at_start, chart_at_end;
+    return chart_start, chart_end, auto_start, auto_end;
 
-def define_period(df, start_date, end_date):
-    sdate = str(start_date)
-    edate = str(end_date)
-    chart_dates = str(sdate+" - "+edate)
+
+def chart_file_dates(df, start_date=None, end_date=None):
+    if start_date==None:
+        sdate = df.index.strftime('%Y-%m-%d_%H:%M:%S').min()
+        title_start= df.index.strftime('%Y-%m-%d %H:%M:%S%z').min()
+    elif start_date!=None and not (isinstance(start_date, str)):
+        try:
+            sdate = datetime.strftime(start_date, "%Y-%m-%d_%H:%M:%S")
+        except ValueError:
+            sdate = datetime.strftime(start_date,'%Y-%m-%d')
+        try:
+            title_start = datetime.strftime(start_date, '%Y-%m-%d %H:%M:%S%z')
+        except ValueError:
+            title_start = assign_tz(start_date, 'UTC')
+            title_start = datetime.strftime(title_start,'%Y-%m-%d %H:%M:%S%z')
+    elif start_date!=None and isinstance(start_date, str):
+        sdate = start_date
+    sdate = sdate.strip().replace(':', ',')
+
+    if end_date==None:
+        edate = df.index.strftime('%Y-%m-%d_%H:%M:%S').max()
+        if str(df.index.max().time())=='23:00:00':
+            title_end = df.index.max() + timedelta(minutes=59, seconds=59)
+            title_end = title_end.strftime('%Y-%m-%d %H:%M:%S%z')
+        else:
+            title_end = df.index.strftime('%Y-%m-%d %H:%M:%S%z').max()
+    elif end_date!=None and not (isinstance(end_date, str)):
+        try:
+            edate = datetime.strftime(end_date, "%Y-%m-%d_%H:%M:%S")
+        except ValueError:
+            edate = datetime.strftime(end_date,'%Y-%m-%d')
+        try:
+            title_end = datetime.strftime(end_date, '%Y-%m-%d %H:%M:%S%z')
+        except ValueError:
+            title_end = assign_tz(start_date, 'UTC')
+            title_end = datetime.strftime(title_end,'%Y-%m-%d %H:%M:%S%z')
+    elif end_date!=None and isinstance(end_date, str):
+        edate = end_date
+    edate = edate.strip().replace(':', ',')
+
+    chart_dates = str(title_start+" - "+title_end)
     return sdate, edate, chart_dates;
+
 
 PWE_skin = "#DCBBA6"
 black = "#000000"
@@ -229,7 +267,7 @@ def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start
 
     chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
     
-    sdate,edate,chart_dates = define_period(df, start_date, end_date);
+    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date);
     
     title = ('{}: {}'.format(ticker, chart_dates))
     
@@ -431,7 +469,7 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
     
     chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
     
-    sdate,edate,chart_dates = define_period(df, start_date, end_date);
+    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date);
 
     title = ('{}: {}'.format(ticker, chart_dates))
 
@@ -553,7 +591,7 @@ def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=N
     
     chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
     
-    sdate,edate,chart_dates = define_period(df, start_date, end_date);
+    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date);
 
     check_folder('charts')
 
@@ -677,7 +715,7 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
     
     chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
     
-    sdate,edate,chart_dates = define_period(df, start_date, end_date);
+    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date);
 
     check_folder('charts')
 
@@ -756,7 +794,7 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
 
 def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='scatter',title=None, ticker=None,yTitle=None,asPlot=False,theme='white',
                           showlegend=False,auto_start=None,auto_end=None,connectgaps=False,
-                         tickformat='%',decimals=2,file_tag=None): # text=None hovermode='x', hovertemplate="%{y:.6%}",
+                         tickformat='.2%',decimals=2,file_tag=None): # text=None hovermode='x', hovertemplate="%{y:.6%}",
     """
 	*Put start_date ad end_date after df and before other arguemets, with no = to any value or it will throw an error.
     
@@ -785,7 +823,7 @@ def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='s
     
     chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
     
-    sdate,edate,chart_dates = define_period(df, start_date, end_date);
+    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date);
     
     df['Series_str'] = df[tseries]
     
@@ -850,7 +888,7 @@ def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='s
 
 def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='scatter',title=None,ticker=None,yTitle=None,xTitle=None,asPlot=False,theme='white',
                           showlegend=False,auto_start=None,auto_end=None,
-                         tickformat='%',decimals=2,orientation='v',textangle=0,file_tag=None): # text=None hovermode='x', hovertemplate="%{y:.6%}",
+                         tickformat='.2%',decimals=2,orientation='v',textangle=0,file_tag=None): # text=None hovermode='x', hovertemplate="%{y:.6%}",
     """
     
     Plots an interactive bar chart with the HTML formatted to the PWE style. It opens the plot in a new browser tab.
@@ -876,7 +914,7 @@ def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='sc
 
     chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
     
-    sdate,edate,chart_dates = define_period(df,start_date,end_date);
+    sdate,edate,chart_dates = chart_file_dates(df,start_date,end_date);
     
     df['Series_str'] = df[tseries]
     df['Series_str'] = pd.Series([round(val, 6) for val in df[tseries]], index = df.index)
@@ -935,6 +973,116 @@ def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='sc
     chart_html, chart_file = pwe_format(f_name)
     
     return chart_html, chart_file,plt_int;
+
+def pwe_hist(df,start_date,end_date,tseries='Price_Returns',title=None,ticker=None,yTitle=None,xTitle=None,asPlot=False,theme='white',
+                          showlegend=False,decimals=2,orientation='v',textangle=0,file_tag=None,
+                          interval='Daily',bins=100,histnorm='frequency',histfunc='count',
+                          yaxis_tickformat='.2%',xaxis_tickformat='.2%',linecolor=None,title_dates='Yes'):
+    """
+    
+    Plots an interactive histogram with the HTML formatted to the PWE style. It opens the plot in a new browser tab.
+    
+    orientation :     'v' is vertical.
+                    'h' is horizontal.
+    
+    textangle :        The angle of the text to display on each bar. 0 is horizontal and -90 is vertical.
+
+    histnorm : string - '', 'percent', 'probability', 'density', 'probability density'
+    histfunc : string - count, sum, avg, min, max
+
+    linecolor : string - specifies the line color of the histogram
+
+    bins : int or tuple 
+			if int:
+				Specifies the number of bins 
+			if tuple:
+				(start, end, size)
+				start : starting value
+				end: end value
+				size: bin size
+
+    See: https://github.com/santosjorge/cufflinks/blob/master/cufflinks/plotlytools.py
+    """
+    dark = ("henanigans", "solar", "space")
+    if str(theme) in dark :
+        fontcolor = 'henanigans_light1'
+        arrowcolor = 'henanigans_light1'
+        style = 'dark'
+    else : 
+        fontcolor = PWE_ig_light_grey
+        arrowcolor = PWE_ig_dark_grey
+        style = theme
+
+    if linecolor==None or linecolor=='PWE_grey':
+        linecolor=PWE_grey
+    elif linecolor=='PWE':
+        linecolor=PWE_skin
+    if bins==None:
+        bins = int(df[tseries].count())
+        
+    colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
+    
+    sdate,edate,chart_dates = chart_file_dates(df,start_date,end_date);
+
+    # format_dict = { tseries : '{:.2%}'}
+    # df.style.format(format_dict)
+
+    df['Series_str'] = pd.Series([round(val, decimals) for val in df[tseries]], index = df.index)
+    df['Series_str'] = pd.Series([f"{val*100:.{decimals}f}%" for val in df['Series_str']], index = df.index)
+    
+    if 'DateTime_str' in df:
+        df['Date_Ret_str'] = df['DateTime_str'].astype(str)+", "+df['Series_str']
+    elif 'DateTime' in df:
+        df['Date_Ret_str'] = df['DateTime'].astype(str)+", "+df['Series_str']
+    else:
+        df['Date_Ret_str'] = df['Date'].astype(str)+", "+df['Series_str']
+        
+    hovertext = df['Date_Ret_str'].values.tolist()
+    text = df['Series_str'].values.tolist()
+
+    if xTitle==None:
+        xTitle=f'{interval} Return (%)'
+    if yTitle==None:
+        if histnorm=='':
+            yTitle='Frequency'
+            yTitle.capitalize()
+        else:
+            yTitle=histnorm.capitalize()
+        
+
+    check_folder('charts')
+
+    tkr = ticker.replace('/', '_')
+
+    if file_tag==None:
+
+        if hasattr(df, 'name'):  
+            df_name = df.name.replace('/', '_').replace(' ', '_')
+            f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_hist_{style}'
+        else:
+            f_name= f'/charts/{tkr}_{sdate}-{edate}_hist_{style}'
+
+    else:
+        f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_hist_{style}'
+
+    if title_dates!=None:
+        chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
+        #chart_title = '{} ({})'.format(title,ticker)
+    
+    plt_int = df[[tseries]].iplot(kind="histogram",bins=bins,theme=theme,showlegend=showlegend,legend='top',rangeslider=False,
+                        title=chart_title,xTitle=xTitle,yTitle=yTitle,colors=colors,fontfamily='Roboto',asPlot=asPlot,filename=f'./{f_name}',
+                        hoverinfo="text",hovertext=hovertext,text=text,orientation=orientation,textangle=textangle,
+                        linecolor=linecolor,histnorm=histnorm,histfunc=histfunc,yaxis_tickformat=yaxis_tickformat,xaxis_tickformat=xaxis_tickformat,)
+                        # xaxis = dict(
+                        # tickformat = '%.format.%5f%',
+                        # title = xTitle,
+                        # hoverformat = '.5f',
+                        # showgrid = True),)
+    
+    chart_html, chart_file = pwe_format(f_name)
+    
+    return chart_html, chart_file, plt_int;
+
   
 def add_range_selector(layout, axis_name='xaxis', ranges=None, default=None):    
     """Add a rangeselector to the layout if it doesn't already have one.

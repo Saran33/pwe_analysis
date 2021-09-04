@@ -6,6 +6,7 @@ Created on Mon Aug 23 08:33:53 2021
 @author: Saran Connolly saran.c@pwecapital.com
 """
 from datetime import datetime, date, timedelta
+from typing import OrderedDict
 import pytz
 from os import error
 import sys
@@ -253,11 +254,11 @@ class Security:
         else:
             return yz, yz_an;
     
-    def stats(self, returns='Price_Returns',price='Close', trading_periods=252,market_hours=24,interval='daily', vol_window = 30): 
+    def stats(self, returns='Price_Returns',price='Close', trading_periods=252,market_hours=24,interval='daily', vol_window = 30, geo=True): 
         """
         returns : A Pandas series of % returns on which to calculate the below statistics.
 
-        trading_periods : The number of trading days per year for the given security.
+        trading_periods : The number of trading days per year for the given self.
 
         market_hours :  In the case of annualizing intraday returns and volatility, this is a pretty crude calculation.
                     Maybe best to keep market_hours at 24, regardless of whether the market is 24 hours each trading day. 
@@ -329,84 +330,97 @@ class Security:
         print ('')
 
         if price in df:
-            Security.cum_ret = (df[price].iloc[-1] / df[price].iloc[0])-1;
+            cum_ret = (df[price].iloc[-1] / df[price].iloc[0])-1;
+            setattr(self, 'cum_ret', cum_ret)
         else:
             raise ValueError('Include a price index in function paramaterss, e.g. price="Close"')
     
-        print ('Cumulative Returns:', "{:.2%}".format(Security.cum_ret))
+        print ('Cumulative Returns:', "{:.2%}".format(self.cum_ret))
         print ('')
         
 #####################################################################################################################
     
         #Arithmetic average returns:
-        Security.avg_ret = df[returns].mean();
-        print ('Arithmetic Mean Return:', "{:.6%}".format(Security.avg_ret))
+        avg_ret = df[returns].mean();
+        setattr(self, 'avg_ret', avg_ret)
+        print ('Arithmetic Mean Return:', "{:.6%}".format(self.avg_ret))
         
         #Geometric average returns:
-        Security.geomean = ((1 + Security.cum_ret)**(1/(periods))) - 1
-        #Security.geomean = ((1 + Security.cum_ret)**(1/((df[returns].count())*(trading_periods/365.25)))) - 1   #(1/7686) -1  #
-        print ('Geometric Mean Return:', "{:.6%}".format(Security.geomean))
+        geomean = ((1 + self.cum_ret)**(1/(periods))) - 1
+        setattr(self, 'geomean', geomean)
+        #self.geomean = ((1 + self.cum_ret)**(1/((df[returns].count())*(trading_periods/365.25)))) - 1   #(1/7686) -1  #
+        print ('Geometric Mean Return:', "{:.6%}".format(self.geomean))
         print ('')
         
         #Median returns:
-        Security.med_ret = df[returns].median()
-        #Security.med_ret = df[returns].round(4).median()
-        print ('Median Return:', "{:.6%}".format(Security.med_ret))
+        med_ret = df[returns].median()
+        setattr(self, 'med_ret', med_ret)
+        #self.med_ret = df[returns].round(4).median()
+        print ('Median Return:', "{:.6%}".format(self.med_ret))
         print ('')
         
 #####################################################################################################################
         
         #Annualized Return:
-        #Security.avg_annualaized = Security.avg_ret * ann_factor
-        Security.avg_annualaized = ((1+ Security.avg_ret)**ann_factor)-1
-        #Security.avg_annualaized = Security.avg_ret * ann_factor
-        print ('Annualaized Arithmetic Return:', "{:.2%}".format(Security.avg_annualaized))
+        #self.avg_ann = self.avg_ret * ann_factor
+        avg_ann = ((1+ self.avg_ret)**ann_factor)-1
+        setattr(self, 'avg_ann', avg_ann)
+        #self.avg_ann = self.avg_ret * ann_factor
+        print ('Annualaized Arithmetic Return:', "{:.2%}".format(self.avg_ann))
         
-        #Annualaized Geometric:
-        Security.avg_annualized_geometric = ((1 + Security.cum_ret)**(ann_factor/periods)) - 1
-        #Security.avg_annualized_geometric = ((1 + df[returns]).cumprod()) -1
-        print ('Annualized Geometric Return:', "{:.2%}".format(Security.avg_annualized_geometric))
+        if geo:
+            #Annualaized Geometric:
+            avg_ann_geo = ((1 + self.cum_ret)**(ann_factor/periods)) - 1
+            setattr(self, 'avg_ann_geo', avg_ann_geo)
+            #self.avg_ann_geo = ((1 + df[returns]).cumprod()) -1
+            print ('Annualized Geometric Return:', "{:.2%}".format(self.avg_ann_geo))
         print(' ')
     
 #####################################################################################################################
     
         # Volatility of returns:
-        Security.vol = df['Log_Returns'].std()
-        print ('Vol. of Period Returns:', "{:.6%}".format(Security.vol))
+        vol = df['Log_Returns'].std()
+        setattr(self, 'vol', vol)
+        print ('Vol. of Period Returns:', "{:.6%}".format(self.vol))
         
         # Average {vol_window} Day Volatility:
         if f'Vol_{vol_window}' in df:
-            Security.vol_roll_mean = df[f'Vol_{vol_window}'].mean()
+            self.vol_roll_mean = df[f'Vol_{vol_window}'].mean()
         else:
             std,ann_vol,vol_roll,vol_roll_an,vs_vol,r_vol=self.get_vol(window=vol_window,returns=returns,trading_periods=ann_factor)
-            Security.vol_roll_mean = vol_roll.mean()
-        print (f'Mean Volatility ({vol_window}):', "{:.6%}".format(Security.vol_roll_mean))
+            vol_roll_mean = vol_roll.mean()
+            setattr(self, 'vol_roll_mean', vol_roll_mean)
+        print (f'Mean Volatility ({vol_window}):', "{:.6%}".format(self.vol_roll_mean))
         
         if ('High' in df) and ('Low' in df) and ('Open' in df) and ('Close' in df):
             # Average {vol_window} Day YangZhang Estimator:
-            yz_roll, yz_roll_an = self.YangZhang_estimator(window=vol_window,trading_periods=trading_periods, clean=True,
+            yz_roll, yz_roll_ann = self.YangZhang_estimator(window=vol_window,trading_periods=trading_periods, clean=True,
                                                               interval=interval,market_hours=market_hours)
-            Security.yz_roll_mean = yz_roll.mean()
-            print (f'Mean YangZhang ({vol_window}):', "{:.6%}".format(Security.yz_roll_mean))
+            yz_roll_mean = yz_roll.mean()
+            setattr(self, 'yz_roll_mean', yz_roll_mean)
+            print (f'Mean YangZhang ({vol_window}):', "{:.6%}".format(self.yz_roll_mean))
             print ('')
         else:
             pass
         
         # Annualized Volatility:
-        Security.ann_vol = Security.vol*np.sqrt(ann_factor)
-        print ('Annualized Vol:', "{:.2%}".format(Security.ann_vol))
+        ann_vol = self.vol*np.sqrt(ann_factor)
+        setattr(self, 'ann_vol', ann_vol)
+        print ('Annualized Vol:', "{:.2%}".format(self.ann_vol))
         
         # Average Annualized {vol_window} Volatility:
-        Security.vol_roll_an = Security.vol_roll_mean*np.sqrt(ann_factor)
-        print (f'Annualized Mean Volatility ({vol_window}):', "{:.2%}".format(Security.vol_roll_an))
+        vol_roll_an = self.vol_roll_mean*np.sqrt(ann_factor)
+        setattr(self, 'vol_roll_an', vol_roll_an)
+        print (f'Annualized Mean Volatility ({vol_window}):', "{:.2%}".format(self.vol_roll_an))
     
         # Annualized {vol_window} YangZhang:
         if ('High' in df) and ('Low' in df) and ('Open' in df) and ('Close' in df):        
-            Security.yz_roll_an = Security.yz_roll_mean*np.sqrt(ann_factor)
+            yz_roll_ann = self.yz_roll_mean*np.sqrt(ann_factor)
+            setattr(self, 'yz_roll_ann', yz_roll_ann)
             #yz_yr, yz_yr_an = YangZhang_estimator(df,window=periods,trading_periods=ann_factor,clean=True);
-            #Security.yz_yr_an = yz_yr_an.iloc[-1]
-            print (f'Annualized Mean YangZhang ({vol_window}):', "{:.2%}".format(Security.yz_roll_an))
-            #print (f'Period YangZhang ({periods}):', "{:.2%}".format(Security.yz_yr_an))
+            #self.yz_yr_an = yz_yr_an.iloc[-1]
+            print (f'Annualized Mean YangZhang ({vol_window}):', "{:.2%}".format(self.yz_roll_ann))
+            #print (f'Period YangZhang ({periods}):', "{:.2%}".format(self.yz_yr_an))
         else:
             pass
         print ('')
@@ -414,17 +428,20 @@ class Security:
 #####################################################################################################################
     
         # Compute Simple Sharpe (No RFR)
-        Security.sharpe_ratio_ar = Security.avg_annualaized / (Security.ann_vol)
-        print ('Arithmetic Sharpe Ratio:', "{:.2f}".format(Security.sharpe_ratio_ar))
+        sharpe_ar = self.avg_ann / (self.ann_vol)
+        setattr(self, 'sharpe_ar', sharpe_ar)
+        print ('Arithmetic Sharpe Ratio:', "{:.2f}".format(self.sharpe_ar))
         
-        # Compute Geometric Sharpe (No RFR)
-        Security.sharpe_ratio_geo = Security.avg_annualized_geometric / (Security.ann_vol)
-        print ('Geometric Sharpe Ratio:', "{:.2f}".format(Security.sharpe_ratio_geo))
+        if geo:        
+            # Compute Geometric Sharpe (No RFR)
+            sharpe_geo = self.avg_ann_geo / (self.ann_vol)
+            setattr(self, 'sharpe_geo', sharpe_geo)
+            print ('Geometric Sharpe Ratio:', "{:.2f}".format(self.sharpe_geo))
         print (' ')
     
 #####################################################################################################################
     
-        print ('Return Summary Security:')
+        print ('Return Summary self:')
         
         print(df[returns].describe()) # Pull up summary statistics
         print('######')
@@ -581,3 +598,37 @@ class Security:
                 break
         return
 
+def df_dict_to_sec(df_dict):
+    """
+    Convert a dict of DataFrames into Security objects.
+    df_dict :   a dictionary of DataFrame names as keys and DataFrames as values.
+
+    To unpack all newly created securities within the dict to globals, use: globals().update(dict_of_dfs)
+    Or else call the security from within the dict by its key.
+    """
+    for key in df_dict.keys():
+        df_dict[key].name = f"{key}"
+        df_dict[key] = Security(df_dict[key])
+    return df_dict
+
+def sec_dict_stats(sec_dict,returns='Price_Returns',price='Close', trading_periods=252,market_hours=24,interval='daily', vol_window = 30,geo=True):
+    """
+    Apply the stats function to a dictionary of Securities.
+    sec_dict :   a dictionary of pwe Securities.
+
+    To unpack all securities within the dict to globals, use: globals().update(sec_dict)
+    Or else call the security from within the dict by its key. i.e. sec_dict[key]
+    """
+    for key in sec_dict.keys():
+        sec_dict[key].stats(returns=returns,price=price,trading_periods=trading_periods,market_hours=market_hours,interval=interval,vol_window=vol_window,geo=geo);
+    return sec_dict;
+
+def sec_dict_stat(sec_dict, stat):
+    """
+    Return a stat for each Security in a dict.
+    stat (str): 'cum_ret', 'avg_ret', 'geomean', 'med_ret', 'avg_ann', 'avg_ann_geo', 'vol', 'ann_vol', 
+                'vol_roll_mean', 'yz_roll_mean', 'yz_roll_ann', 'sharpe_ar', 'sharpe_geo', 
+    """
+    stat_dict =OrderedDict()
+    stat_dict = {key: getattr(sec_dict[key], stat) for key in sec_dict.keys()}
+    return stat_dict;
