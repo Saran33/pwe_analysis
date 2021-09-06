@@ -598,6 +598,18 @@ class Security:
                 break
         return
 
+def to_sec(df, name=None):
+    """
+    Name a DataFrame and initialize it as a Security instance.
+    name :  Default is a string of the df variable name.
+    """
+    if name==None:
+        df.name = f'{df=}'.split('=')[0]
+    else:
+        df.name = name
+    df = Security(df)
+    return df;
+
 def df_dict_to_sec(df_dict):
     """
     Convert a dict of DataFrames into Security objects.

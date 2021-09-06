@@ -1083,6 +1083,208 @@ def pwe_hist(df,start_date,end_date,tseries='Price_Returns',title=None,ticker=No
     
     return chart_html, chart_file, plt_int;
 
+def pwe_box(df,start_date=None,end_date=None,title=None,ticker=None,yTitle=None,xTitle=None,asPlot=False,theme='white',
+                          showlegend=False,decimals=2,orientation='v',textangle=0,file_tag=None,
+                          interval='Daily',
+                          yaxis_tickformat='.2%',xaxis_tickformat='.2%',linecolor=None,title_dates='Yes'):
+    """
+    
+    Plots an interactive box plot with the HTML formatted to the PWE style. It opens the plot in a new browser tab.
+    
+    orientation :     'v' is vertical.
+                    'h' is horizontal.
+    
+    textangle :        The angle of the text to display on each box. 0 is horizontal and -90 is vertical.m
+
+    boxpoints : string
+                Displays data points in a box plot
+                    outliers
+                    all
+                    suspectedoutliers
+                    False
+
+    See: https://github.com/santosjorge/cufflinks/blob/master/cufflinks/plotlytools.py
+    """
+    dark = ("henanigans", "solar", "space")
+    if str(theme) in dark :
+        fontcolor = 'henanigans_light1'
+        arrowcolor = 'henanigans_light1'
+        style = 'dark'
+    else : 
+        fontcolor = PWE_ig_light_grey
+        arrowcolor = PWE_ig_dark_grey
+        style = theme
+
+    if linecolor==None or linecolor=='PWE_grey':
+        linecolor=PWE_grey
+    elif linecolor=='PWE':
+        linecolor=PWE_skin
+        
+    colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
+    
+    sdate,edate,chart_dates = chart_file_dates(df,start_date,end_date);
+
+    if xTitle==None:
+        xTitle=f'{interval} Return (%)'
+        
+
+    check_folder('charts')
+
+    tkr = ticker.replace('/', '_')
+
+    if file_tag==None:
+
+        if hasattr(df, 'name'):  
+            df_name = df.name.replace('/', '_').replace(' ', '_')
+            f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_hist_{style}'
+        else:
+            f_name= f'/charts/{tkr}_{sdate}-{edate}_hist_{style}'
+
+    else:
+        f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_hist_{style}'
+
+    if title_dates!=None:
+        chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
+        #chart_title = '{} ({})'.format(title,ticker)
+    
+    plt_int = df.iplot(kind="box",theme=theme,showlegend=showlegend,legend='top',rangeslider=False,
+                        title=chart_title,xTitle=xTitle,yTitle=yTitle,colors=colors,fontfamily='Roboto',asPlot=asPlot,filename=f'./{f_name}',
+                        hoverinfo="text",orientation=orientation,textangle=textangle,
+                        yaxis_tickformat=yaxis_tickformat,xaxis_tickformat=xaxis_tickformat,)
+                        # xaxis = dict(
+                        # tickformat = '%.format.%5f%',
+                        # title = xTitle,
+                        # hoverformat = '.5f',
+                        # showgrid = True),)
+    
+    chart_html, chart_file = pwe_format(f_name)
+    
+    return chart_html, chart_file, plt_int;
+
+def pwe_table(df,file_tag=None, ticker=None, head_text_size=16, text_size=12,head_align='left',text_align='right',fill_style='alternate'):
+    """
+    Create a Plotly table in PWE style.
+    fill_style  :   'alternate' will display alternating bands for each row.
+                    'left_index' will display a darker left column with no alternaing rows.
+                    Alternatively, pass a custom list. e.g. fill_style=[pwe_r618, pwe_r382, pwe_r382, pwe_r382 ]*2
+    """
+
+    import plotly.graph_objects as go
+    from plotly.offline import iplot #init_notebook_mode
+    from cufflinks.colors import to_rgba
+
+    pwe_r618 = to_rgba("#DCBBA6", 0.618)
+    pwe_r382 = to_rgba("#DCBBA6", 0.382)
+    rowOddColor = pwe_r382
+    rowEvenColor = pwe_r618
+
+    n_cols  = df.shape[1]
+    n_rows  = df.shape[0]
+
+    alternate = [[rowOddColor,rowEvenColor]*n_rows]
+    left_index=dict(color=[pwe_r618, pwe_r382])
+
+    if fill_style=='alternate':
+        fill_color=alternate
+        fill=None
+    elif fill_style=='left_index':
+        fill_color=None
+        fill=left_index
+    else:
+        fill_color=None
+        fill=dict(color=fill_style)
+
+    if fill_color:
+        fig = go.Figure(data=[go.Table(
+            header=dict(values=list(df.columns),
+                        fill_color="#DCBBA6",
+                        align=head_align,
+                        font=dict(family='Roboto',size=head_text_size)),
+            cells=dict(values=[df['2018-01-01 - 2021-09-01']['Timedelta'], df['2018-01-01 - 2021-09-01']['Mean Hourly Return'], df['2018-01-01 - 2021-09-01']['Abnormal Return'], df['2018-01-01 - 2021-09-01']['P-value'],
+            df['2019-09-01 - 2021-09-01']['Timedelta'], df['2019-09-01 - 2021-09-01']['Mean Hourly Return'], df['2019-09-01 - 2021-09-01']['Abnormal Return'], df['2019-09-01 - 2021-09-01']['P-value']],
+                    #fill_color = [pwe_r618, pwe_r382, pwe_r382, pwe_r382 ]*2,
+                    #fill_color = [pwe_r618, pwe_r382, pwe_r382, pwe_r382 ]*2,
+                    fill_color=fill_color,
+                    align=text_align, font=dict(family='Roboto',size=text_size)))])
+
+    else:
+        fig = go.Figure(data=[go.Table(
+            header=dict(values=list(df.columns),
+                        fill_color="#DCBBA6",
+                        align=head_align,
+                        font=dict(family='Roboto',size=head_text_size)),
+            cells=dict(values=[df['2018-01-01 - 2021-09-01']['Timedelta'], df['2018-01-01 - 2021-09-01']['Mean Hourly Return'], df['2018-01-01 - 2021-09-01']['Abnormal Return'], df['2018-01-01 - 2021-09-01']['P-value'],
+            df['2019-09-01 - 2021-09-01']['Timedelta'], df['2019-09-01 - 2021-09-01']['Mean Hourly Return'], df['2019-09-01 - 2021-09-01']['Abnormal Return'], df['2019-09-01 - 2021-09-01']['P-value']],
+                    fill=fill,
+                    align=text_align, font=dict(family='Roboto',size=text_size)))])
+    #fig.show()
+
+    iplot(fig)
+
+    style ='table'
+    tkr = ticker.replace('/', '_')
+    if file_tag==None:
+        if hasattr(df, 'name'):  
+            df_name = df.name.replace('/', '_')
+            f_name= f'/charts/{tkr}_{df_name}_{style}'
+        else:
+            f_name= f'/charts/{tkr}_{style}'
+    else:
+        f_name= f'/charts/{tkr}_{file_tag}_{style}'
+
+    fig.write_html(f'.{f_name}.html')
+
+    chart_html, chart_file = pwe_format(f_name)
+    
+    return chart_html, chart_file;
+
+import webbrowser
+
+def custom_html(f_name, string_from, string_to):
+    """
+    Manually append HTML code for a chart or table.
+    string_from :   The string of code to be replaced.
+    string_to   :   The string of code to append.
+    """
+    print(f_name)
+    cwd = os.getcwd()
+    file_path_str = f'{cwd}{f_name}'
+    file_path = f'{file_path_str}.html'
+    
+    # https://www.geeksforgeeks.org/python-os-path-relpath-method/
+    prefix = cwd
+    relative_path = f'/{os.path.relpath(file_path,prefix)}'
+    
+    local_path_str = f'{f_name}'
+    local_file_path = f'/{local_path_str}.html'
+    # unf_link = f'http://localhost:8888/view{local_file_path}'
+    unf_link = f'http://localhost:8888/view{relative_path}'
+    
+    text_wrapper = open(file_path, encoding="utf-8")
+    html_text = text_wrapper.read()
+    #print(html_text)
+    
+    name = f_name
+    file = open(file_path).read()
+    
+    replaced_txt = file.replace(string_from, string_to)
+    
+    output_html = f"{file_path_str}_PWE.html"
+    writer = open(output_html,'w')
+    writer.write(replaced_txt) 
+    writer.close()
+
+    output_html_path = f"{cwd}{f_name}"
+    abs_path = f'/{os.path.abspath(output_html)}'
+    #chart_html = f"http://localhost:8888/view{local_path_str}_PWE.html"
+    chart_html = f"http://localhost:8888/view{local_path_str}"
+    #chart_html = f"http://localhost:8888/view{relative_path}"
+    #chart_file = f"file:///{relative_path}_PWE.html"
+    chart_file = f"file:///{abs_path}"
+
+    webbrowser.open_new_tab(chart_file)
+    
+    return chart_html, chart_file;
   
 def add_range_selector(layout, axis_name='xaxis', ranges=None, default=None):    
     """Add a rangeselector to the layout if it doesn't already have one.

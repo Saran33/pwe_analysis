@@ -8,8 +8,9 @@ Created on Tue Aug 17 09:00:18 2021
 
 import pandas as pd
 import numpy as np
+from collections import OrderedDict
 #from scipy.stats import ttest_1samp, ttest_ind, shapiro, mannwhitneyu, f_oneway, chi2_contingency
-from scipy.stats import ttest_ind
+from scipy.stats import ttest_ind, ttest_1samp
 
 def which_mean_test():
     """
@@ -208,6 +209,7 @@ def which_mean_test():
                     print ("")
                     print ("One Sample t-test")
                     print (test)
+                    print ("https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_1samp.html")
                     
                 elif samp == 2:
                     test = "ttest_rel"
@@ -325,74 +327,203 @@ def which_mean_test():
         print ("")
         return which_mean_test()
 
-def returns_ttest(group1, group2, group1_stats, group2_stats, returns='Price_Returns',H_1='less', tails=1,
-                  median=False,group1_name='Group1',group2_name='Group2'):
+def ttest_ind_(group1, group2, H_1='two-sided', median=False, 
+                group1_name=None, group2_name=None, nan_policy='omit',
+                permutations=None, random_state=None, equal_var=True, trim=0):
     """
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_ind.html
+
+    H_1         : alternative {‘two-sided’, ‘less’, ‘greater’}
+
+    For H_1='two-sided':
+            H_0: the mean of Group1 is no different to the mean of Group2.
+            H_1: the mean of Group1 significantly differs to the mean of Group2. 
+
     For H_1='less':
-            H_0: the mean return of Group1 is greater than or equal to the average return of Group2.
-            H_1: the mean return of Group1 hour is less than the average return of Group2.
+            H_0: the mean of Group1 is greater than or equal to the mean of Group2.
+            H_1: the mean of Group1 is statistically significantly less than the mean of Group2.
             
     For H_1='greater':
-            H_0: the mean return of Group1 is less than or equal to the average return of Group2.
-            H_1: the mean return of Group1 is greater than the average return of Group2.
+            H_0: the mean of Group1 is less than or equal to the mean of Group2.
+            H_1: the mean of Group1 is statistically significantly greater than the mean of Group2.
     
     """
+    if group1_name ==None:
+        group1_name = 'Group 1'
+    if group2_name ==None:
+        group2_name = 'Group 2'
     
-    group1_returns = group1[returns]
-    group2_returns = group2[returns]
-    
-    print(f"{group1_name} Size:",group1_returns.count())
-    print(f"{group1_name} Nan values: ",group1_returns.isna().value_counts())
+    print(f"{group1_name} Size:",group1.count())
+    print(f"{group1_name} Nan values:",group1.isnull().sum())
     print("")
-    print(f"{group2_name} Size:",group2_returns.count())
-    print(f"{group2_name} Nan Values: ",group2_returns.isna().value_counts())
+    print(f"{group2_name} Size:",group2.count())
+    print(f"{group2_name} Nan Values:",group2.isnull().sum())
     print("")
     
-    if median==True:
-        group1_mean = group1_stats.med_ret
-        group2_mean = group2_stats.med_ret
-        
+    if median:
+        group1_mean = group1.median()
+        group2_mean = group2.median() 
     else:
-        group1_mean = group1_stats.avg_ret
-        group2_mean = group2_stats.avg_ret
+        group1_mean = group1.mean()
+        group2_mean = group2.mean()
     
-    print(f"Mean {group1_name} returns:", group1_mean)
-    print (f"Mean {group2_name} returns:", group2_mean)
+    print(f"Mean {group1_name} returns:", "{:.6%}".format(group1_mean))
+    print (f"Mean {group2_name} returns:", "{:.6%}".format(group2_mean))
+    print("")
+    if group1_mean<group2_mean:
+        diff = "{:.2%}".format(abs((group2_mean-group1_mean)/group2_mean))
+        print (f"The mean of {group1_name} is {diff} lower than the mean of {group2_name}.")
+    if group1_mean>group2_mean:
+        diff = "{:.2%}".format(abs((group1_mean-group2_mean)/group2_mean))
+        print (f"The mean of {group1_name} is {diff} higher than the mean of {group2_name}.")
     print("")
     
-    group1_std = group1_stats.vol
-    group2_std = group2_stats.vol
-    print(f"{group1_name} returns σ:", group1_std)
-    print (f"{group2_name} returns σ:", group2_std)
+    group1_std = group1.std()
+    group2_std = group2.std()
+    print(f"{group1_name} returns σ:", "{:.6%}".format(group1_std))
+    print (f"{group2_name} returns σ:", "{:.6%}".format(group2_std))
     print("")
     
-    ttest,pval = ttest_ind(group1_returns,group2_returns,nan_policy='omit')
+    tstat,pval = ttest_ind(group1,group2,nan_policy=nan_policy,alternative=H_1,trim=trim,
+                    permutations=permutations,random_state=random_state,equal_var=equal_var)
     
-    if tails == 2:
-        
-        if H_1=='less':
-            print("p-value:",pval)
-        elif H_1=='greater':
-            pval = 1-pval
-            print("p-value:",pval)
-        
+    print('p-value:',"{:.6}".format(pval))
+    print('t-stat:',"{:.6}".format(tstat))
+
+    if H_1=='two-sided':
         if pval <0.05:
             print("We reject null hypothesis.")
         else:
             print("We fail to reject null hypothesis.")
-            
-    elif tails == 1:
-        
-        if H_1=='less':
-            one_tailed_p = pval/2
-            print("p-value:",one_tailed_p)
-        elif H_1=='greater':
-            one_tailed_p = 1-pval/2
-            print("p-value:",one_tailed_p)
-        
-        if one_tailed_p <0.05:
+
+    elif H_1=='less' or H_1=='greater':
+        if pval <0.05:
             print("We reject null hypothesis.")
         else:
             print("We fail to reject null hypothesis.")
 
-    return;
+    return pval;
+
+def ttest_1samp_(sample, pop, H_1='less', sample_name=None, pop_name=None, nan_policy='omit',):
+    """
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ttest_1samp.html
+
+    scipy.stats.ttest_1samp(a, popmean, axis=0, nan_policy='propagate', alternative='two-sided')
+
+    H_1         : alternative {‘two-sided’, ‘less’, ‘greater’}
+
+    For H_1='two-sided':
+            H_0: the sample mean is no different to the pop mean.
+            H_1: the sample mean is statistically different to the pop mean.
+
+    For H_1='less':
+            H_0: the sample mean is greater than or equal to the pop mean.
+            H_1: the sample mean is statistically significantly less than the pop mean.
+            
+    For H_1='greater':
+            H_0: the sample mean is less than or equal to the pop mean.
+            H_1: the sample mean is statistically significantly greater than the pop mean.
+    
+    """
+    if sample_name ==None:
+        sample_name = 'Sample'
+    if pop_name ==None:
+        pop_name = 'Population'
+
+    print(f"{sample_name} Size:",sample.count())
+    print(f"{sample_name} Nan values: ",sample.isnull().sum())
+    print("")
+    print(f"{pop_name} Size:",pop.count())
+    print(f"{pop_name} Nan Values: ",pop.isnull().sum())
+    print("")
+
+    sample_mean = sample.mean()
+    pop_mean = pop.mean()
+    print(f"Mean {sample_name} returns:", "{:.6%}".format(sample_mean))
+    print (f"Mean {pop_name} returns:", "{:.6%}".format(pop_mean))
+    print("")
+    if sample_mean<pop_mean:
+        diff = "{:,.3%}".format(abs((pop_mean-sample_mean)/pop_mean))
+        ab_ret  = "{:,.2%}".format(-1*abs(((pop_mean-sample_mean)/pop_mean)))
+        print (f"Returns are {diff} lower than average.")
+        print (ab_ret)
+    if sample_mean>pop_mean:
+        diff = "{:,.3%}".format(abs((sample_mean-pop_mean)/pop_mean))
+        ab_ret  = "{:,.2%}".format(abs((sample_mean-pop_mean)/pop_mean))
+        print (f"Returns are {diff} higher than average.")
+        print (ab_ret)
+    print("")
+    
+    sample_std = sample.std()
+    pop_std = pop.std()
+    print(f"{sample_name} returns σ:", "{:.6%}".format(sample_std))
+    print (f"{pop_name} returns σ:", "{:.6%}".format(pop_std))
+    print("")
+    
+    tstat,pval = ttest_1samp(sample, pop_mean, nan_policy=nan_policy,alternative=H_1)
+    print('p-value:',"{:.6}".format(pval))
+    print('t-stat:',"{:.6}".format(tstat))
+
+    if H_1=='two-sided':
+        if pval <0.05:
+            print("We reject null hypothesis.")
+        else:
+            print("We fail to reject null hypothesis.")
+
+    elif H_1=='less' or H_1=='greater':
+        if pval <0.05:
+            print("We reject null hypothesis.")
+        else:
+            print("We fail to reject null hypothesis.")
+
+    return pval, ab_ret;
+
+def pval_table(prefix_strs, series_names=['2018/01/01-2021/09/01', '2019/09/01-2021/09/01'], interval='Hourly', p_decimals=2, ret_decimals=6):
+    """
+    A specific function for manipulating numerous securiies into a dataframe of stats. Needs to be copied and pasted for 'eval' to work.
+    Including it here for reference, despite the fact it is not generalizable.
+    """
+    df_dict = OrderedDict()
+    for prefix_str, series_name in zip(prefix_strs,series_names):
+        table_df = pd.DataFrame()
+        delta_lst =[]
+        suffix_str_lst = ['_min72_48','_less48','_min48_24', '_less24','_t_min_0','_plus24', '_plus24_48','_plus48_72']
+        for suffix_str in suffix_str_lst:
+            delta_lst.append("{pref}{suff}".format(pref=prefix_str,suff=suffix_str))
+
+        delta_dict = OrderedDict()
+        series_name_lst = []
+        for item in delta_lst:
+            sec = eval(item)
+            if sec.name!=item:
+                setattr(sec, 'name', item)
+            delta_dict[item] = sec
+
+        series_name_lst = ['T-72 to T-48','T-48 to T-0', 'T-48 to T-24', 'T-24 to T-0', 'T-0', 'T-0 to T+24', 'T+24 to T+48', 'T+48 to T+72']
+        table_df['Timedelta'] = series_name_lst
+        table_df[f'{series_name} key'] = delta_lst
+
+        ret_dict = OrderedDict()
+        for key in delta_dict.keys():
+            ret_dict[key] = delta_dict[key].avg_ret
+        table_df[f'Mean {interval} Return'] = pd.Series([round(val, 6) for val in ret_dict.values()], index = table_df.index)
+        table_df[f'Mean {interval} Return'] = pd.Series([f"{val*100:.{ret_decimals}f}%" for val in table_df[f'Mean {interval} Return']], index = table_df.index)
+
+        ret_dict = OrderedDict()
+        for key in delta_dict.keys():
+            ret_dict[key] = delta_dict[key].ab_ret
+        table_df['Abnormal Return'] = pd.Series([val for val in ret_dict.values()], index = table_df.index)
+        #table_df['Abnormal Return'] = pd.Series([f"{val*100:.{ret_decimals}f}%" for val in table_df['Abnormal Return']], index = table_df.index)
+
+        pval_dict = OrderedDict()
+        for key in delta_dict.keys():
+            pval_dict[key] = delta_dict[key].pval
+        table_df['P-value'] = pd.Series([round(val, 6) for val in pval_dict.values()], index = table_df.index)
+        table_df['P-value'] = pd.Series([f"{val*100:.{p_decimals}f}%" for val in table_df['P-value']], index = table_df.index)
+        #table_df[f'{series_name} Abnormal {interval} Return'] =
+
+        df_dict[series_name] = table_df
+
+        df_total = pd.concat([df_dict[df] for df in df_dict.keys()], axis=1, keys=[df for df in df_dict.keys()])
+
+    return delta_lst, delta_dict, df_total;
