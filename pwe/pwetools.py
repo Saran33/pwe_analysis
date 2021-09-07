@@ -862,7 +862,7 @@ def delete_none(_dict):
 
     return _dict;
 
-def resample_ohlc(df,interval='1H',o='Open',h='High',l='Low',c='Close',v='Volume',
+def resample_ohlc(df,interval='1H',origin='start_day',offset=None,o='Open',h='High',l='Low',c='Close',v='Volume',
                   v2=None,msc=None, msc_method='mean'):
     """
     Resamples ohcl data to a different interval.
@@ -870,6 +870,9 @@ def resample_ohlc(df,interval='1H',o='Open',h='High',l='Low',c='Close',v='Volume
     v2 : An option second volume for some securities expressed in price.
     msc : a miscellaneous column. Specify the name.
     msc_method : How to resample to msc column. Default = mean.
+
+    For more info on params, see pandas doc:
+    https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.resample.html
     
     Read the below link to get correct market trading hours when resampling:
     https://atekihcan.com/blog/codeortrading/changing-timeframe-of-ohlc-candlestick-data-in-pandas/
@@ -881,7 +884,8 @@ def resample_ohlc(df,interval='1H',o='Open',h='High',l='Low',c='Close',v='Volume
     ohlc_dict = delete_none(ohlc)
         
     for x in ohlc_dict:
-        df = df.resample(interval, offset=0).apply(ohlc_dict) # origin=0
+        # offset=0
+        df = df.resample(interval,origin=origin,offset=offset).apply(ohlc_dict) # origin=0
     
     return df;
 
