@@ -25,7 +25,7 @@ setup(
   'alpha_vantage @ git+git://github.com/Saran33/alpha_vantage.git@develop#egg=alpha_vantage',
 		'cryptocmd @ git+https://github.com/guptarohit/cryptoCMD.git',
         'datamine @ git+https://github.com/Saran33/datamine_python.git',
-        'pandas','numpy','pandas_summary','plotly','quandl','TA-Lib','ta','tqdm','pytz','glob',
+        'pandas','numpy','pandas_summary','plotly','quandl','TA-Lib','ta','tqdm','pytz',
 ],
 	#package_dir={"": "src"},
     #packages=find_packages(where="pwe"),
