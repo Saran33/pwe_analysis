@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 from collections import OrderedDict
 #from scipy.stats import ttest_1samp, ttest_ind, shapiro, mannwhitneyu, f_oneway, chi2_contingency
-from scipy.stats import ttest_ind, ttest_1samp
+from scipy.stats import ttest_ind, ttest_1samp, wilcoxon
 
 def which_mean_test():
     """
@@ -361,20 +361,20 @@ def ttest_ind_(group1, group2, H_1='two-sided', median=False,
     print("")
     
     if median:
-        group1_mean = group1.median()
-        group2_mean = group2.median() 
+        group1_med = group1.median()
+        group2_med = group2.median() 
     else:
-        group1_mean = group1.mean()
-        group2_mean = group2.mean()
+        group1_med = group1.mean()
+        group2_med = group2.mean()
     
-    print(f"Mean {group1_name} returns:", "{:.6%}".format(group1_mean))
-    print (f"Mean {group2_name} returns:", "{:.6%}".format(group2_mean))
+    print(f"Mean {group1_name} returns:", "{:.6%}".format(group1_med))
+    print (f"Mean {group2_name} returns:", "{:.6%}".format(group2_med))
     print("")
-    if group1_mean<group2_mean:
-        diff = "{:.2%}".format(abs((group2_mean-group1_mean)/group2_mean))
+    if group1_med<group2_med:
+        diff = "{:.2%}".format(abs((group2_med-group1_med)/group2_med))
         print (f"The mean of {group1_name} is {diff} lower than the mean of {group2_name}.")
-    if group1_mean>group2_mean:
-        diff = "{:.2%}".format(abs((group1_mean-group2_mean)/group2_mean))
+    if group1_med>group2_med:
+        diff = "{:.2%}".format(abs((group1_med-group2_med)/group2_med))
         print (f"The mean of {group1_name} is {diff} higher than the mean of {group2_name}.")
     print("")
     
@@ -478,10 +478,188 @@ def ttest_1samp_(sample, pop, H_1='less', sample_name=None, pop_name=None, nan_p
 
     return pval, ab_ret;
 
+from scipy.stats  import wilcoxon, mannwhitneyu, ranksums
+
+def wilcoxon_sr(group1, group2, H_1='two-sided', 
+                group1_name=None, group2_name=None,
+                zero_method='wilcox',correction=False,mode='auto'):
+    """
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.wilcoxon.html
+    """
+    if group1_name ==None:
+        group1_name = 'Group 1'
+    if group2_name ==None:
+        group2_name = 'Group 2'
+    
+    print(f"{group1_name} Size:",group1.count())
+    print(f"{group1_name} Nan values:",group1.isnull().sum())
+    print("")
+    print(f"{group2_name} Size:",group2.count())
+    print(f"{group2_name} Nan Values:",group2.isnull().sum())
+    print("")
+    
+    group1_med = group1.median()
+    group2_med = group2.median() 
+    
+    print(f"Median {group1_name} returns:", "{:.6%}".format(group1_med))
+    print (f"Median {group2_name} returns:", "{:.6%}".format(group2_med))
+    print("")
+    if group1_med<group2_med:
+        diff = "{:.2%}".format(abs((group2_med-group1_med)/group2_med))
+        print (f"The median of {group1_name} is {diff} lower than the mean of {group2_name}.")
+    if group1_med>group2_med:
+        diff = "{:.2%}".format(abs((group1_med-group2_med)/group2_med))
+        print (f"The median of {group1_name} is {diff} higher than the mean of {group2_name}.")
+    print("")
+    
+    group1_std = group1.std()
+    group2_std = group2.std()
+    print(f"{group1_name} returns σ:", "{:.6%}".format(group1_std))
+    print (f"{group2_name} returns σ:", "{:.6%}".format(group2_std))
+    print("")
+    
+    if group1.count() == group2.count():
+        w , pval = wilcoxon(group1, group2, zero_method=zero_method, correction=correction, alternative=H_1, mode=mode)
+    else:
+        w , pval = wilcoxon(group1-group2_med, zero_method=zero_method, correction=correction, alternative=H_1, mode=mode)
+    
+    print('p-value:',"{:.6}".format(pval))
+    print('w-stat:',"{:.6}".format(w))
+
+    if H_1=='two-sided':
+        if pval <0.05:
+            print("We reject null hypothesis.")
+        else:
+            print("We fail to reject null hypothesis.")
+
+    elif H_1=='less' or H_1=='greater':
+        if pval <0.05:
+            print("We reject null hypothesis.")
+        else:
+            print("We fail to reject null hypothesis.")
+
+    return pval;
+
+def man_whitney_u(group1, group2, H_1='two-sided', group1_name=None, group2_name=None,
+                    use_continuity=True, axis=0, method='auto'):
+    """
+    Mann-Whitney U rank test 
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.mannwhitneyu.html#scipy.stats.mannwhitneyu
+    """
+    if group1_name ==None:
+        group1_name = 'Group 1'
+    if group2_name ==None:
+        group2_name = 'Group 2'
+    
+    print(f"{group1_name} Size:",group1.count())
+    print(f"{group1_name} Nan values:",group1.isnull().sum())
+    print("")
+    print(f"{group2_name} Size:",group2.count())
+    print(f"{group2_name} Nan Values:",group2.isnull().sum())
+    print("")
+    
+    group1_med = group1.median()
+    group2_med = group2.median() 
+    
+    print(f"Median {group1_name} returns:", "{:.6%}".format(group1_med))
+    print (f"Median {group2_name} returns:", "{:.6%}".format(group2_med))
+    print("")
+    if group1_med<group2_med:
+        diff = "{:.2%}".format(abs((group2_med-group1_med)/group2_med))
+        print (f"The median of {group1_name} is {diff} lower than the mean of {group2_name}.")
+    if group1_med>group2_med:
+        diff = "{:.2%}".format(abs((group1_med-group2_med)/group2_med))
+        print (f"The median of {group1_name} is {diff} higher than the mean of {group2_name}.")
+    print("")
+    
+    group1_std = group1.std()
+    group2_std = group2.std()
+    print(f"{group1_name} returns σ:", "{:.6%}".format(group1_std))
+    print (f"{group2_name} returns σ:", "{:.6%}".format(group2_std))
+    print("")
+    
+    u, pval = mannwhitneyu(group1.dropna(), group2.dropna(), use_continuity=use_continuity, alternative=H_1, axis=axis, method=method)
+    
+    print('p-value:',"{:.6}".format(pval))
+    print('w-stat:',"{:.6}".format(u))
+
+    if H_1=='two-sided':
+        if pval <0.05:
+            print("We reject null hypothesis.")
+        else:
+            print("We fail to reject null hypothesis.")
+
+    elif H_1=='less' or H_1=='greater':
+        if pval <0.05:
+            print("We reject null hypothesis.")
+        else:
+            print("We fail to reject null hypothesis.")
+
+    return pval;
+
+def w_ranksums(group1, group2, H_1='two-sided', group1_name=None, group2_name=None):
+    """
+    This test should be used to compare two samples from continuous distributions. 
+    It does not handle ties between measurements in x and y.
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.ranksums.html
+    Accepts nans.
+    """
+    if group1_name ==None:
+        group1_name = 'Group 1'
+    if group2_name ==None:
+        group2_name = 'Group 2'
+    
+    print(f"{group1_name} Size:",group1.count())
+    print(f"{group1_name} Nan values:",group1.isnull().sum())
+    print("")
+    print(f"{group2_name} Size:",group2.count())
+    print(f"{group2_name} Nan Values:",group2.isnull().sum())
+    print("")
+    
+    group1_med = group1.median()
+    group2_med = group2.median() 
+    
+    print(f"Median {group1_name} returns:", "{:.6%}".format(group1_med))
+    print (f"Median {group2_name} returns:", "{:.6%}".format(group2_med))
+    print("")
+    if group1_med<group2_med:
+        diff = "{:.2%}".format(abs((group2_med-group1_med)/group2_med))
+        print (f"The median of {group1_name} is {diff} lower than the mean of {group2_name}.")
+    if group1_med>group2_med:
+        diff = "{:.2%}".format(abs((group1_med-group2_med)/group2_med))
+        print (f"The median of {group1_name} is {diff} higher than the mean of {group2_name}.")
+    print("")
+    
+    group1_std = group1.std()
+    group2_std = group2.std()
+    print(f"{group1_name} returns σ:", "{:.6%}".format(group1_std))
+    print (f"{group2_name} returns σ:", "{:.6%}".format(group2_std))
+    print("")
+    
+    rs, pval = ranksums(group1, group2, alternative=H_1)
+    
+    print('p-value:',"{:.6}".format(pval))
+    print('w-stat:',"{:.6}".format(rs))
+
+    if H_1=='two-sided':
+        if pval <0.05:
+            print("We reject null hypothesis.")
+        else:
+            print("We fail to reject null hypothesis.")
+
+    elif H_1=='less' or H_1=='greater':
+        if pval <0.05:
+            print("We reject null hypothesis.")
+        else:
+            print("We fail to reject null hypothesis.")
+
+    return pval;
+    
 def pval_table(prefix_strs, series_names=['2018/01/01-2021/09/01', '2019/09/01-2021/09/01'], interval='Hourly', p_decimals=2, ret_decimals=6):
     """
     A specific function for manipulating numerous securiies into a dataframe of stats. Needs to be copied and pasted for 'eval' to work.
     Including it here for reference, despite the fact it is not generalizable.
+    Bit of a hack. Needs to be pasted into a notebook for (eval) to work for python globals.
     """
     df_dict = OrderedDict()
     for prefix_str, series_name in zip(prefix_strs,series_names):

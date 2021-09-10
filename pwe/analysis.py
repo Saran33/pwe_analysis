@@ -15,6 +15,8 @@ import numpy as np
 import math
 from pwe.pwetools import first_day_of_current_year, last_day_of_current_year, sort_index,to_utc
 
+from scipy.stats import kurtosis, skew, jarque_bera, shapiro  #anderson,
+
 class Security:
     def __init__(self, inp):
         if ".csv" in inp:
@@ -444,6 +446,24 @@ class Security:
         print ('Return Summary self:')
         
         print(df[returns].describe()) # Pull up summary statistics
+
+        if df[returns].count() >= 5000:
+            jarq_bera = jarque_bera(df[returns].dropna())
+            setattr(self, 'jarq_bera', jarq_bera)
+            print ("Jarque-Bera:",jarq_bera)
+        elif df[returns].count() < 5000:
+            shapiro_wilk = shapiro(df[returns].dropna())
+            setattr(self, 'shapiro_wilk', shapiro_wilk)
+            print ("Shapiro-Wilk :",shapiro_wilk)
+        # anderson(df[returns].dropna(), dist='norm')
+
+        kurt = kurtosis(df[returns], nan_policy='omit', fisher=False)
+        setattr(self, 'kurt', kurt)
+        print ("Kurtosis:",kurt)
+        skw = skew(df[returns], nan_policy='omit', bias=True)
+        setattr(self, 'skw', skw)
+        print ("Skew:",skw)
+
         print('######')
         print ('')
             
@@ -627,7 +647,7 @@ def sec_dict_stats(sec_dict,returns='Price_Returns',price='Close', trading_perio
     """
     Apply the stats function to a dictionary of Securities.
     sec_dict :   a dictionary of pwe Securities.
-
+    
     To unpack all securities within the dict to globals, use: globals().update(sec_dict)
     Or else call the security from within the dict by its key. i.e. sec_dict[key]
     """
@@ -644,3 +664,88 @@ def sec_dict_stat(sec_dict, stat):
     stat_dict =OrderedDict()
     stat_dict = {key: getattr(sec_dict[key], stat) for key in sec_dict.keys()}
     return stat_dict;
+
+def apply_wilcoxon_sr(prefix_strs, group2, returns='Price_Returns',
+                        H_1=None,group2_name=None,zero_method='wilcox',correction=False,mode='auto'):
+    """
+   Apply Wilcoxon SR test to numerous equal lenghth series or compare each series to population median.
+   Bit of a hack. Needs to be pasted into a notebook for (eval) to work for python globals.
+    """
+    from pwe.hyptest import wilcoxon_sr
+    
+    for prefix_str in prefix_strs:
+        delta_lst =[]
+        suffix_str_lst = ['_min72_48','_less48','_min48_24', '_less24','_t_min_0','_plus24', '_plus24_48','_plus48_72']
+        for suffix_str in suffix_str_lst:
+            delta_lst.append("{pref}{suff}".format(pref=prefix_str,suff=suffix_str))
+
+        delta_dict = OrderedDict()
+        for item in delta_lst:
+            sec = eval(item)
+            if sec.name!=item:
+                setattr(sec, 'name', item)
+            delta_dict[item] = sec
+
+        for key in delta_dict.keys():
+            if H_1==None:
+                group1_med = delta_dict[key].df[returns].median()
+                group2_med = group2[returns].median()
+                if group1_med < group2_med:
+                    wilcoxon_sr_p = wilcoxon_sr(delta_dict[key].df[returns], group2[returns], H_1='less', group1_name=key, group2_name=group2_name,
+                                                zero_method=zero_method, correction=correction, mode=mode)
+                elif group1_med > group2_med:
+                    wilcoxon_sr_p = wilcoxon_sr(delta_dict[key].df[returns], group2[returns], H_1='greater', group1_name=key, group2_name=group2_name,
+                                                zero_method=zero_method, correction=correction, mode=mode)
+                elif group1_med == group2_med:
+                    wilcoxon_sr_p = wilcoxon_sr(delta_dict[key].df[returns], group2[returns], H_1='two-sided', group1_name=key, group2_name=group2_name,
+                                                zero_method=zero_method, correction=correction, mode=mode)
+            elif H_1!=None:
+                wilcoxon_sr_p = wilcoxon_sr(delta_dict[key].df[returns], group2[returns], H_1=H_1, group1_name=key, group2_name=group2_name,
+                                        zero_method=zero_method, correction=correction, mode=mode)
+            setattr(delta_dict[key], 'wilcoxon_sr_p', wilcoxon_sr_p)
+
+    return delta_lst, delta_dict;
+
+def apply_man_whitney_u(prefix_strs, group2, returns='Price_Returns',
+                        H_1=None, group2_name=None,use_continuity=True, axis=0, method='auto'):
+    """
+   Recursively apply Mann-Whitney U rank tests to different distributions vs. 1 distribution.
+   Bit of a hack. Needs to be pasted into a notebook for (eval) to work for python globals.
+    """
+    from pwe.hyptest import man_whitney_u
+    
+    for prefix_str in prefix_strs:
+        delta_lst =[]
+        suffix_str_lst = ['_min72_48','_less48','_min48_24', '_less24','_t_min_0','_plus24', '_plus24_48','_plus48_72']
+        for suffix_str in suffix_str_lst:
+            delta_lst.append("{pref}{suff}".format(pref=prefix_str,suff=suffix_str))
+
+        delta_dict = OrderedDict()
+        for item in delta_lst:
+            sec = eval(item)
+            if sec.name!=item:
+                setattr(sec, 'name', item)
+            delta_dict[item] = sec
+
+        for key in delta_dict.keys():
+            if H_1==None:
+                group1_med = delta_dict[key].df[returns].median()
+                group2_med = group2[returns].median()
+                if group1_med < group2_med:
+                    mwu_p = man_whitney_u(delta_dict[key].df[returns], group2[returns], H_1='less', group1_name=key, group2_name=group2_name,
+                                                use_continuity=use_continuity, axis=axis, method=method)
+
+                elif group1_med > group2_med:
+                    mwu_p = man_whitney_u(delta_dict[key].df[returns], group2[returns], H_1='greater', group1_name=key, group2_name=group2_name,
+                                            use_continuity=use_continuity, axis=axis, method=method)
+
+                elif group1_med == group2_med:
+                    mwu_p = man_whitney_u(delta_dict[key].df[returns], group2[returns], H_1='two-sided', group1_name=key, group2_name=group2_name,
+                                            use_continuity=use_continuity, axis=axis, method=method)
+            elif H_1!=None:
+                    mwu_p = man_whitney_u(delta_dict[key].df[returns], group2[returns], H_1=H_1, group1_name=key, group2_name=group2_name,
+                                            use_continuity=use_continuity, axis=axis, method=method)
+
+            setattr(delta_dict[key], 'mwu_p', mwu_p)
+
+    return delta_lst, delta_dict; 

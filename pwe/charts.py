@@ -13,7 +13,7 @@ import pandas as pd
 import numpy as np
 from pandas_summary import DataFrameSummary
 #from isoweek import Week
-from pwe.pwetools import check_folder,file_datetime,assign_tz
+from pwe.pwetools import check_folder,file_datetime,assign_tz,first_day_of_current_year
 
 import plotly
 import cufflinks as cf
@@ -44,19 +44,21 @@ def get_chart_dates(df, start_date=None,end_date=None,utc=True, auto_start=None,
     auto_start      :   The start of the default range to display on charts, until a user clicks a differnt range.
     auto_end        :   The end of the default range to display on charts, until a user clicks a differnt range.
     """
-    now = datetime.now()
-    td_dmy_str = now.strftime("%d-%m-%Y")
-
-    utc_now = pytz.utc.localize(datetime.utcnow())
-    utc_now.isoformat()
-    utc_td_dmy_str = now.strftime("%d-%m-%Y")
-
     if utc:
+        utc_now = pytz.utc.localize(datetime.utcnow())
+        utc_now.isoformat()
+        utc_td_dmy_str = utc_now.strftime("%d-%m-%Y")
+        utc_td_ymd_str = utc_now.strftime('%Y-%m-%d')
         t = utc_now
         t_dmy_str = utc_td_dmy_str
+        t_ymd_str = utc_td_ymd_str
     elif not utc:
+        now = datetime.now()
+        td_dmy_str = now.strftime("%d-%m-%Y")
+        td_ymd_str = now.strftime('%Y-%m-%d')
         t = now
-        t_dmy_str = td_dmy_str        
+        t_dmy_str = td_dmy_str
+        t_ymd_str = td_ymd_str    
 
     # End date:
     if end_date==None:
@@ -94,82 +96,151 @@ def get_chart_dates(df, start_date=None,end_date=None,utc=True, auto_start=None,
 
     # Auto end
     if auto_end==None:
-        auto_end = t_dmy_str
+        auto_end = t_ymd_str
+    elif auto_end=='yst':
+        at_end = t - timedelta(days=1)
+        auto_end = at_end.strftime('%Y-%m-%d')
     elif (auto_end!=None) and (isinstance(auto_end, str)):
         at_end = datetime.strptime(auto_end,'%Y-%m-%d')
-        auto_end = at_end.strftime("%d-%m-%Y")
+        auto_end = at_end.strftime('%Y-%m-%d')
     elif (auto_end!=None) and (type(auto_end) == datetime):
         at_end = auto_end
-        auto_end = at_end.strftime("%d-%m-%Y")
+        auto_end = at_end.strftime('%Y-%m-%d')
     elif (auto_end!=None) and (type(auto_end) == date):
         at_end = auto_end
-        auto_end = at_end.strftime("%d-%m-%Y")
+        auto_end = at_end.strftime('%Y-%m-%d')
     elif isinstance(auto_end, pd.Timestamp):
         at_end = pd.to_datetime(auto_end)
-        auto_end = at_end.strftime("%d-%m-%Y")
+        auto_end = at_end.strftime('%Y-%m-%d')
 
     # Auto start
-    if auto_start == None:
+    if auto_start == None or auto_start=='ytd':
+        at_st = first_day_of_current_year(time=False, utc=False)
+        auto_start = at_st.strftime('%Y-%m-%d')
+    elif auto_start=='1yr':
         at_st = t - timedelta(days=365)
-        auto_start = at_st.strftime("%d-%m-%Y")
+        auto_start = at_st.strftime('%Y-%m-%d')
     elif (auto_start!=None) and (isinstance(auto_start, str)):
         at_start = datetime.strptime(auto_start,'%Y-%m-%d')
-        auto_start = at_start.strftime("%d-%m-%Y")
+        auto_start = at_start.strftime('%Y-%m-%d')
     elif (auto_start!=None) and (type(auto_start) == datetime):
         at_start = auto_start
-        auto_start = at_start.strftime("%d-%m-%Y")
+        auto_start = at_start.strftime('%Y-%m-%d')
     elif (auto_start!=None) and (type(auto_start) == date):
         at_start = auto_start
-        auto_start = at_start.strftime("%d-%m-%Y")
+        auto_start = at_start.strftime('%Y-%m-%d')
     elif isinstance(auto_start, pd.Timestamp):
         at_start = pd.to_datetime(auto_start)
-        auto_start = at_start.strftime("%d-%m-%Y")
+        auto_start = at_start.strftime('%Y-%m-%d')
 
     return chart_start, chart_end, auto_start, auto_end;
 
 
-def chart_file_dates(df, start_date=None, end_date=None):
-    if start_date==None:
-        sdate = df.index.strftime('%Y-%m-%d_%H:%M:%S').min()
-        title_start= df.index.strftime('%Y-%m-%d %H:%M:%S%z').min()
-    elif start_date!=None and not (isinstance(start_date, str)):
-        try:
-            sdate = datetime.strftime(start_date, "%Y-%m-%d_%H:%M:%S")
-        except ValueError:
-            sdate = datetime.strftime(start_date,'%Y-%m-%d')
-        try:
-            title_start = datetime.strftime(start_date, '%Y-%m-%d %H:%M:%S%z')
-        except ValueError:
-            title_start = assign_tz(start_date, 'UTC')
-            title_start = datetime.strftime(title_start,'%Y-%m-%d %H:%M:%S%z')
-    elif start_date!=None and isinstance(start_date, str):
-        sdate = start_date
-    sdate = sdate.strip().replace(':', ',')
+def chart_file_dates(df, start_date=None, end_date=None, time=True):
+    if time:
+        if start_date==None:
+            sdate = df.index.strftime('%Y-%m-%d_%H:%M:%S').min()
+            title_start= df.index.strftime('%Y-%m-%d %H:%M:%S%z').min()
+        elif start_date!=None and not (isinstance(start_date, str)):
+            try:
+                sdate = datetime.strftime(start_date, "%Y-%m-%d_%H:%M:%S")
+            except ValueError:
+                sdate = datetime.strftime(start_date,'%Y-%m-%d')
+            try:
+                title_start = datetime.strftime(start_date, '%Y-%m-%d %H:%M:%S%z')
+            except ValueError:
+                title_start = assign_tz(start_date, 'UTC')
+                title_start = datetime.strftime(title_start,'%Y-%m-%d %H:%M:%S%z')
+        elif start_date!=None and isinstance(start_date, str):
+            sdate = start_date
+        sdate = sdate.strip().replace(':', ',')
 
-    if end_date==None:
-        edate = df.index.strftime('%Y-%m-%d_%H:%M:%S').max()
-        if str(df.index.max().time())=='23:00:00':
-            title_end = df.index.max() + timedelta(minutes=59, seconds=59)
-            title_end = title_end.strftime('%Y-%m-%d %H:%M:%S%z')
-        else:
-            title_end = df.index.strftime('%Y-%m-%d %H:%M:%S%z').max()
-    elif end_date!=None and not (isinstance(end_date, str)):
-        try:
-            edate = datetime.strftime(end_date, "%Y-%m-%d_%H:%M:%S")
-        except ValueError:
-            edate = datetime.strftime(end_date,'%Y-%m-%d')
-        try:
-            title_end = datetime.strftime(end_date, '%Y-%m-%d %H:%M:%S%z')
-        except ValueError:
-            title_end = assign_tz(start_date, 'UTC')
-            title_end = datetime.strftime(title_end,'%Y-%m-%d %H:%M:%S%z')
-    elif end_date!=None and isinstance(end_date, str):
-        edate = end_date
-    edate = edate.strip().replace(':', ',')
+        if end_date==None:
+            edate = df.index.strftime('%Y-%m-%d_%H:%M:%S').max()
+            if str(df.index.max().time())=='23:00:00':
+                title_end = df.index.max() + timedelta(minutes=59, seconds=59)
+                title_end = title_end.strftime('%Y-%m-%d %H:%M:%S%z')
+            else:
+                title_end = df.index.strftime('%Y-%m-%d %H:%M:%S%z').max()
+        elif end_date!=None and not (isinstance(end_date, str)):
+            try:
+                edate = datetime.strftime(end_date, "%Y-%m-%d_%H:%M:%S")
+            except ValueError:
+                edate = datetime.strftime(end_date,'%Y-%m-%d')
+            try:
+                title_end = datetime.strftime(end_date, '%Y-%m-%d %H:%M:%S%z')
+            except ValueError:
+                title_end = assign_tz(start_date, 'UTC')
+                title_end = datetime.strftime(title_end,'%Y-%m-%d %H:%M:%S%z')
+        elif end_date!=None and isinstance(end_date, str):
+            edate = end_date
+        edate = edate.strip().replace(':', ',')
 
-    chart_dates = str(title_start+" - "+title_end)
+    else:
+        if start_date==None:
+            sdate = df.index.strftime('%Y-%m-%d').min()
+            title_start= df.index.strftime('%Y-%m-%d').min()
+        elif start_date!=None and not (isinstance(start_date, str)):
+            try:
+                sdate = datetime.strftime(start_date, "%Y-%m-%d")
+            except ValueError:
+                sdate = datetime.strftime(start_date,'%Y-%m-%d')
+            try:
+                title_start = datetime.strftime(start_date, '%Y-%m-%d')
+            except ValueError:
+                title_start = assign_tz(start_date, 'UTC')
+                title_start = datetime.strftime(title_start,'%Y-%m-%d')
+        elif start_date!=None and isinstance(start_date, str):
+            sdate = start_date
+        sdate = sdate.strip().replace(':', ',')
+
+        if end_date==None:
+            edate = df.index.strftime('%Y-%m-%d').max()
+            if str(df.index.max().time())=='23:00:00':
+                title_end = df.index.max() + timedelta(minutes=59, seconds=59)
+                title_end = title_end.strftime('%Y-%m-%d')
+            else:
+                title_end = df.index.strftime('%Y-%m-%d').max()
+        elif end_date!=None and not (isinstance(end_date, str)):
+            try:
+                edate = datetime.strftime(end_date, "%Y-%m-%d")
+            except ValueError:
+                edate = datetime.strftime(end_date,'%Y-%m-%d')
+            try:
+                title_end = datetime.strftime(end_date, '%Y-%m-%d')
+            except ValueError:
+                title_end = assign_tz(start_date, 'UTC')
+                title_end = datetime.strftime(title_end,'%Y-%m-%d')
+        elif end_date!=None and isinstance(end_date, str):
+            edate = end_date
+        edate = edate.strip().replace(':', ',')
+
+
+    chart_dates = str(title_start+" : "+title_end)
     return sdate, edate, chart_dates;
 
+def get_chart_title(title, chart_ticker, title_dates, ticker, chart_dates):
+    if title!=None and chart_ticker==True:
+        if title_dates!=None and title_dates!=False:
+            chart_title = '{} ({}) - {}'.format(title,ticker,chart_dates)
+        elif title_dates==None or title_dates==False:
+            chart_title = '{} ({})'.format(title,ticker)
+    elif title!=None and chart_ticker==False:
+        if title_dates!=None and title_dates!=False:
+            chart_title = '{} - {}'.format(title,chart_dates)
+        elif title_dates==None or title_dates==False:
+            chart_title = '{}'.format(title)
+    elif title==None and chart_ticker==True:
+        if title_dates!=None and title_dates!=False:
+            chart_title = '{} - {}'.format(ticker,chart_dates)
+        elif title_dates==None or title_dates==False:
+            chart_title = '{}'.format(ticker)
+    elif title==None and chart_ticker==False:
+        if title_dates!=None and title_dates!=False:
+            chart_title = '{}'.format(chart_dates)
+        elif title_dates==None or title_dates==False:
+            chart_title = ''
+    return chart_title;
 
 PWE_skin = "#DCBBA6"
 black = "#000000"
@@ -243,7 +314,9 @@ Use: cf.help() or cf.help(figure) to see paramaters
 
 """
 
-def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start=None,auto_end=None):
+def quant_chart(df,start_date,end_date,ticker=None,title=None,theme='henanigans',auto_start=None,auto_end=None,support=None,resist=None,
+                show_range=True,title_dates=False,title_time=False,chart_ticker=True,top_margin=0.9,spacing=0.08,range_fontsize=9.8885,
+                title_x=0.5,title_y=0.933,arrowhead=6,arrowlen=-50):
     """
     
     Plots a chart in an iPython Notebook. This function will not remove Plotly tags or populate as a new browser tab.
@@ -265,14 +338,15 @@ def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start
         
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
 
-    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
+    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=auto_start, auto_end=auto_end);
     
-    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date);
+    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date,time=title_time);
+
+    chart_title = get_chart_title(title, chart_ticker, title_dates, ticker, chart_dates);
     
-    title = ('{}: {}'.format(ticker, chart_dates))
-    
-    qf = cf.QuantFig(df, title=title,legend='top',name=ticker,
-                             rangeslider=False,up_color=PWE_skin,down_color=PWE_grey, fontfamily='Roboto',theme=theme) # theme='ggplot'
+    qf = cf.QuantFig(df,legend='top',name=ticker,top_margin=top_margin,spacing=spacing,
+                             rangeslider=False,up_color=PWE_skin,down_color=PWE_grey, fontfamily='Roboto',theme=theme,
+                             title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
     
     # To make a permanent change to theme:
     qf.theme.update(up_color=PWE_skin,down_color=PWE_grey)
@@ -281,7 +355,7 @@ def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start
     # For example: steps=['1y','2 months','5 weeks','ytd','2mtd']
     rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
                                         bgcolor=(PWE_skin,.2),
-                                        fontsize=12,fontfamily='Roboto')
+                                        fontsize=range_fontsize,fontfamily='Roboto')
     qf.layout.update(rangeselector=rangeselector)
     
     # # Add an annotation:
@@ -306,10 +380,13 @@ def quant_chart(df,start_date,end_date,ticker=None,theme='henanigans',auto_start
     
     #for trace in qf['data']: 
     #    if(trace == 'Volume'): trace['datalegend'] = False
-    
-    
-    qf.iplot(hspan=dict(y0=38196,y1=44000,color=PWE_skin,fill=True,opacity=.3,yref='y2'),
-             rangeslider=False,xrange=[auto_start,auto_end])
+
+
+    if show_range==True:
+        qf.iplot(hspan=dict(y0=support,y1=resist,color=PWE_skin,fill=True,opacity=.3,yref='y2'),
+                rangeslider=False,xrange=[auto_start,auto_end])
+    else:
+        qf.iplot(rangeslider=False)
     
     #qf.iplot(rangeslider=False)
     
@@ -432,9 +509,12 @@ def pwe_format(f_name):
     
     return chart_html, chart_file;
     
-def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_start=None,auto_end=None,asPlot=True,
-                    showlegend=True,boll_std=2,boll_periods=20,showboll=False,showrsi=False,rsi_periods=14,
-                   showama=False,ama_periods=9,showvol=False,show_price_range=False,annots=None,textangle=0,file_tag=None):
+def quant_chart_int(df,start_date,end_date,ticker=None,title=None,theme='henanigans',auto_start=None,auto_end=None,
+                    asPlot=True,showlegend=True,boll_std=2,boll_periods=20,showboll=False,showrsi=False,rsi_periods=14,
+                   showama=False,ama_periods=9,showvol=False,show_range=False,annots=None,textangle=0,file_tag=None,
+                   support=None,resist=None,annot_font_size=6,title_dates=False,title_time=False,chart_ticker=True,
+                   top_margin=0.9,spacing=0.08,range_fontsize=9.8885,title_x=0.5,title_y=0.933,
+                   arrowhead=6,arrowlen=-50):
     """
     
     df : The Pandas dataframe used for the chart. It must contain open, high, low and close, and may also contain volume. Anything else will be ignored, unless specified.
@@ -467,11 +547,11 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
         
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
     
-    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
+    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=auto_start, auto_end=auto_end);
     
-    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date);
+    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date, time=title_time);
 
-    title = ('{}: {}'.format(ticker, chart_dates))
+    chart_title = get_chart_title(title, chart_ticker, title_dates, ticker, chart_dates);
 
     check_folder('charts')
 
@@ -488,9 +568,14 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
     else:
         f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_interative_{style}'
     
-    qf = cf.QuantFig(df, title=title,legend='top',name=ticker,
+    # qf = cf.QuantFig(df, title=chart_title,legend='top',name=ticker,
+    #                          rangeslider=False,up_color=PWE_skin,down_color=PWE_grey, fontfamily='Roboto',theme=theme,
+    #                 top_margin=top_margin,spacing=spacing,xrange=[auto_start,auto_end])
+
+    qf = cf.QuantFig(df,legend='top',name=ticker,
                              rangeslider=False,up_color=PWE_skin,down_color=PWE_grey, fontfamily='Roboto',theme=theme,
-                    top_margin=0.9,spacing=0.08,xrange=[auto_start,auto_end]) # theme='ggplot'
+                    top_margin=top_margin,spacing=spacing,xrange=[auto_start,auto_end],
+                    title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
     
     # To make a permanent change to theme:
     qf.theme.update(up_color=PWE_skin,down_color=PWE_grey)
@@ -499,7 +584,7 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
     # For example: steps=['1y','2 months','5 weeks','ytd','2mtd']
     rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
                                         bgcolor=(PWE_skin,.2),
-                                        fontsize=12,fontfamily='Roboto')
+                                        fontsize=range_fontsize,fontfamily='Roboto')
 
     qf.layout.update(rangeselector=rangeselector)
     
@@ -509,8 +594,8 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
     #qf.layout['annotations']['values']=[]
     if annots != None:
         qf.add_annotations(annots,
-                           showarrow=True,y=0,arrowhead=6,arrowcolor=arrowcolor,fontcolor=fontcolor,
-                           fontsize=6,anntextangle=0,yanchor="bottom", fontfamily='Roboto')
+                           showarrow=True,y=0,arrowhead=arrowhead,arrowcolor=arrowcolor,arrowlen=arrowlen,fontcolor=fontcolor,
+                           fontsize=annot_font_size,anntextangle=0,yanchor="bottom", fontfamily='Roboto')
 
     
     # Add a support or resistance line:
@@ -537,8 +622,8 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
     #for trace in qf['data']: 
     #    if(trace == 'Volume'): trace['datalegend'] = False
     
-    if show_price_range==True:
-        fig = qf.iplot(hspan=dict(y0=41553.01,y1=50460.96,color=PWE_skin,fill=True,opacity=.3,yref='y2'),
+    if show_range==True:
+        fig = qf.iplot(hspan=dict(y0=support,y1=resist,color=PWE_skin,fill=True,opacity=.3,yref='y2'),
                        rangeslider=False,asPlot=asPlot, filename=f'.{f_name}', auto_open=False)
     else:
         fig = qf.iplot(rangeslider=False,asPlot=asPlot,filename=f'.{f_name}', auto_open=False)
@@ -559,13 +644,15 @@ def quant_chart_int(df,start_date,end_date,ticker=None,theme='henanigans',auto_s
     
     chart_html, chart_file = pwe_format(f_name)
     
-    return chart_html, chart_file;
+    return fig, chart_html, chart_file;
 
 
-def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None,
-                      ticker=None,yTitle=None,showlegend=False,legend='top',asPlot=False,
-                      theme='white',fontsize=6,arrowhead=6,auto_start=None,
-                      auto_end=None,connectgaps=False,annots=None,annot_col='Close',file_tag=None):
+def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None,ticker=None,
+                        yTitle=None,showlegend=False,legend='top',asPlot=False,
+                        theme='white',fontsize=6,auto_start=None,auto_end=None,connectgaps=False,
+                        annots=None,annot_col='Close',file_tag=None,
+                        title_dates=False,title_time=False,chart_ticker=True,top_margin=0.9,spacing=0.08,
+                        range_fontsize=9.8885,title_x=0.5,title_y=0.933,arrowhead=6,arrowlen=-50):
     """
     
     Plots a line or scatter chart within an iPython notebook. It will not format HTML with PWE style or open in a browser window.
@@ -589,9 +676,9 @@ def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=N
         
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
     
-    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
+    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=auto_start, auto_end=auto_end);
     
-    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date);
+    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date, time=title_time);
 
     check_folder('charts')
 
@@ -608,34 +695,32 @@ def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=N
     else:
         f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_singleline_{style}'
 
-    #chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
-    chart_title = '{} ({})'.format(title,ticker)
+    chart_title = get_chart_title(title, chart_ticker, title_dates, ticker, chart_dates);
 	
     if columns is None:
         if annots == None:
-            plt_int = df.iplot(kind=kind,showlegend=showlegend,legend=legend,rangeslider=False,
-                           title=chart_title,xTitle='Date', yTitle=yTitle,
-                           colors=colors,fontfamily='Roboto',theme=theme,
-                           asPlot=asPlot, filename=f'./{f_name}',
-                      rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
-                                         bgcolor=(PWE_skin,.2),fontsize=12,fontfamily='Roboto',
-                                         x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
-                      connectgaps=connectgaps)
+            plt_int = df.iplot(kind=kind,showlegend=showlegend,legend=legend,rangeslider=False,xTitle='Date', yTitle=yTitle,
+                           colors=colors,fontfamily='Roboto',theme=theme,asPlot=asPlot, filename=f'./{f_name}',
+                           rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
+                           bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',x=-0.025, y=1,visible=True),
+                           xrange=[auto_start,auto_end],connectgaps=connectgaps,
+                           title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
         else:
             
             ans = cf.tools.get_annotations(df=df[annot_col],annotations=annots,annot_col=annot_col,
                                 fontsize=fontsize,yanchor='auto', yref="y",showarrow=True,
                                 arrowhead=arrowhead,arrowcolor=arrowcolor,fontcolor=fontcolor,
-                                anntextangle=0)
+                                anntextangle=0,arrowlen=arrowlen,)
             
             plt_int = df.iplot(kind=kind,showlegend=showlegend,legend=legend,rangeslider=False,
                            title=chart_title,xTitle='Date', yTitle=yTitle,
                            colors=colors,fontfamily='Roboto',theme=theme,
                            asPlot=asPlot, filename=f'./{f_name}',
                       rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
-                                         bgcolor=(PWE_skin,.2),fontsize=12,fontfamily='Roboto',
-                                         x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
-                      connectgaps=connectgaps,annotations=ans,anntextangle=0)
+                                         bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
+                                         x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],connectgaps=connectgaps,
+                                         annotations=ans,anntextangle=0,
+                      title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
             
     else:
         if annots == None:
@@ -644,25 +729,26 @@ def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=N
                                         colors=[PWE_skin,PWE_grey],fontfamily='Roboto',
                                         theme=theme,asPlot=asPlot, filename=f'.{f_name}',
                                         rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
-                                         bgcolor=(PWE_skin,.2),fontsize=12,fontfamily='Roboto',
-                                         x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
-                      connectgaps=connectgaps)
+                                         bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
+                                         x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],connectgaps=connectgaps,
+                                         title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
             
         else:
             
             ans = cf.tools.get_annotations(df=df[annot_col],annotations=annots,annot_col=annot_col,
                                 fontsize=fontsize,yanchor='auto', yref="y",showarrow=True,
-                                arrowhead=arrowhead,arrowcolor=arrowcolor,fontcolor=fontcolor,
-                                anntextangle=-0)
+                                arrowhead=arrowhead,arrowcolor=arrowcolor,arrowlen=arrowlen,
+                                fontcolor=fontcolor,anntextangle=-0)
             
             plt_int = df[columns].iplot(kind=kind,showlegend=showlegend,legend=legend,rangeslider=False,
                                  title=chart_title,xTitle='Date', yTitle=yTitle,
                                  colors=colors,fontfamily='Roboto',theme=theme,
                                  asPlot=asPlot, filename=f'./{f_name}',
                             rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
-                                               bgcolor=(PWE_skin,.2),fontsize=12,fontfamily='Roboto',
-                                               x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
-                            connectgaps=connectgaps,annotations=ans,anntextangle=0)
+                                               bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
+                                               x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],connectgaps=connectgaps,
+                                               annotations=ans,anntextangle=0,
+                            title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
     
     #rangeslider: {range:['2021-01-01', '2021-08-10']}
     #range=['2021-01-01','2021-08-10']
@@ -689,9 +775,11 @@ def get_cf_annots(df,annotations,annot_col='Close',fontsize=6,arrowhead=6,arrowc
 def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None,ticker=None,
                    yTitle=None,asPlot=False,theme='white',showlegend=False,legend='top',
                    auto_start=None,auto_end=None,connectgaps=False,annots=None,
-                   anntextangle=0,fontsize=6,arrowhead=6,annot_col=None,file_tag=None):
+                   anntextangle=0,fontsize=6,annot_col=None,file_tag=None,
+                   title_dates=False,title_time=False,chart_ticker=True,
+                   top_margin=0.9,spacing=0.08,range_fontsize=9.8885,
+                   title_x=0.5,title_y=0.933,arrowhead=6,arrowlen=-50):
     """
-    
     Plots an interactive line or scatter chart and opens it in a new browser. It also formats HTML with PWE style.
     
     auto_start, auto_end : Set default dates to display on the chart. Needs to be '%Y-%m-%d'.
@@ -699,7 +787,6 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
     kind : set 'scatter' for a line chart.name
     
     Select the text 'iplot' in the function below and click shift and tab for more options.
-    
     """    
     dark = ("henanigans", "solar", "space")
     if str(theme) in dark :
@@ -713,9 +800,9 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
         
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
     
-    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
+    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=auto_start, auto_end=auto_end);
     
-    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date);
+    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date, time=title_time);
 
     check_folder('charts')
 
@@ -732,8 +819,7 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
     else:
         f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_line_{style}'
         
-    #chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
-    chart_title = '{} ({})'.format(title,ticker)
+    chart_title = get_chart_title(title, chart_ticker, title_dates, ticker, chart_dates);
     
     if columns is None:
         if annots == None:
@@ -742,24 +828,25 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
                            colors=colors,fontfamily='Roboto',theme=theme,
                            asPlot=asPlot, filename=f'./{f_name}',
                       rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
-                                         bgcolor=(PWE_skin,.2),fontsize=12,fontfamily='Roboto',
-                                         x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
-                      connectgaps=connectgaps)
+                                         bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
+                                         x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],connectgaps=connectgaps,
+                                         title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
         else:
             
             ans = cf.tools.get_annotations(df=df[annot_col],annotations=annots,annot_col=annot_col,
                                 fontsize=fontsize,yanchor='auto', yref="y",showarrow=True,
                                 arrowhead=arrowhead,arrowcolor=arrowcolor,fontcolor=fontcolor,
-                                anntextangle=-anntextangle)
+                                anntextangle=-anntextangle,arrowlen=arrowlen)
             
             plt_int = df.iplot(kind=kind,showlegend=showlegend,legend=legend,rangeslider=False,
                            title=chart_title,xTitle='Date', yTitle=yTitle,
                            colors=colors,fontfamily='Roboto',theme=theme,
                            asPlot=asPlot, filename=f'./{f_name}',
                       rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
-                                         bgcolor=(PWE_skin,.2),fontsize=12,fontfamily='Roboto',
+                                         bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
                                          x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
-                      connectgaps=connectgaps,annotations=ans,anntextangle=anntextangle)
+                      connectgaps=connectgaps,annotations=ans,anntextangle=anntextangle,
+                      title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
             
     else:
         if annots == None:
@@ -768,33 +855,35 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
                                         colors=[PWE_skin,PWE_grey],fontfamily='Roboto',
                                         theme=theme,asPlot=asPlot, filename=f'.{f_name}',
                                         rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
-                                         bgcolor=(PWE_skin,.2),fontsize=12,fontfamily='Roboto',
-                                         x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
-                      connectgaps=connectgaps)
+                                         bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
+                                         x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],connectgaps=connectgaps,
+                                         title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
             
         else:
             
             ans = cf.tools.get_annotations(df=df[annot_col],annotations=annots,annot_col=annot_col,
                                 fontsize=fontsize,yanchor='auto', yref="y",showarrow=True,
                                 arrowhead=arrowhead,arrowcolor=arrowcolor,fontcolor=fontcolor,
-                                anntextangle=-anntextangle)
+                                anntextangle=-anntextangle,arrowlen=arrowlen)
             
             plt_int = df[columns].iplot(kind=kind,showlegend=showlegend,legend=legend,rangeslider=False,
                                  title=chart_title,xTitle='Date', yTitle=yTitle,
                                  colors=colors,fontfamily='Roboto',theme=theme,
                                  asPlot=asPlot, filename=f'./{f_name}',
                             rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
-                                               bgcolor=(PWE_skin,.2),fontsize=12,fontfamily='Roboto',
+                                               bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
                                                x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
-                            connectgaps=connectgaps,annotations=ans,anntextangle=anntextangle)
+                            connectgaps=connectgaps,annotations=ans,anntextangle=anntextangle,
+                            title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
     
     chart_html, chart_file = pwe_format(f_name)
     
     return chart_html, chart_file;
 
 def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='scatter',title=None, ticker=None,yTitle=None,asPlot=False,theme='white',
-                          showlegend=False,auto_start=None,auto_end=None,connectgaps=False,
-                         tickformat='.2%',decimals=2,file_tag=None): # text=None hovermode='x', hovertemplate="%{y:.6%}",
+                          showlegend=False,auto_start=None,auto_end=None,connectgaps=False,tickformat='.2%',decimals=2,file_tag=None,
+                          title_dates=False,title_time=False,chart_ticker=True,range_fontsize=9.8885,top_margin=0.9,spacing=0.08,
+                          title_x=0.5,title_y=0.933): # text=None hovermode='x', hovertemplate="%{y:.6%}",
     """
 	*Put start_date ad end_date after df and before other arguemets, with no = to any value or it will throw an error.
     
@@ -821,9 +910,9 @@ def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='s
         
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
     
-    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
+    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=auto_start, auto_end=auto_end);
     
-    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date);
+    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date, time=title_time);
     
     df['Series_str'] = df[tseries]
     
@@ -865,17 +954,14 @@ def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='s
     else:
         f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_dist_{style}'
     
-    #chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
-    chart_title = '{} ({})'.format(title,ticker)
+    chart_title = get_chart_title(title, chart_ticker, title_dates, ticker, chart_dates);
     
-    plt_int = df[tseries].iplot(kind=kind,showlegend=showlegend,legend='top',rangeslider=False,
-                               title=chart_title,xTitle='Date', yTitle=yTitle,
-                       colors=colors,fontfamily='Roboto',theme=theme,
-                       asPlot=asPlot, filename=f'./{f_name}',
+    plt_int = df[tseries].iplot(kind=kind,showlegend=showlegend,legend='top',rangeslider=False,xTitle='Date', yTitle=yTitle,
+                       colors=colors,fontfamily='Roboto',theme=theme,asPlot=asPlot, filename=f'./{f_name}',
                        rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],bgcolor=(PWE_skin,.2),
-                                        fontsize=12,fontfamily='Roboto', x=-0.025, y=1, visible=True),
-                       xrange = [auto_start,auto_end],connectgaps=connectgaps,yaxis_tickformat=tickformat,
-                       hoverinfo="text", text=text) #hovertemplate=hovertemplate
+                       fontsize=range_fontsize,fontfamily='Roboto', x=-0.025, y=1, visible=True),
+                       xrange = [auto_start,auto_end],connectgaps=connectgaps,yaxis_tickformat=tickformat,hoverinfo="text", text=text,
+                       title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'}) #hovertemplate=hovertemplate
     
     #plt_int['layout']['hovermode'] = dict(side='left')
     #plt_int['layout']['hovermode'] = hovermode
@@ -887,8 +973,9 @@ def pwe_return_dist_chart(df,start_date,end_date,tseries='Price_Returns',kind='s
     return chart_html, chart_file;
 
 def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='scatter',title=None,ticker=None,yTitle=None,xTitle=None,asPlot=False,theme='white',
-                          showlegend=False,auto_start=None,auto_end=None,
-                         tickformat='.2%',decimals=2,orientation='v',textangle=0,file_tag=None): # text=None hovermode='x', hovertemplate="%{y:.6%}",
+                          showlegend=False,auto_start=None,auto_end=None, tickformat='.2%',decimals=2,orientation='v',textangle=0,file_tag=None,
+                          title_dates=False,title_time=False,chart_ticker=True,range_fontsize=9.8885,top_margin=0.9,spacing=0.08,
+                          title_x=0.5,title_y=0.933): # text=None hovermode='x', hovertemplate="%{y:.6%}",
     """
     
     Plots an interactive bar chart with the HTML formatted to the PWE style. It opens the plot in a new browser tab.
@@ -912,9 +999,9 @@ def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='sc
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
     
 
-    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=None, auto_end=None);
+    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=auto_start, auto_end=auto_end);
     
-    sdate,edate,chart_dates = chart_file_dates(df,start_date,end_date);
+    sdate,edate,chart_dates = chart_file_dates(df,start_date,end_date,time=title_time);
     
     df['Series_str'] = df[tseries]
     df['Series_str'] = pd.Series([round(val, 6) for val in df[tseries]], index = df.index)
@@ -952,18 +1039,15 @@ def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='sc
     else:
         f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_bar_chart_{style}'
     
-    #chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
-    chart_title = '{} ({})'.format(title,ticker)
+    chart_title = get_chart_title(title, chart_ticker, title_dates, ticker, chart_dates);
     
-    plt_int = df[tseries].iplot(kind=kind,showlegend=showlegend,legend='top',rangeslider=False,
-                               title=chart_title,xTitle=xTitle, yTitle=yTitle,
-                       colors=colors,fontfamily='Roboto',theme=theme,
-                       asPlot=asPlot, filename=f'./{f_name}',
+    plt_int = df[tseries].iplot(kind=kind,showlegend=showlegend,legend='top',rangeslider=False,xTitle=xTitle, yTitle=yTitle,
+                       colors=colors,fontfamily='Roboto',theme=theme,asPlot=asPlot, filename=f'./{f_name}',
                        rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],bgcolor=(PWE_skin,.2),
-                                        fontsize=12,fontfamily='Roboto', x=-0.025, y=1, visible=True),
+                       fontsize=range_fontsize,fontfamily='Roboto', x=-0.025, y=1, visible=True),
                        xrange = [auto_start,auto_end],yaxis_tickformat=tickformat,hoverinfo="text",
-                       hovertext=hovertext,text=text,orientation=orientation,
-                               textangle=textangle) #hovertemplate=hovertemplate
+                       hovertext=hovertext,text=text,orientation=orientation,textangle=textangle,
+                       title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'}) #hovertemplate=hovertemplate
     
     #plt_int['layout']['hovermode'] = dict(side='left')
     #plt_int['layout']['hovermode'] = hovermode
@@ -977,7 +1061,8 @@ def pwe_return_bar_chart(df,start_date,end_date,tseries='Price_Returns',kind='sc
 def pwe_hist(df,start_date,end_date,tseries='Price_Returns',title=None,ticker=None,yTitle=None,xTitle=None,asPlot=False,theme='white',
                           showlegend=False,decimals=2,orientation='v',textangle=0,file_tag=None,
                           interval='Daily',bins=100,histnorm='frequency',histfunc='count',
-                          yaxis_tickformat='.2%',xaxis_tickformat='.2%',linecolor=None,title_dates='Yes'):
+                          yaxis_tickformat='.2%',xaxis_tickformat='.2%',linecolor=None,title_dates=True,title_time=True,chart_ticker=True,
+                          top_margin=0.9,spacing=0.08,title_x=0.5,title_y=0.933):
     """
     
     Plots an interactive histogram with the HTML formatted to the PWE style. It opens the plot in a new browser tab.
@@ -1022,7 +1107,7 @@ def pwe_hist(df,start_date,end_date,tseries='Price_Returns',title=None,ticker=No
         
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
     
-    sdate,edate,chart_dates = chart_file_dates(df,start_date,end_date);
+    sdate,edate,chart_dates = chart_file_dates(df,start_date,end_date, time=title_time);
 
     # format_dict = { tseries : '{:.2%}'}
     # df.style.format(format_dict)
@@ -1065,14 +1150,13 @@ def pwe_hist(df,start_date,end_date,tseries='Price_Returns',title=None,ticker=No
     else:
         f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_hist_{style}'
 
-    if title_dates!=None:
-        chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
-        #chart_title = '{} ({})'.format(title,ticker)
+    chart_title = get_chart_title(title, chart_ticker, title_dates, ticker, chart_dates);
     
     plt_int = df[[tseries]].iplot(kind="histogram",bins=bins,theme=theme,showlegend=showlegend,legend='top',rangeslider=False,
-                        title=chart_title,xTitle=xTitle,yTitle=yTitle,colors=colors,fontfamily='Roboto',asPlot=asPlot,filename=f'./{f_name}',
+                        xTitle=xTitle,yTitle=yTitle,colors=colors,fontfamily='Roboto',asPlot=asPlot,filename=f'./{f_name}',
                         hoverinfo="text",hovertext=hovertext,text=text,orientation=orientation,textangle=textangle,
-                        linecolor=linecolor,histnorm=histnorm,histfunc=histfunc,yaxis_tickformat=yaxis_tickformat,xaxis_tickformat=xaxis_tickformat,)
+                        linecolor=linecolor,histnorm=histnorm,histfunc=histfunc,yaxis_tickformat=yaxis_tickformat,xaxis_tickformat=xaxis_tickformat,
+                        title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
                         # xaxis = dict(
                         # tickformat = '%.format.%5f%',
                         # title = xTitle,
@@ -1084,9 +1168,10 @@ def pwe_hist(df,start_date,end_date,tseries='Price_Returns',title=None,ticker=No
     return chart_html, chart_file, plt_int;
 
 def pwe_box(df,start_date=None,end_date=None,title=None,ticker=None,yTitle=None,xTitle=None,asPlot=False,theme='white',
-                          showlegend=False,decimals=2,orientation='v',textangle=0,file_tag=None,
-                          interval='Daily',
-                          yaxis_tickformat='.2%',xaxis_tickformat='.2%',linecolor=None,title_dates='Yes'):
+                          showlegend=False,decimals=2,orientation='v',textangle=0,file_tag=None,interval='Daily',
+                          yaxis_tickformat='.2%',xaxis_tickformat='.2%',
+                          linecolor=None,title_dates=True,title_time=True,chart_ticker=True,
+                          top_margin=0.9,spacing=0.08,title_x=0.5,title_y=0.933):
     """
     
     Plots an interactive box plot with the HTML formatted to the PWE style. It opens the plot in a new browser tab.
@@ -1122,7 +1207,7 @@ def pwe_box(df,start_date=None,end_date=None,title=None,ticker=None,yTitle=None,
         
     colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
     
-    sdate,edate,chart_dates = chart_file_dates(df,start_date,end_date);
+    sdate,edate,chart_dates = chart_file_dates(df,start_date,end_date, time=title_time);
 
     if xTitle==None:
         xTitle=f'{interval} Return (%)'
@@ -1136,21 +1221,20 @@ def pwe_box(df,start_date=None,end_date=None,title=None,ticker=None,yTitle=None,
 
         if hasattr(df, 'name'):  
             df_name = df.name.replace('/', '_').replace(' ', '_')
-            f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_hist_{style}'
+            f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_box_{style}'
         else:
-            f_name= f'/charts/{tkr}_{sdate}-{edate}_hist_{style}'
+            f_name= f'/charts/{tkr}_{sdate}-{edate}_box_{style}'
 
     else:
-        f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_hist_{style}'
+        f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_box_{style}'
 
-    if title_dates!=None:
-        chart_title = '{} ({}) : {}'.format(title,ticker,chart_dates)
-        #chart_title = '{} ({})'.format(title,ticker)
+    chart_title = get_chart_title(title, chart_ticker, title_dates, ticker, chart_dates);
     
     plt_int = df.iplot(kind="box",theme=theme,showlegend=showlegend,legend='top',rangeslider=False,
                         title=chart_title,xTitle=xTitle,yTitle=yTitle,colors=colors,fontfamily='Roboto',asPlot=asPlot,filename=f'./{f_name}',
                         hoverinfo="text",orientation=orientation,textangle=textangle,
-                        yaxis_tickformat=yaxis_tickformat,xaxis_tickformat=xaxis_tickformat,)
+                        yaxis_tickformat=yaxis_tickformat,xaxis_tickformat=xaxis_tickformat,
+                        title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
                         # xaxis = dict(
                         # tickformat = '%.format.%5f%',
                         # title = xTitle,
@@ -1200,8 +1284,7 @@ def pwe_table(df,file_tag=None, ticker=None, head_text_size=16, text_size=12,hea
                         fill_color="#DCBBA6",
                         align=head_align,
                         font=dict(family='Roboto',size=head_text_size)),
-            cells=dict(values=[df['2018-01-01 - 2021-09-01']['Timedelta'], df['2018-01-01 - 2021-09-01']['Mean Hourly Return'], df['2018-01-01 - 2021-09-01']['Abnormal Return'], df['2018-01-01 - 2021-09-01']['P-value'],
-            df['2019-09-01 - 2021-09-01']['Timedelta'], df['2019-09-01 - 2021-09-01']['Mean Hourly Return'], df['2019-09-01 - 2021-09-01']['Abnormal Return'], df['2019-09-01 - 2021-09-01']['P-value']],
+            cells=dict(values=df.transpose().values.tolist(),
                     #fill_color = [pwe_r618, pwe_r382, pwe_r382, pwe_r382 ]*2,
                     #fill_color = [pwe_r618, pwe_r382, pwe_r382, pwe_r382 ]*2,
                     fill_color=fill_color,
@@ -1212,13 +1295,11 @@ def pwe_table(df,file_tag=None, ticker=None, head_text_size=16, text_size=12,hea
             header=dict(values=list(df.columns),
                         fill_color="#DCBBA6",
                         align=head_align,
-                        font=dict(family='Roboto',size=head_text_size)),
-            cells=dict(values=[df['2018-01-01 - 2021-09-01']['Timedelta'], df['2018-01-01 - 2021-09-01']['Mean Hourly Return'], df['2018-01-01 - 2021-09-01']['Abnormal Return'], df['2018-01-01 - 2021-09-01']['P-value'],
-            df['2019-09-01 - 2021-09-01']['Timedelta'], df['2019-09-01 - 2021-09-01']['Mean Hourly Return'], df['2019-09-01 - 2021-09-01']['Abnormal Return'], df['2019-09-01 - 2021-09-01']['P-value']],
+                        font=dict(family='Roboto',size=head_text_size)), #cells=dict(values=df.transpose().values.tolist(),
+            cells=dict(values=df.transpose().values.tolist(),
                     fill=fill,
                     align=text_align, font=dict(family='Roboto',size=text_size)))])
     #fig.show()
-
     iplot(fig)
 
     style ='table'
@@ -1237,8 +1318,6 @@ def pwe_table(df,file_tag=None, ticker=None, head_text_size=16, text_size=12,hea
     chart_html, chart_file = pwe_format(f_name)
     
     return chart_html, chart_file;
-
-import webbrowser
 
 def custom_html(f_name, string_from, string_to):
     """
