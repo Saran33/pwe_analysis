@@ -713,8 +713,7 @@ def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=N
                                 anntextangle=0,arrowlen=arrowlen,)
             
             plt_int = df.iplot(kind=kind,showlegend=showlegend,legend=legend,rangeslider=False,
-                           title=chart_title,xTitle='Date', yTitle=yTitle,
-                           colors=colors,fontfamily='Roboto',theme=theme,
+                           xTitle='Date',yTitle=yTitle,colors=colors,fontfamily='Roboto',theme=theme,
                            asPlot=asPlot, filename=f'./{f_name}',
                       rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
                                          bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
@@ -725,8 +724,7 @@ def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=N
     else:
         if annots == None:
             plt_int = df[columns].iplot(kind=kind,showlegend=showlegend,legend=legend,rangeslider=False,
-                                        title=chart_title,xTitle='Date', yTitle=yTitle,
-                                        colors=[PWE_skin,PWE_grey],fontfamily='Roboto',
+                                        xTitle='Date',yTitle=yTitle,colors=[PWE_skin,PWE_grey],fontfamily='Roboto',
                                         theme=theme,asPlot=asPlot, filename=f'.{f_name}',
                                         rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
                                          bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
@@ -741,8 +739,7 @@ def single_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=N
                                 fontcolor=fontcolor,anntextangle=-0)
             
             plt_int = df[columns].iplot(kind=kind,showlegend=showlegend,legend=legend,rangeslider=False,
-                                 title=chart_title,xTitle='Date', yTitle=yTitle,
-                                 colors=colors,fontfamily='Roboto',theme=theme,
+                                 xTitle='Date',yTitle=yTitle,colors=colors,fontfamily='Roboto',theme=theme,
                                  asPlot=asPlot, filename=f'./{f_name}',
                             rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
                                                bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
@@ -824,9 +821,8 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
     if columns is None:
         if annots == None:
             plt_int = df.iplot(kind=kind,showlegend=showlegend,legend=legend,rangeslider=False,
-                           title=chart_title,xTitle='Date', yTitle=yTitle,
-                           colors=colors,fontfamily='Roboto',theme=theme,
-                           asPlot=asPlot, filename=f'./{f_name}',
+                           xTitle='Date',yTitle=yTitle,colors=colors,fontfamily='Roboto',theme=theme,
+                           asPlot=asPlot,filename=f'./{f_name}',
                       rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
                                          bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
                                          x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],connectgaps=connectgaps,
@@ -839,9 +835,8 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
                                 anntextangle=-anntextangle,arrowlen=arrowlen)
             
             plt_int = df.iplot(kind=kind,showlegend=showlegend,legend=legend,rangeslider=False,
-                           title=chart_title,xTitle='Date', yTitle=yTitle,
-                           colors=colors,fontfamily='Roboto',theme=theme,
-                           asPlot=asPlot, filename=f'./{f_name}',
+                           xTitle='Date',yTitle=yTitle,colors=colors,fontfamily='Roboto',theme=theme,
+                           asPlot=asPlot,filename=f'./{f_name}',
                       rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
                                          bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
                                          x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
@@ -851,9 +846,8 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
     else:
         if annots == None:
             plt_int = df[columns].iplot(kind=kind,showlegend=showlegend,legend=legend,rangeslider=False,
-                                        title=chart_title,xTitle='Date', yTitle=yTitle,
-                                        colors=[PWE_skin,PWE_grey],fontfamily='Roboto',
-                                        theme=theme,asPlot=asPlot, filename=f'.{f_name}',
+                                        xTitle='Date',yTitle=yTitle,colors=[PWE_skin,PWE_grey],fontfamily='Roboto',
+                                        theme=theme,asPlot=asPlot,filename=f'.{f_name}',
                                         rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
                                          bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
                                          x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],connectgaps=connectgaps,
@@ -867,9 +861,8 @@ def pwe_line_chart(df,start_date,end_date,columns=None,kind='scatter',title=None
                                 anntextangle=-anntextangle,arrowlen=arrowlen)
             
             plt_int = df[columns].iplot(kind=kind,showlegend=showlegend,legend=legend,rangeslider=False,
-                                 title=chart_title,xTitle='Date', yTitle=yTitle,
-                                 colors=colors,fontfamily='Roboto',theme=theme,
-                                 asPlot=asPlot, filename=f'./{f_name}',
+                                 xTitle='Date',yTitle=yTitle,colors=colors,fontfamily='Roboto',theme=theme,
+                                 asPlot=asPlot,filename=f'./{f_name}',
                             rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
                                                bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
                                                x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
@@ -1231,7 +1224,7 @@ def pwe_box(df,start_date=None,end_date=None,title=None,ticker=None,yTitle=None,
     chart_title = get_chart_title(title, chart_ticker, title_dates, ticker, chart_dates);
     
     plt_int = df.iplot(kind="box",theme=theme,showlegend=showlegend,legend='top',rangeslider=False,
-                        title=chart_title,xTitle=xTitle,yTitle=yTitle,colors=colors,fontfamily='Roboto',asPlot=asPlot,filename=f'./{f_name}',
+                        xTitle=xTitle,yTitle=yTitle,colors=colors,fontfamily='Roboto',asPlot=asPlot,filename=f'./{f_name}',
                         hoverinfo="text",orientation=orientation,textangle=textangle,
                         yaxis_tickformat=yaxis_tickformat,xaxis_tickformat=xaxis_tickformat,
                         title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
