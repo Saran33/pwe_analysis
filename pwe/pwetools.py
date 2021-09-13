@@ -1297,22 +1297,35 @@ def t_to_exp(df, interval='h'):
     df['t_to_Exp'] = (df['Next_Exp']-df['DateTime']).astype(t_delta)
     return df;
 
+    last_fris_df
+
 def t_since_exp(df, interval='h'):
     df['Last_Exp'] = df['Exp_DateTime'].ffill()
     t_delta = get_t_delta(interval=interval)
     df['t_since_Exp'] = (df['DateTime']-df['Last_Exp']).astype(t_delta)
     return df;
 
-def expir_delta(df, interval='h'):
+def expir_delta(df, expirations_df, interval='h'):
     """
     Add columns expressing the timedelta since expiration and until the next expiration.
 
     df          : a pandas DataFrame.
     interval    : the format to express the timedelta. Default is 'h' for hours.
                   d, h, m, ms, ns.
+
+    expirations_df : a datafame of expiration date range. e.g., for bitcoin,last_fris_df
     """
     t_to_exp(df, interval=interval)
     t_since_exp(df, interval=interval)
+
+    if df['t_to_Exp'].isnull().any():
+        t_delta = get_t_delta(interval=interval)
+        df['t_to_Exp'] = np.where(df['t_to_Exp'].isnull(), (expirations_df.index[-1]-df['DateTime']).astype(t_delta), df['t_to_Exp'])
+
+    if df['t_since_Exp'].isnull().any():
+        t_delta = get_t_delta(interval=interval)
+        previous_exp = expirations_df.index[0] - pd.offsets.LastWeekOfMonth(n=1,weekday=4)
+        df['t_since_Exp'] = np.where(df['t_since_Exp'].isnull(), (df['DateTime']-previous_exp).astype(t_delta), df['t_since_Exp'])
 
 def get_exp_range(df, t=48, t_til=None, t_since=None):
     """
