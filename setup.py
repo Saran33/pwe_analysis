@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='pwe',
     packages=find_packages(include=['pwe']),
-    version='0.1.0.1.6180339887498948482045868343656381',
+    version='0.1.0.1.61803398874989484820458683436563811',
 	author='Saran Connolly',
     description='PWE Capital security analysis and charting package.',
 	long_description=long_description,
