@@ -1312,6 +1312,128 @@ def pwe_table(df,file_tag=None, ticker=None, head_text_size=16, text_size=12,hea
     
     return chart_html, chart_file;
 
+def pwe_line_scatter_chart(df,marker_x, marker_y,start_date,end_date,columns=None,kind='scatter',title=None,ticker=None,
+                   yTitle=None,asPlot=False,theme='white',showlegend=False,legend='top',
+                   auto_start=None,auto_end=None,connectgaps=False,annots=None,
+                   anntextangle=0,fontsize=6,annot_col=None,file_tag=None,
+                   title_dates=False,title_time=False,chart_ticker=True,
+                   top_margin=0.9,spacing=0.08,range_fontsize=9.8885,
+                   title_x=0.5,title_y=0.933,arrowhead=6,arrowlen=-50,mode="lines+markers",
+                          marker_color=None,marker_name=None,marker_size=2):
+    """
+    Plots an interactive line or scatter chart and opens it in a new browser. It also formats HTML with PWE style.
+    
+    auto_start, auto_end : Set default dates to display on the chart. Needs to be '%Y-%m-%d'.
+    
+    kind : set 'scatter' for a line chart.name
+    
+    Select the text 'iplot' in the function below and click shift and tab for more options.
+    """
+    import plotly as py
+    import plotly
+    import cufflinks as cf
+    import pandas as pd
+    import numpy as np
+    from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
+    init_notebook_mode(connected=True)
+    cf.go_offline()
+    import plotly.graph_objects as go
+    
+    dark = ("henanigans", "solar", "space")
+    if str(theme) in dark :
+        fontcolor = 'henanigans_light1'
+        arrowcolor = 'henanigans_light1'
+        style = 'dark'
+    else : 
+        fontcolor = PWE_ig_light_grey
+        arrowcolor = PWE_ig_light_grey
+        style = theme
+        
+    colors=[PWE_skin,PWE_grey,black,vic_teal,PWE_blue,PWE_ig_light_grey,PWE_ig_dark_grey]
+    
+    if marker_color==None:
+        marker_color=vic_teal
+    
+    chart_start, chart_end, auto_start, auto_end = get_chart_dates(df=df, start_date=None,end_date=None,utc=True, auto_start=auto_start, auto_end=auto_end);
+    
+    sdate,edate,chart_dates = chart_file_dates(df, start_date, end_date, time=title_time);
+
+    check_folder('charts')
+
+    tkr = ticker.replace('/', '_')
+
+    if file_tag==None:
+
+        if hasattr(df, 'name'):  
+            df_name = df.name.replace('/', '_')
+            f_name= f'/charts/{tkr}_{df_name}_{sdate}-{edate}_line_{style}'
+        else:
+            f_name= f'/charts/{tkr}_{sdate}-{edate}_line_{style}'
+
+    else:
+        f_name= f'/charts/{tkr}_{file_tag}_{sdate}-{edate}_line_{style}'
+        
+    chart_title = get_chart_title(title, chart_ticker, title_dates, ticker, chart_dates);
+    
+    if columns is None:
+        if annots == None:
+            plt_int = df.iplot(asFigure=True,kind=kind,mode=mode,showlegend=showlegend,legend=legend,rangeslider=False,
+                           xTitle='Date',yTitle=yTitle,colors=colors,fontfamily='Roboto',theme=theme,
+                           asPlot=asPlot,filename=f'./{f_name}',
+                      rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
+                                         bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
+                                         x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],connectgaps=connectgaps,
+                                         title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
+        else:
+            
+            ans = cf.tools.get_annotations(df=df[annot_col],annotations=annots,annot_col=annot_col,
+                                fontsize=fontsize,yanchor='auto', yref="y",showarrow=True,
+                                arrowhead=arrowhead,arrowcolor=arrowcolor,fontcolor=fontcolor,
+                                anntextangle=-anntextangle,arrowlen=arrowlen)
+            
+            plt_int = df.iplot(asFigure=True,kind=kind,mode=mode,showlegend=showlegend,legend=legend,rangeslider=False,
+                           xTitle='Date',yTitle=yTitle,colors=colors,fontfamily='Roboto',theme=theme,
+                           asPlot=asPlot,filename=f'./{f_name}',
+                      rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
+                                         bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
+                                         x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
+                      connectgaps=connectgaps,annotations=ans,anntextangle=anntextangle,
+                      title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
+            
+    else:
+        if annots == None:
+            plt_int = df[columns].iplot(asFigure=True,kind=kind,mode=mode,showlegend=showlegend,legend=legend,rangeslider=False,
+                                        xTitle='Date',yTitle=yTitle,colors=[PWE_skin,PWE_grey],fontfamily='Roboto',
+                                        theme=theme,asPlot=asPlot,filename=f'.{f_name}',
+                                        rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
+                                         bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
+                                         x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],connectgaps=connectgaps,
+                                         title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
+            
+        else:
+            
+            ans = cf.tools.get_annotations(df=df[annot_col],annotations=annots,annot_col=annot_col,
+                                fontsize=fontsize,yanchor='auto', yref="y",showarrow=True,
+                                arrowhead=arrowhead,arrowcolor=arrowcolor,fontcolor=fontcolor,
+                                anntextangle=-anntextangle,arrowlen=arrowlen)
+            
+            plt_int = df[columns].iplot(asFigure=True,kind=kind,mode=mode,showlegend=showlegend,legend=legend,rangeslider=False,
+                                 xTitle='Date',yTitle=yTitle,colors=colors,fontfamily='Roboto',theme=theme,
+                                 asPlot=asPlot,filename=f'./{f_name}',
+                            rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
+                                               bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
+                                               x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
+                            connectgaps=connectgaps,annotations=ans,anntextangle=anntextangle,
+                            title={'text': f'{chart_title}','y':title_y,'x':title_x,'xanchor': 'center','yanchor': 'top'})
+            
+    plt_int = plt_int.add_trace(go.Scatter(x=marker_x, y=marker_y,mode='markers',name=marker_name,marker_color=marker_color, marker_size=marker_size))
+    
+    plotly.offline.plot(plt_int,filename=f'./{f_name}.html')
+    
+    chart_html, chart_file = pwe_format(f_name)
+    
+    return plt_int, chart_html, chart_file;
+
 def custom_html(f_name, string_from, string_to):
     """
     Manually append HTML code for a chart or table.

@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name='pwe',
     packages=find_packages(include=['pwe']),
-    version='0.1.0.1.61803398874989484820458683436563',
+    version='0.1.0.1.618033988749894848204586834365638',
 	author='Saran Connolly',
     description='PWE Capital security analysis and charting package.',
 	long_description=long_description,
@@ -29,7 +29,7 @@ setup(
 ],
 	#package_dir={"": "src"},
     #packages=find_packages(where="pwe"),
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     setup_requires=['pytest-runner'],
     tests_require=['pytest==4.4.1'],
     test_suite='tests',
