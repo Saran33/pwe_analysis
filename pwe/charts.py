@@ -1317,9 +1317,9 @@ def pwe_line_scatter_chart(df,marker_x, marker_y,start_date,end_date,columns=Non
                    auto_start=None,auto_end=None,connectgaps=False,annots=None,
                    anntextangle=0,fontsize=6,annot_col=None,file_tag=None,
                    title_dates=False,title_time=False,chart_ticker=True,
-                   top_margin=0.9,spacing=0.08,range_fontsize=9.8885,
+                   top_margin=0.9,spacing=0.08,range_fontsize=9.8885,yaxis_tickformat='.2%',xaxis_tickformat='',
                    title_x=0.5,title_y=0.933,arrowhead=6,arrowlen=-50,mode="lines+markers",
-                          marker_color=None,marker_name=None,marker_size=2):
+                    marker_color=None,marker_name=None,marker_size=2):
     """
     Plots an interactive line or scatter chart and opens it in a new browser. It also formats HTML with PWE style.
     
@@ -1379,7 +1379,7 @@ def pwe_line_scatter_chart(df,marker_x, marker_y,start_date,end_date,columns=Non
         if annots == None:
             plt_int = df.iplot(asFigure=True,kind=kind,mode=mode,showlegend=showlegend,legend=legend,rangeslider=False,
                            xTitle='Date',yTitle=yTitle,colors=colors,fontfamily='Roboto',theme=theme,
-                           asPlot=asPlot,filename=f'./{f_name}',
+                           asPlot=asPlot,filename=f'./{f_name}',yaxis_tickformat=yaxis_tickformat,xaxis_tickformat=xaxis_tickformat,
                       rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
                                          bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
                                          x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],connectgaps=connectgaps,
@@ -1393,7 +1393,7 @@ def pwe_line_scatter_chart(df,marker_x, marker_y,start_date,end_date,columns=Non
             
             plt_int = df.iplot(asFigure=True,kind=kind,mode=mode,showlegend=showlegend,legend=legend,rangeslider=False,
                            xTitle='Date',yTitle=yTitle,colors=colors,fontfamily='Roboto',theme=theme,
-                           asPlot=asPlot,filename=f'./{f_name}',
+                           asPlot=asPlot,filename=f'./{f_name}',yaxis_tickformat=yaxis_tickformat,xaxis_tickformat=xaxis_tickformat,
                       rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
                                          bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
                                          x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
@@ -1404,7 +1404,7 @@ def pwe_line_scatter_chart(df,marker_x, marker_y,start_date,end_date,columns=Non
         if annots == None:
             plt_int = df[columns].iplot(asFigure=True,kind=kind,mode=mode,showlegend=showlegend,legend=legend,rangeslider=False,
                                         xTitle='Date',yTitle=yTitle,colors=[PWE_skin,PWE_grey],fontfamily='Roboto',
-                                        theme=theme,asPlot=asPlot,filename=f'.{f_name}',
+                                        theme=theme,asPlot=asPlot,filename=f'.{f_name}',yaxis_tickformat=yaxis_tickformat,xaxis_tickformat=xaxis_tickformat,
                                         rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
                                          bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
                                          x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],connectgaps=connectgaps,
@@ -1419,7 +1419,7 @@ def pwe_line_scatter_chart(df,marker_x, marker_y,start_date,end_date,columns=Non
             
             plt_int = df[columns].iplot(asFigure=True,kind=kind,mode=mode,showlegend=showlegend,legend=legend,rangeslider=False,
                                  xTitle='Date',yTitle=yTitle,colors=colors,fontfamily='Roboto',theme=theme,
-                                 asPlot=asPlot,filename=f'./{f_name}',
+                                 asPlot=asPlot,filename=f'./{f_name}',yaxis_tickformat=yaxis_tickformat,xaxis_tickformat=xaxis_tickformat,
                             rangeselector=dict(steps=['Reset','3Y','2Y','1Y','YTD','6M', '1M'],
                                                bgcolor=(PWE_skin,.2),fontsize=range_fontsize,fontfamily='Roboto',
                                                x=-0.025, y=1,visible=True),xrange=[auto_start,auto_end],
