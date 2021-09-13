@@ -1432,7 +1432,7 @@ def pwe_line_scatter_chart(df,marker_x, marker_y,start_date,end_date,columns=Non
     
     chart_html, chart_file = pwe_format(f_name)
     
-    return plt_int, chart_html, chart_file;
+    return chart_html, chart_file;
 
 def custom_html(f_name, string_from, string_to):
     """
