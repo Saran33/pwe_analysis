@@ -185,25 +185,25 @@ class Security:
         af, t, p = self.get_ann_factor(interval,trading_periods,market_hours)
         
         # Standard deviation:
-        df['Std_{}_{}'.format(window,p)] = (df[returns].rolling(window).std())
+        df['Std_{}_{}'.format(window,p)] = (df[returns][1:].rolling(window).std())
         std = df['Std_{}_{}'.format(window,p)]
-        df['Ann_Std_{}_{}'.format(window,p)] = (df[returns].rolling(window).std())*np.sqrt(af)
+        df['Ann_Std_{}_{}'.format(window,p)] = (df[returns][1:].rolling(window).std())*np.sqrt(af)
         ann_vol = df['Ann_Std_{}_{}'.format(window,p)]
         
         # Volatility of log returns:
-        df['Vol_{}_{}'.format(window,p)] = (df['Log_Returns'].rolling(window).std())
+        df['Vol_{}_{}'.format(window,p)] = (df['Log_Returns'][1:].rolling(window).std())
         vol = df['Vol_{}_{}'.format(window,p)]
-        df['Ann_Vol_{}_{}'.format(window,p)] = (df['Log_Returns'].rolling(window).std())*np.sqrt(af) 
+        df['Ann_Vol_{}_{}'.format(window,p)] = (df['Log_Returns'][1:].rolling(window).std())*np.sqrt(af) 
         an_vol = df['Ann_Vol_{}_{}'.format(window,p)]
         
         # Variance Swaps (returns are not demeaned):
-        df['Ann_VS_Var_{}_{}'.format(window,p)] = np.square(df['Log_Returns']).rolling(window).sum() * af
+        df['Ann_VS_Var_{}_{}'.format(window,p)] = np.square(df['Log_Returns'][1:]).rolling(window).sum() * af
         vs_var = df['Ann_VS_Var_{}_{}'.format(window,p)]
         df['Ann_VS_Vol_{}_{}'.format(window,p)] = np.sqrt(vs_var)
         vs_vol = df['Ann_VS_Vol_{}_{}'.format(window,p)]
         
         # Classic by period (returns are demeaned, dof=1)
-        df['Realized_Var_{}_{}'.format(window,p)] = (df['Log_Returns'].rolling(window).var())* af
+        df['Realized_Var_{}_{}'.format(window,p)] = (df['Log_Returns'][1:].rolling(window).var())* af
         #df['Realized_Var_{}_{}'.format(window,p)] = (df['Log_Returns'].rolling(window).var())* af
         r_var = df['Realized_Var_{}_{}'.format(window,p)]
         df['Realized_Vol_{}_{}'.format(window,p)] = np.sqrt(r_var)
@@ -381,7 +381,7 @@ class Security:
 #####################################################################################################################
     
         # Volatility of returns:
-        vol = df['Log_Returns'].std()
+        vol = df['Log_Returns'][1:].std()
         setattr(self, 'vol', vol)
         print ('Vol. of Period Returns:', "{:.6%}".format(self.vol))
         

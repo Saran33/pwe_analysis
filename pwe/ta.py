@@ -15,6 +15,20 @@ import numpy as np
 import ta
 import talib
 from  talib import abstract
+from pykalman import KalmanFilter
+
+def kalman_filter(df, price='Close', transition_matrices=[1], observation_matrices=[1], initial_state_mean=0, initial_state_covariance=1,
+                    observation_covariance=1, transition_covariance=.01):
+
+    kf = KalmanFilter(transition_matrices = transition_matrices,
+                    observation_matrices = observation_matrices,
+                    initial_state_mean = initial_state_mean,
+                    initial_state_covariance = initial_state_covariance,
+                    observation_covariance=observation_covariance,
+                    transition_covariance=transition_covariance)
+
+    state_means, _ = kf.filter(df[price])
+    df['Kalman_Filter'] = state_means
 
 def abstract_ta_lib(df, open="Open", high="High", low="Low", close="Close", volume="Volume"):
     # note that all ndarrays must be the same length.
