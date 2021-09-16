@@ -13,7 +13,6 @@ import sys
 import pandas as pd
 import numpy as np
 import ta
-from ta import all_ta_features
 import talib
 from  talib import abstract
 
@@ -31,7 +30,7 @@ def all_ta(df, open="Open", high="High", low="Low", close="Close", volume="Volum
     """
     Add all ta standard features from bukosabino ta.
     """
-    df = all_ta_features(df, open=open, high=high, low=low, close=close, volume=volume)
+    df = ta.all_ta_features(df, open=open, high=high, low=low, close=close, volume=volume)
     return df;
 
 def ama(df,window=9,fast_period=6,slow_period=12,price='Close',fillna=False):
