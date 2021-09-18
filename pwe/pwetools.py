@@ -527,6 +527,69 @@ def to_utc(arg, yearfirst=True, dayfirst=True):
 
     return arg;
 
+def local_time_offset(t=None):
+    """Return offset of local system timezone from GMT, either at present or at time t."""
+    # python2.3 localtime() can't take None
+    from time import time, daylight, altzone, timezone,localtime
+
+    if t is None:
+        t = time()
+
+    if localtime(t).tm_isdst and daylight:
+        return -altzone
+    else:
+        return -timezone
+
+def localize_dt_tz(d_t, from_tz, to_tz):
+    """
+    Localize the TZ of a single datetime object.
+    i.e. convert from one timezone to another in local format.
+    """
+    errmsgs = {}
+    # pytz.utc
+    while True:
+        if issubclass(type(from_tz), pytz.BaseTzInfo):
+            tz1 = from_tz
+        else:
+            try:
+                tz1 = pytz.timezone(from_tz)
+
+            except pytz.UnknownTimeZoneError:
+                print("Searching for TZ...")
+                zones = pytz.common_timezones
+                for z in list(zones):
+                    if (from_tz in z) and (from_tz not in list(zones)):
+                        from_tz = z
+                        print (f"Timezone: {z}")
+                tz1 = pytz.timezone(from_tz)
+
+        if issubclass(type(to_tz), pytz.BaseTzInfo):
+            tz2 = to_tz
+        else:
+            try:
+                tz2 = pytz.timezone(to_tz)
+
+            except pytz.UnknownTimeZoneError:
+                print("Searching for TZ...")
+                zones = pytz.common_timezones
+                for z in list(zones):
+                    if (to_tz in z) and (to_tz not in list(zones)):
+                        to_tz = z
+                        print (f"Timezone: {z}")
+                tz2 = pytz.timezone(to_tz)
+
+        if type(d_t) is str:
+            d_t = str_to_dt(d_t, yearfirst=True, dayfirst=True)
+
+        if type(d_t) is datetime:
+            if d_t.tzinfo == None:
+                d_t = tz1.localize(d_t)
+                d_t = d_t.astimezone(tz2)
+            elif d_t.tzinfo!=None:
+                d_t = d_t.astimezone(tz2)
+
+        return d_t
+
 def change_tz(arg,from_tz, to_tz):
     """
     Change the tz of a date or an array of dates the index of pandas DataFrame.
@@ -812,6 +875,23 @@ def file_datetime(df):
     csv_start = csv_start.strip().replace(':', ',')
         
     csv_end = df.index.strftime('%Y-%m-%d_%H:%M:%S').max()
+    csv_end = csv_end.strip().replace(':', ',')
+        
+    return csv_start, csv_end;
+
+def get_file_datetime(start_date, end_date):
+    try:
+        csv_start = start_date.strftime('%Y-%m-%d_%H:%M:%S')
+    except:
+        csv_start = datetime.strptime(start_date, '%Y-%m-%d %H:%M:%S')
+        csv_start = csv_start.strftime('%Y-%m-%d_%H:%M:%S')
+    csv_start = csv_start.strip().replace(':', ',')
+
+    try: 
+        csv_end = end_date.strftime('%Y-%m-%d_%H:%M:%S')
+    except:
+        csv_end = datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S')
+        csv_end = csv_end.strftime('%Y-%m-%d_%H:%M:%S')
     csv_end = csv_end.strip().replace(':', ',')
         
     return csv_start, csv_end;
@@ -1424,3 +1504,11 @@ def drop_rows(df, head=False, tail=True, n=1):
     if tail:
         df= df.drop(df.tail(n).index,inplace=True)
     return df;
+
+def candle_close_dt(df, days=0, mins=0, secs=0):
+    """
+    Get the closing datetime of a candle. Add a timedelta to the index and returns a new dt column.
+    """
+    df['Candle_Length'] = pd.to_timedelta(((days*60*60*24)+(mins*60)+secs), unit='s')
+    df['Close_DateTime'] = df.index + df['Candle_Length']
+    df.drop('Candle_Length', axis=1)
