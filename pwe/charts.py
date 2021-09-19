@@ -1238,7 +1238,24 @@ def pwe_box(df,start_date=None,end_date=None,title=None,ticker=None,yTitle=None,
     
     return chart_html, chart_file, plt_int;
 
-def pwe_table(df,file_tag=None, ticker=None, head_text_size=16, text_size=12,head_align='left',text_align='right',fill_style='alternate'):
+def calc_table_height(df, base=244, height_per_row=20, char_limit=30, height_padding=16.5):
+    '''
+    df: The dataframe with only the columns you want to plot
+    base: The base height of the table (header without any rows)
+    height_per_row: The height that one row requires
+    char_limit: If the length of a value crosses this limit, the row's height needs to be expanded to fit the value
+    height_padding: Extra height in a row when a length of value exceeds char_limit
+    '''
+    total_height = 0 + base
+    for x in range(df.shape[0]):
+        total_height += height_per_row
+    for y in range(df.shape[1]):
+        if len(str(df.iloc[x][y])) > char_limit:
+            total_height += height_padding
+    return total_height
+
+def pwe_table(df,file_tag=None, ticker=None, head_text_size=16, text_size=12,head_align='left',text_align='right',fill_style='alternate',
+            autosize=False, width=730, height=388):
     """
     Create a Plotly table in PWE style.
     fill_style  :   'alternate' will display alternating bands for each row.
@@ -1292,6 +1309,18 @@ def pwe_table(df,file_tag=None, ticker=None, head_text_size=16, text_size=12,hea
             cells=dict(values=df.transpose().values.tolist(),
                     fill=fill,
                     align=text_align, font=dict(family='Roboto',size=text_size)))])
+
+    fig.update_layout(
+    autosize=autosize,
+    width=width,
+    height=height,
+    margin=dict(
+        l=0,
+        r=0,
+        b=0,
+        t=0,
+        pad=0))
+
     #fig.show()
     iplot(fig)
 
