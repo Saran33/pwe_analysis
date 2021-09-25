@@ -995,15 +995,20 @@ def last_day_of_current_year(time=False,utc=False):
         ldocy = is_utc(ldocy)
     return ldocy;
 
-def split_datetime(df, date=True,day=False,month=False,year=False,time=False,hour=False,minute=False,second=False,microseconds=False, dow=False):
+def split_datetime(df, date=True, year=False, quarter=False, month=False, day=False, dow=False,
+                    time=False,hour=False,minute=False,second=False,microseconds=False):
     if date:
         df['Date'] = df.index.date
-    if day:
-        df['Day'] = df.index.day
-    if month:
-        df['Month'] = df.index.month
     if year:
         df['Year'] = df.index.year
+    if quarter:
+        df['Quarter'] = df.index.quarter
+    if month:
+        df['Month'] = df.index.month
+    if day:
+        df['Day'] = df.index.day
+    if dow:
+        df['Day_of_Week'] = df.index.dayofweek
     if time:
         df['Time'] = df.index.time
     if hour:
@@ -1014,8 +1019,6 @@ def split_datetime(df, date=True,day=False,month=False,year=False,time=False,hou
         df['Second'] = df.index.second
     if microseconds:
         df['Microsecond'] = df.index.microseconds
-    if dow:
-        df['Day_of_Week'] = df.index.dayofweek
     return;
 
 def diff_between_df(df1,df2):
