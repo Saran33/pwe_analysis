@@ -82,7 +82,7 @@ def check_for_recent(dir='csv_files',file_type='csv', horizon='today'):
         print (f"No directory exists called: '{abs_path}'")
         while True:
             try:
-                mk_new_dir = input ("Would you like to create one? ").strip().strip('"')
+                mk_new_dir = input ("Would you like to create one? ").strip().strip('"').strip("'")
                 if mk_new_dir.lower().startswith('y'):
                     os.makedirs(abs_path)
                     print (f"Created empty folder '{dir}'")

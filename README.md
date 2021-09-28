@@ -11,6 +11,8 @@ The repository can be found at:
 #### To install from git:
 `pip install git+git://github.com/Saran33/pwe_analysis.git`
 
+To run some functions, you will also need to install the C++ [TA-Lib] (https://github.com/mrjbq7/ta-lib)
+
 #### Download CoinMarketCap data:
 ```python
 from pwe import charts,quan,cmc
