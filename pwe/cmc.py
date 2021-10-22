@@ -42,8 +42,8 @@ def cmc_data(symbol="BTC",start_date=None,end_date=None):
 
     print ("Checking if a file for this ticker with the same start and end dates exists...")
     
-    if os.path.exists(os.path.abspath(f'csv_files/Binance/{tkr}_{start_date}_{end_date}.csv')) == True:
-        file_path = os.path.abspath(f'csv_files/Binance/{tkr}_{start_date}_{end_date}.csv')
+    if os.path.exists(os.path.abspath(f'csv_files/CMC/{tkr}_{start_date}_{end_date}.csv')) == True:
+        file_path = os.path.abspath(f'csv_files/CMC/{tkr}_{start_date}_{end_date}.csv')
         
         print ("Matching local file exists.")
         print ("Reading recent file from CSV...")
@@ -71,9 +71,9 @@ def cmc_data(symbol="BTC",start_date=None,end_date=None):
         df = format_ohlc(df)
         df.name = symbol
         
-        f_name = f'csv_files/Binance/{tkr}_{start_date}_{end_date}.csv'
+        f_name = f'csv_files/CMC/{tkr}_{start_date}_{end_date}.csv'
         
-        check_folder('csv_files')
+        check_folder('csv_files/CMC')
         print (f"Saving as csv to: {f_name}")
         #scraper.export("csv", name=f_name)
         df.to_csv(f_name)
