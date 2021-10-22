@@ -4,13 +4,15 @@
 # φ = φ.replace(' ', "")
 # print(φ)
 
+
 def phi(n=6):
     """
     get Phi to a certain number of decimals places.
     """
     phi = φ[0:n+2]
     phi = float(phi)
-    return phi;
+    return phi
+
 
 def nextver():
     """
@@ -22,16 +24,17 @@ def nextver():
 
     while True:
         try:
-            current_version = input ("What is the current version? ").strip().strip('"')
+            current_version = input(
+                "What is the current version? ").strip().strip('"')
             if current_version.startswith("0.1.61"):
                 cur_ver_n = len(current_version[2:])
                 start = φ.find(current_version[2:])
                 new_end = len(current_version[2:])+1
                 next_version = φ[start:new_end]
                 next_ver_n = len(next_version)
-                print (f"\nCurrent version: {current_version} ({cur_ver_n})\n")
-                print (f"Next version: 0.{next_version} ({next_ver_n})\n")
-                print (f"{next_version[2:]}\n")
+                print(f"\nCurrent version: {current_version} ({cur_ver_n})\n")
+                print(f"Next version: 0.{next_version} ({next_ver_n})\n")
+                print(f"{next_version[2:]}\n")
                 break
             elif current_version.startswith("1.61"):
                 cur_ver_n = len(current_version)
@@ -39,19 +42,21 @@ def nextver():
                 new_end = len(current_version)+1
                 next_version = φ[start:new_end]
                 next_ver_n = len(next_version)
-                print (f"\nCurrent version: 0.{current_version} ({cur_ver_n})\n")
-                print (f"Next version: 0.{next_version} ({next_ver_n})\n")
-                print (f"{next_version[2:]}\n")
-                break       
+                print(
+                    f"\nCurrent version: 0.{current_version} ({cur_ver_n})\n")
+                print(f"Next version: 0.{next_version} ({next_ver_n})\n")
+                print(f"{next_version[2:]}\n")
+                break
             elif current_version.startswith("61"):
                 cur_ver_n = len(current_version)+2
                 start = φ.find(current_version)-2
                 new_end = len(current_version)+3
                 next_version = φ[start:new_end]
                 next_ver_n = len(next_version)
-                print (f"\nCurrent version: 0.1.{current_version} ({cur_ver_n})\n")
-                print (f"Next version: 0.{next_version} ({next_ver_n})\n")
-                print (f"{next_version[2:]}\n")
+                print(
+                    f"\nCurrent version: 0.1.{current_version} ({cur_ver_n})\n")
+                print(f"Next version: 0.{next_version} ({next_ver_n})\n")
+                print(f"{next_version[2:]}\n")
                 break
             elif current_version.startswith(".61"):
                 cur_ver_n = len(current_version)+1
@@ -59,19 +64,23 @@ def nextver():
                 new_end = len(current_version)+2
                 next_version = φ[start:new_end]
                 next_ver_n = len(next_version)
-                print (f"\nCurrent version: 0.1{current_version} ({cur_ver_n})\n")
-                print (f"Next version: 0.{next_version} ({next_ver_n})\n")
-                print (f"{next_version[2:]}\n")
+                print(
+                    f"\nCurrent version: 0.1{current_version} ({cur_ver_n})\n")
+                print(f"Next version: 0.{next_version} ({next_ver_n})\n")
+                print(f"{next_version[2:]}\n")
                 break
             elif current_version not in φ:
-                print("\nInput is not the start of φ. Plea.se enter the first n digits of φ.")
+                print(
+                    "\nInput is not the start of φ. Plea.se enter the first n digits of φ.")
                 print("\ne.g. 1.618... , .618... or 618...\n")
             else:
-                print("\nInput is not the start of φ. Please enter the first n digits of φ.")
+                print(
+                    "\nInput is not the start of φ. Please enter the first n digits of φ.")
                 print("\ne.g. 1.618... , .618... or 618...\n")
         except ValueError:
             print("\nInput is not the start of φ. Please enter the first n digits of φ.")
             print("\ne.g. 1.618... , .618... or 618...\n")
+
 
 if __name__ == "__main__":
     nextver()
