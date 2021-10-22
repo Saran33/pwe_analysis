@@ -426,6 +426,7 @@ def pwe_format(f_name):
     cwd = os.getcwd()
     file_path_str = f'{cwd}{f_name}'
     file_path = f'{file_path_str}.html'
+    file_path = file_path.replace(' ', '\ ')
     # print(file_path_str)
     # print(file_path)
     # print('')
