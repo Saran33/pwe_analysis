@@ -34,7 +34,6 @@ def get_av_ts(symbol, interval, start, end, rel_dir, av_api='ALPHAVANTAGE_API_KE
         df = pd.read_csv(file_path, low_memory=False, index_col=[
                          'DateTime'], parse_dates=['DateTime'], infer_datetime_format=True)
         df.name = tkr
-        df
 
     else:
         print("No CSV found. Downloading data from API")
@@ -45,7 +44,7 @@ def get_av_ts(symbol, interval, start, end, rel_dir, av_api='ALPHAVANTAGE_API_KE
         sort_index(df)
         df.index.names = ['DateTime']
         df.name = tkr
-        f_name = f"{tkr}_{interval}_{df.index.min()}_{df.index.max()}"
+        f_name = f'{rel_dir}/{tkr}_{interval}_{start}_{end}.csv'
         df.to_csv(f_name)
 
-        return df
+    return df
