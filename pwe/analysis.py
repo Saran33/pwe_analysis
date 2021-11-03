@@ -270,6 +270,22 @@ class Security:
         else:
             return yz, yz_an
 
+    def downside_risk(self, returns, rfr=0, trading_periods=252):
+        adj_returns = returns - rfr
+        sqr_downside = np.square(np.clip(adj_returns, np.NINF, 0))
+        return np.sqrt(np.nanmean(sqr_downside) * trading_periods)
+
+
+    def sortino(self, returns, rfr=0, trading_periods=252):
+        adj_returns = returns - rfr
+        ds_risk = self.downside_risk(adj_returns)
+
+        if ds_risk == 0:
+            return np.nan
+
+        sort_ratio = (np.nanmean(adj_returns) * np.sqrt(trading_periods)) / ds_risk
+        return sort_ratio
+
     def stats(self, returns='Price_Returns', price='Close', trading_periods=252, market_hours=24, interval='daily', vol_window=30, geo=True):
         """
         returns : A Pandas series of % returns on which to calculate the below statistics.
@@ -461,6 +477,11 @@ class Security:
             setattr(self, 'sharpe_geo', sharpe_geo)
             print('Geometric Sharpe Ratio:', "{:.2f}".format(self.sharpe_geo))
         print(' ')
+
+        # Compute Sortino Ratio (No RFR)
+        sortino = self.sortino(returns, rfr=0, trading_periods=ann_factor)
+        setattr(self, 'sortino', sortino)
+        print('Sortino Ratio:', "{:.2f}".format(self.sortino))
 
 #####################################################################################################################
 

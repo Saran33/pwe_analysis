@@ -184,7 +184,7 @@ btc_yz30_dist = charts.pwe_return_dist_chart(BTC,start_date,end_date,
                                              auto_start='2021-01-01',auto_end=end_date,
                                              connectgaps=False,tickformat='.0%',decimals=2)
 ```
-![Yang-Zhang](img/BTC-USD YZ Vol._BTC_01-01-2017-24-08-2021_dist_white_PWE.png)
+![Yang-Zhang](https://github.com/Saran33/pwe_analysis/blob/main/img/BTC-USD%20YZ%20Vol._BTC_01-01-2017-24-08-2021_dist_white_PWE.png)
 ```python
 btc_vol30_dist = charts.pwe_return_dist_chart(BTC_Bitfinex,start_date,end_date,
                                               tseries='Ann_Vol_30',kind='scatter',
@@ -194,7 +194,7 @@ btc_vol30_dist = charts.pwe_return_dist_chart(BTC_Bitfinex,start_date,end_date,
                                              connectgaps=False,tickformat='.0%',decimals=2)
 ```
 
-![Volatility](img/BTC-USD Vol._BITFINEX_BTCUSD_01-01-2017-24-08-2021_dist_white_PWE.png)
+![Volatility](https://github.com/Saran33/pwe_analysis/blob/main/img/BTC-USD%20Vol._BITFINEX_BTCUSD_01-01-2017-24-08-2021_dist_white_PWE.png)
 
 #### Returns by Subseries: 
 ##### 2020
