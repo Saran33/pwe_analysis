@@ -13,7 +13,7 @@ from alpha_vantage.timeseries import TimeSeries
 from alpha_vantage.cryptocurrencies import CryptoCurrencies
 
 
-def get_av_ts(symbol, interval, start, end, rel_dir, av_api='ALPHAVANTAGE_API_KEY'):
+def get_av_ts(symbol, interval, start, end, rel_dir, AV_API='ALPHAVANTAGE_API_KEY'):
     """
     AlphaVatage API
     https://github.com/RomelTorres/alpha_vantage
@@ -37,7 +37,7 @@ def get_av_ts(symbol, interval, start, end, rel_dir, av_api='ALPHAVANTAGE_API_KE
 
     else:
         print("No CSV found. Downloading data from API")
-        ts = TimeSeries(key=av_api, output_format='pandas')  # retries=5
+        ts = TimeSeries(key=AV_API, output_format='pandas')  # retries=5
         # Get json object with the intraday data and another with  the call's metadata
         df, meta_data = ts.get_monthly_adjusted(tkr)
         del_col_num(df)

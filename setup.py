@@ -23,7 +23,7 @@ setup(
 	install_requires = [
   'cufflinks @ git+https://github.com/Saran33/cufflynx.git@Saran33#egg=cufflinks',
   'alpha_vantage @ git+git://github.com/Saran33/alpha_vantage.git@develop#egg=alpha_vantage',
-		'cryptocmd @ git+https://github.com/guptarohit/cryptoCMD.git',
+		'cryptocmd @ git+https://github.com/Saran33/cryptoCMD',
         'datamine @ git+https://github.com/Saran33/datamine_python.git',
         'pykalman @ git+https://github.com/pykalman/pykalman.git',
         'pandas','numpy', 'scipy', 'pandas_summary','plotly','quandl','TA-Lib','ta','tqdm','pytz',
