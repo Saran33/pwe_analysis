@@ -443,7 +443,6 @@ def pwe_format(f_name):
     # print(file_path)
     # print('')
 
-    # https://www.geeksforgeeks.org/python-os-path-relpath-method/
     prefix = cwd
     relative_path = f'/{os.path.relpath(file_path,prefix)}'
     # print(prefix)
@@ -452,7 +451,6 @@ def pwe_format(f_name):
 
     local_path_str = f'{f_name}'
     local_file_path = f'/{local_path_str}.html'
-    # unf_link = f'http://localhost:8888/view{local_file_path}'
     unf_link = f'http://localhost:8888/view{relative_path}'
     # print(local_path_str)
     # print(local_file_path)
@@ -468,12 +466,6 @@ def pwe_format(f_name):
     # https://www.freecodeformat.com/svg-editor.php
     plotly_svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 132 132'><defs><style>.cls-1 {fill: #3f4f75;} .cls-2 {fill: #80cfbe;} .cls-3 {fill: #fff;}</style></defs><title>plotly-logomark</title><g id='symbol'><rect class='cls-1' width='132' height='132' rx='6' ry='6'/><circle class='cls-2' cx='78' cy='54' r='6'/><circle class='cls-2' cx='102' cy='30' r='6'/><circle class='cls-2' cx='78' cy='30' r='6'/><circle class='cls-2' cx='54' cy='30' r='6'/><circle class='cls-2' cx='30' cy='30' r='6'/><circle class='cls-2' cx='30' cy='54' r='6'/><path class='cls-3' d='M30,72a6,6,0,0,0-6,6v24a6,6,0,0,0,12,0V78A6,6,0,0,0,30,72Z'/><path class='cls-3' d='M78,72a6,6,0,0,0-6,6v24a6,6,0,0,0,12,0V78A6,6,0,0,0,78,72Z'/><path class='cls-3' d='M54,48a6,6,0,0,0-6,6v48a6,6,0,0,0,12,0V54A6,6,0,0,0,54,48Z'/><path class='cls-3' d='M102,48a6,6,0,0,0-6,6v48a6,6,0,0,0,12,0V54A6,6,0,0,0,102,48Z'/></g></svg>"
     pwe_svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 127.74 132'><defs><style>.a{fill:#dcbba6;}.b{fill:none;}.c{fill:#646470;}</style></defs><title>pwe-logomark</title><g id='symbol'><rect class='a' x='0.34' y='9.19' width='122.81' height='122.81'/><path class='b' d='M109.16,16.78l-40,101.35L50,65.11c-1.86,2.81-3.78,5.82-5.86,8.88C31.8,92.18,17.09,113.56,4.33,131.88H122.81V52.56l-4-10.32C116.3,35.5,112.52,25.53,109.16,16.78Z'/><path d='M111.7,8.38,109.2,2,69.4,102.84,51.46,53.18l-3,4.46C45.8,61.7,42.87,66.27,39.65,71,28.58,87.34,13,110,0,128.64v3.24H4.33C17.09,113.56,31.8,92.18,44.16,74c2.08-3.06,4-6.07,5.86-8.88l19.16,53,40-101.35c3.36,8.75,7.14,18.72,9.67,25.46l4,10.32V37.47C119.62,29,115.12,17.19,111.7,8.38Z'/><polygon class='c' points='61.84 55.95 55.97 65.64 58.34 72.16 60.6 68.42 71.28 97.98 74.28 90.38 61.84 55.95'/><path class='c' d='M121.92,0c-3.13,7.94-6.47,16.37-10,25.12-3.9,9.82-8,20.05-12.12,30.48C93,72.78,86,90.48,79.88,105.9l-2.79-7.74-3,7.6,5.57,15.41,2.62-6.65C88.92,97.68,97,77.3,104.87,57.59c3.3-8.28,6.68-16.78,10-25.12C119.44,21,123.88,9.78,127.74,0Z'/></g></svg>"
-
-    # https://codepen.io/plotly/pen/EVgeWb
-    # https://rdrr.io/cran/plotly/man/config.html
-    # https://stackoverflow.com/questions/36554705/adding-config-modes-to-plotly-py-offline-modebar
-    # https://gist.github.com/neo01124/449bc7df9f25c6ef055c7efbd2d89a3a
-    # https://plotly.com/javascript/configuration-options/#hide-the-plotly-logo-on-the-modebar
 
     name = f_name
     file = open(file_path).read()
@@ -517,7 +509,6 @@ def pwe_format(f_name):
     #chart_file = f"file:///{relative_path}_PWE.html"
     chart_file = f"file:///{abs_path}"
 
-    # webbrowser.open_new_tab("chrome://newtab")
     webbrowser.open_new_tab(chart_file)
     # print(output_html_path)
     # print(chart_html)
@@ -1362,7 +1353,6 @@ def pwe_table(df, file_tag=None, ticker=None, head_text_size=16, text_size=12, h
                         font=dict(family='Roboto', size=head_text_size)),
             cells=dict(values=df.transpose().values.tolist(),
                        #fill_color = [pwe_r618, pwe_r382, pwe_r382, pwe_r382 ]*2,
-                       #fill_color = [pwe_r618, pwe_r382, pwe_r382, pwe_r382 ]*2,
                        fill_color=fill_color,
                        align=text_align, font=dict(family='Roboto', size=text_size)))])
 
@@ -1547,13 +1537,11 @@ def custom_html(f_name, string_from, string_to):
     file_path_str = f'{cwd}{f_name}'
     file_path = f'{file_path_str}.html'
 
-    # https://www.geeksforgeeks.org/python-os-path-relpath-method/
     prefix = cwd
     relative_path = f'/{os.path.relpath(file_path,prefix)}'
 
     local_path_str = f'{f_name}'
     local_file_path = f'/{local_path_str}.html'
-    # unf_link = f'http://localhost:8888/view{local_file_path}'
     unf_link = f'http://localhost:8888/view{relative_path}'
 
     text_wrapper = open(file_path, encoding="utf-8")
@@ -1572,10 +1560,7 @@ def custom_html(f_name, string_from, string_to):
 
     output_html_path = f"{cwd}{f_name}"
     abs_path = f'/{os.path.abspath(output_html)}'
-    #chart_html = f"http://localhost:8888/view{local_path_str}_PWE.html"
     chart_html = f"http://localhost:8888/view{local_path_str}"
-    #chart_html = f"http://localhost:8888/view{relative_path}"
-    #chart_file = f"file:///{relative_path}_PWE.html"
     chart_file = f"file:///{abs_path}"
 
     webbrowser.open_new_tab(chart_file)
@@ -1595,7 +1580,6 @@ def add_range_selector(layout, axis_name='xaxis', ranges=None, default=None):
     axis.setdefault('type', 'date')
     axis.setdefault('rangeslider', dict())
     if ranges is None:
-        # Make some nice defaults
         ranges = ['1m', '6m', 'ytd', '1y', 'all']
     re_split = re.compile('(\d+)')
 
@@ -1603,7 +1587,7 @@ def add_range_selector(layout, axis_name='xaxis', ranges=None, default=None):
         split = re.split(re_split, range)
         assert len(split) == 3
         return (int(split[1]), split[2])
-    # plotly understands m, but not d or y!
+    # plotly accepts m, but not d or y
     step_map = dict(d='day', m='month', y='year')
 
     def make_button(range):

@@ -918,7 +918,7 @@ def del_col_num(df):
         pass
     else:
         df.columns = df.columns.str.strip().str.replace('\d+', '').str.replace('.', '').str.replace(' ',
-                                                                                                    '').str.replace('_', '').str.capitalize().str.replace('(', '').str.replace(')', '')
+                                                        '').str.replace('_', '').str.capitalize().str.replace('(', '').str.replace(')', '')
     return df
 
 
