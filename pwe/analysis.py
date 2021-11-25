@@ -162,7 +162,7 @@ class Security:
             t = 'quarters'
             p = 'Q.'
 
-        elif interval == 'semiannual':
+        elif interval == 'semi-annual':
             ann_factor = 2
             t = 'half years'
             p = 'Six Month'

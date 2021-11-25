@@ -1669,3 +1669,7 @@ def candle_close_dt(df, days=0, mins=0, secs=0):
         ((days*60*60*24)+(mins*60)+secs), unit='s')
     df['Close_DateTime'] = df.index + df['Candle_Length']
     df.drop('Candle_Length', axis=1)
+
+
+def ext_str_lst(str_list):
+    return ", ".join(map(str, str_list))

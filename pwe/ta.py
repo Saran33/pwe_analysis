@@ -5,16 +5,16 @@ Created on Mon Sep 13 19:29:33 2021
 
 @author: Saran Connolly saran.c@pwecapital.com
 """
-from datetime import datetime, date, timedelta
-from typing import OrderedDict
+# from datetime import datetime, date, timedelta
+# from typing import OrderedDict
 import pytz
-from os import error
+# from os import error
 import sys
 import pandas as pd
 import numpy as np
 import ta
-import talib
-from talib import abstract
+# import talib
+# from talib import abstract
 from pykalman import KalmanFilter
 
 
@@ -70,19 +70,8 @@ def bol_bands(df, window=20, std=2, price='Close', fillna=True, lib=False, input
     """
     Bolliger Bands
     """
-    # === talib ====
-    # uses close prices (default)
-    if lib:
-        if inputs != None:
-            df[f"bbu_{std}_{window}"], df[f"bbm_{std}_{window}"], df[f"bbl_{std}_{window}"] = abstract.BBANDS(
-                inputs, timeperiod=window, nbdevup=std, nbdevdn=std)
-        else:
-            df[f"bbu_{std}_{window}"], df[f"bbm_{std}_{window}"], df[f"bbl_{std}_{window}"] = talib.BBANDS(
-                df['Close'].values, timeperiod=10, nbdevup=2, nbdevdn=2)
-    # === /talib ====
-
     # === ta ====
-    else:
+    if not lib:
         indicator_bb = ta.volatility.BollingerBands(
             close=df[price], window=window, window_dev=std, fillna=fillna)
 
@@ -102,6 +91,17 @@ def bol_bands(df, window=20, std=2, price='Close', fillna=True, lib=False, input
         # Add Percentage Bollinger Bands
         df[f"bb_bbp_{std}_{window}"] = indicator_bb.bollinger_pband()
 
+    # === talib ====
+    # uses close prices (default)
+    # elif lib:
+    #     if inputs != None:
+    #         df[f"bbu_{std}_{window}"], df[f"bbm_{std}_{window}"], df[f"bbl_{std}_{window}"] = abstract.BBANDS(
+    #             inputs, timeperiod=window, nbdevup=std, nbdevdn=std)
+    #     else:
+    #         df[f"bbu_{std}_{window}"], df[f"bbm_{std}_{window}"], df[f"bbl_{std}_{window}"] = talib.BBANDS(
+    #             df['Close'].values, timeperiod=10, nbdevup=2, nbdevdn=2)
+    # # === /talib ====
+
 
 def adx(df, high='High', low='Low', close='Close', window=14, fillna=True, lib=False, inputs=None):
     """
@@ -111,17 +111,18 @@ def adx(df, high='High', low='Low', close='Close', window=14, fillna=True, lib=F
 
     The Average Directional Index (ADX) is in turn derived from the smoothed averages of the difference between +DI and -DI, and measures the strength of the trend (regardless of direction) over time.
     """
-    if lib:
-        # === talib ====
-        if inputs != None:
-            df[f"ADX_{window}"] = abstract.ADX(inputs, timeperiod=window)
-        else:
-            df[f"ADX_{window}"] = talib.ADX(
-                df[high], df[low], df[close], timeperiod=window)
-    else:
+    if not lib:
         # === ta ====
         indicator_adx = ta.trend.ADXIndicator(
             high=df[high], low=df[low], close=df[close], window=window, fillna=fillna)
         df[f"ADX_{window}"] = indicator_adx.adx()
         df[f"ADX_pos_{window}"] = indicator_adx.adx_pos()
         df[f"ADX_neg_{window}"] = indicator_adx.adx_neg()
+
+    # elif lib:
+    #     # === talib ====
+    #     if inputs != None:
+    #         df[f"ADX_{window}"] = abstract.ADX(inputs, timeperiod=window)
+    #     else:
+    #         df[f"ADX_{window}"] = talib.ADX(
+    #             df[high], df[low], df[close], timeperiod=window)
