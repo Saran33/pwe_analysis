@@ -139,6 +139,21 @@ class Security:
             p = "Hr."
             #vol_window = vol_window*market_hours
 
+        elif interval == '30min':
+            ann_factor = trading_periods*market_hours*2
+            t = '30min'
+            p = '30min'
+            #vol_window = vol_window*market_hours*2
+        elif interval == '15min':
+            ann_factor = trading_periods*market_hours*4
+            t = '15min'
+            p = '15min'
+            #vol_window = vol_window*market_hours*4
+        elif interval == '5min':
+            ann_factor = trading_periods*market_hours*12
+            t = '5min'
+            p = '5min'
+            #vol_window = vol_window*market_hours*12
         elif interval == 'minutes':
             ann_factor = trading_periods*market_hours*60
             t = 'minutes'
@@ -324,6 +339,15 @@ class Security:
             ann_factor = trading_periods*market_hours
             t = 'hours'
             #vol_window = vol_window*market_hours
+        elif interval == '30min':
+            ann_factor = trading_periods*market_hours*2
+            t = '30min'
+        elif interval == '15min':
+            ann_factor = trading_periods*market_hours*4
+            t = '15min'
+        elif interval == '5min':
+            ann_factor = trading_periods*market_hours*12
+            t = '5min'
         elif interval == 'minutes':
             ann_factor = trading_periods*market_hours*60
             t = 'minutes'

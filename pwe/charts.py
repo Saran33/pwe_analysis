@@ -1620,41 +1620,72 @@ def add_range_selector(layout, axis_name='xaxis', ranges=None, default=None):
         axis.setdefault('range', [start_date, end_date])
 
 
-def calc_interval(df):
+def calc_interval(df, api_interval=None):
     """Calculate the interval between timestamps for chart labels."""
-    if (df.index[1] - df.index[0] == timedelta(days=1)) or ((df.index[1] - df.index[0] >= timedelta(days=1)) and (df.index[1] - df.index[0] <= timedelta(days=4))):
-        chart_interval = "Daily"
-        interval = "daily"
-    if df.index[1] - df.index[0] == timedelta(hours=1):
-        chart_interval = "Hourly"
-        interval = "hourly"
-    if df.index[1] - df.index[0] == timedelta(minutes=30):
-        chart_interval = "30min"
-        interval = "30min"
-    if df.index[1] - df.index[0] == timedelta(minutes=15):
-        chart_interval = "15min"
-        interval = "15min"
-    if df.index[1] - df.index[0] == timedelta(minutes=5):
-        chart_interval = "5min"
-        interval = "5min"
-    if df.index[1] - df.index[0] == timedelta(minutes=1):
-        chart_interval = "Per Minute"
-        interval = "minutes"
-    if df.index[1] - df.index[0] == timedelta(seconds=1):
-        chart_interval = "Per Second"
-        interval = "seconds"
-    if df.index[1] - df.index[0] == timedelta(weeks=1):
-        chart_interval = "Weekly"
-        interval = "weekly"
-    if timedelta(days=32) >= df.index[1] - df.index[0] >= timedelta(days=27):
-        chart_interval = "Monthly"
-        interval = "monthly"
-    if timedelta(days=182) >= df.index[1] - df.index[0] >= timedelta(days=90):
-        chart_interval = "Semi-Annual"
-        interval = "semi-annual"
-    if timedelta(days=360) >= df.index[1] - df.index[0] >= timedelta(days=182):
-        chart_interval = "Annual"
-        interval = "annual"
+    print("TIMEDELTA:", df.index[2] - df.index[1])
+    try:
+        if (df.index[-1] - df.index[-2] == timedelta(days=1)) or ((df.index[-1] - df.index[-2] >= timedelta(days=1)) and (df.index[-1] - df.index[-2] <= timedelta(days=4))):
+            chart_interval = "Daily"
+            interval = "daily"
+        elif df.index[-1] - df.index[-2] == timedelta(hours=1):
+            chart_interval = "Hourly"
+            interval = "hourly"
+        elif df.index[-1] - df.index[-2] == timedelta(minutes=30):
+            chart_interval = "30min"
+            interval = "30min"
+        elif df.index[-1] - df.index[-2] == timedelta(minutes=15):
+            chart_interval = "15min"
+            interval = "15min"
+        elif df.index[-1] - df.index[-2] == timedelta(minutes=5):
+            chart_interval = "5min"
+            interval = "5min"
+        elif df.index[-1] - df.index[-2] == timedelta(minutes=1):
+            chart_interval = "Per Minute"
+            interval = "minutes"
+        elif df.index[-1] - df.index[-2] == timedelta(seconds=1):
+            chart_interval = "Per Second"
+            interval = "seconds"
+        elif df.index[-1] - df.index[-2] == timedelta(weeks=1):
+            chart_interval = "Weekly"
+            interval = "weekly"
+        elif timedelta(days=32) >= df.index[-1] - df.index[-2] >= timedelta(days=27):
+            chart_interval = "Monthly"
+            interval = "monthly"
+        elif timedelta(days=182) >= df.index[-1] - df.index[-2] >= timedelta(days=90):
+            chart_interval = "Semi-Annual"
+            interval = "semi-annual"
+        elif timedelta(days=360) >= df.index[-1] - df.index[-2] >= timedelta(days=182):
+            chart_interval = "Annual"
+            interval = "annual"
+        elif api_interval:
+            if api_interval == 'daily':
+                chart_interval = "Daily"
+                interval = "daily"
+            elif api_interval == 'hourly':
+                chart_interval = "Hourly"
+                interval = "hourly"
+            elif api_interval == '30min':
+                chart_interval = "30min"
+                interval = "30min"
+            elif api_interval == '15min':
+                chart_interval = "15min"
+                interval = "15min"
+            elif api_interval == '5min':
+                chart_interval = "5min"
+                interval = "5min"
+            elif api_interval == 'minutes':
+                chart_interval = "Per Minute"
+                interval = "minutes"
+            elif api_interval == 'weekly':
+                chart_interval = "Weekly"
+                interval = "weekly"
+            elif api_interval == 'monthly':
+                chart_interval = "Monthly"
+                interval = "monthly"
+    except:
+        print ("ERROR getting chart dates")
+
+    print ("INTERVAL:",chart_interval, interval)
     return chart_interval, interval
 
 
