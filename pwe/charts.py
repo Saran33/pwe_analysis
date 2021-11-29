@@ -1628,6 +1628,15 @@ def calc_interval(df):
     if df.index[1] - df.index[0] == timedelta(hours=1):
         chart_interval = "Hourly"
         interval = "hourly"
+    if df.index[1] - df.index[0] == timedelta(minutes=30):
+        chart_interval = "30min"
+        interval = "30min"
+    if df.index[1] - df.index[0] == timedelta(minutes=15):
+        chart_interval = "15min"
+        interval = "15min"
+    if df.index[1] - df.index[0] == timedelta(minutes=5):
+        chart_interval = "5min"
+        interval = "5min"
     if df.index[1] - df.index[0] == timedelta(minutes=1):
         chart_interval = "Per Minute"
         interval = "minutes"
