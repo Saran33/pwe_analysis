@@ -136,8 +136,13 @@ def get_multi_av_ts(tickers, endpoint, start, end, rel_dir, AV_API='ALPHAVANTAGE
     check_folder(rel_dir)
 
     for tkr in tkrs:
-        relpath = f'{rel_dir}/{tkr}_{csv_start}_{csv_end}.csv'
+        if endpoint in ['intraday', 'intraday_extended']:
+            if interval:
+                relpath = f'{rel_dir}/{tkr}_{endpoint}_{interval}_{start}_{end}.csv'
+        else:
+            relpath = f'{rel_dir}/{tkr}_{endpoint}_{start}_{end}.csv'
         file_path = os.path.abspath(relpath)
+        
         if os.path.exists(file_path) == True:
 
             print("Matching local file exists.")
@@ -165,11 +170,6 @@ def get_multi_av_ts(tickers, endpoint, start, end, rel_dir, AV_API='ALPHAVANTAGE
                 df.index.names = ['DateTime']
                 print(f"DOWNLOADED: {tkr}")
                 print(df[:5])
-
-                if save_csv:
-                    df.to_csv(relpath, index=True)
-                    abs_path = os.path.abspath(relpath)
-                    print("Saved data to:", abs_path)
 
                 df = df[[price]]
                 df = df.rename(columns={price: tkr})

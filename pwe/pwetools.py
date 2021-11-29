@@ -917,8 +917,8 @@ def del_col_num(df):
     if 'Close' in df:
         pass
     else:
-        df.columns = df.columns.str.strip().str.replace('\d+', '').str.replace('.', '').str.replace(' ',
-                                                        '').str.replace('_', '').str.capitalize().str.replace('(', '').str.replace(')', '')
+        df.columns = df.columns.str.strip().str.replace('\d+', '', regex=True).str.replace('.', '', regex=False).str.replace(' ',
+                                                        '', regex=False).str.replace('_', '', regex=False).str.capitalize().str.replace('(', '', regex=False).str.replace(')', '', regex=False)
     return df
 
 
