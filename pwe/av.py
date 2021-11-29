@@ -19,6 +19,7 @@ def get_av_ts(symbol, endpoint, start, end, rel_dir, AV_API='ALPHAVANTAGE_API_KE
     https://github.com/RomelTorres/alpha_vantage
 
     endpoint -> intraday, intraday_extended, daily, daily_adjusted, weekly, weekly_adjusted, monthly, monthly_adjusted.
+    interval -> 1min, 5min, 15min, 30min, 60min
     outputsize:  The size of the call, supported values are
         'compact' and 'full; the first returns the last 100 points in the
         data series, and 'full' returns the full-length intraday times
