@@ -22,6 +22,7 @@ import plotly.io as pio
 # pio.templates
 from plotly.offline import download_plotlyjs, init_notebook_mode, plot, iplot
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 # sinit_notebook_mode(connected=True)
 # cf.go_offline()
 # To display the plots
@@ -246,15 +247,24 @@ def get_chart_title(title, chart_ticker, title_dates, ticker, chart_dates):
     return chart_title
 
 
-PWE_skin = "#DCBBA6"
+PWE_skin = "#DCBBA6"  # "rgb(220,187,166)"
+skin_lighter = "#E5CDBF"  # "rgb(229,205,191)"
+skin_lightest = "#EDDDD5"  # "rgb(237,221,213)"
+skin_darker = "#d3ab95"  # "rgb(211,171,149)"
+pwe_darkest = "#C48E71"
 black = "#000000"
 PWE_grey = "#64646F"
+PWE_lgrey = "#7D7D89"
 PWE_blue = "#a4b3c1"
+PWE_dark_blue = "#869AAC"
 ironsidegrey = "#6F6F64"
 PWE_light_grey = "#a5a5a5"
 PWE_ig_light_grey = '#58595b'
 PWE_ig_dark_grey = '#403d3e'
 vic_teal = '#d1d3d4'
+pwe_teal = '#99B7BD'
+pwe_light_teal = '#b8cdd1'
+pwe_teal2 = '#b6b6b6'
 PWE_black = '#231f20'
 
 transparent = '#DCBBA600'
@@ -280,6 +290,7 @@ PWE_skin80_h = "#dcbaa6"
 PWE_skin_20 = "#DCBBA633"
 PWE_skin_38 = "#DCBBA661"
 henanigans_light1 = "#A4A4A4"
+
 
 cf.go_offline()
 cf.set_config_file(offline=False, world_readable=True)
@@ -1251,8 +1262,10 @@ def pwe_box(df, start_date=None, end_date=None, title=None, ticker=None, yTitle=
     elif linecolor == 'PWE':
         linecolor = PWE_skin
 
-    colors = [PWE_skin, PWE_grey, black, vic_teal,
-              PWE_blue, PWE_ig_light_grey, PWE_ig_dark_grey]
+    # colors = [PWE_skin, PWE_grey, black, vic_teal,
+    #           PWE_blue, PWE_ig_light_grey, PWE_ig_dark_grey]
+    colors = [PWE_skin, PWE_grey, black, pwe_light_teal, PWE_blue,
+              PWE_ig_light_grey, PWE_ig_dark_grey, skin_darker, PWE_lgrey, PWE_black, pwe_teal, PWE_dark_blue, vic_teal, skin_lighter, pwe_darkest, ]
 
     sdate, edate, chart_dates = chart_file_dates(
         df, start_date, end_date, time=title_time)
@@ -1781,3 +1794,93 @@ def pwe_heatmap(df, start_date=None, end_date=None, title=None, ticker=None, yTi
     # chart_html, chart_file = pwe_format(f_name)
 
     return plt_int  # chart_html, chart_file
+
+
+def pwe_double_pie(vals1, vals2, labels, pie1_name='Pie 1', pie2_name='Pie 2', font_size=18, autosize=True,
+            width=620, height=620, aspect='vertical', title=None, showlegend=True,
+            ann1_x=None, ann1_y=None, ann2_x=None, ann2_y=None):
+    """ 
+    Create two PWE styled pie charts in a single graph using Plotly.
+    aspect: 'vertical' or 'horizontal'.
+    """
+    colors = [PWE_skin, PWE_grey, pwe_light_teal, PWE_blue,
+                PWE_ig_light_grey, PWE_ig_dark_grey, skin_darker, PWE_lgrey, PWE_black, pwe_teal, PWE_dark_blue, vic_teal, skin_lighter, pwe_darkest, ] # black
+
+    if aspect == 'horizontal':
+        fig = make_subplots(rows=2, cols=1, specs=[
+                            [{'type': 'domain'}, {'type': 'domain'}]])
+        fig.add_trace(go.Pie(labels=labels, values=vals1, name=pie1_name, marker_colors=colors),
+                    1, 1)
+        fig.add_trace(go.Pie(labels=labels, values=vals2, name=pie2_name, marker_colors=colors),
+                    1, 2)
+
+        fig.update_traces(hole=.4, hoverinfo="label+percent+name")
+        
+        if not ann1_x:
+            ann1_x=0.2025
+        if not ann1_y:
+            ann1_y=0.5
+        if not ann2_x:
+            ann2_x=0.7975
+        if not ann2_y:
+            ann2_y=0.5
+
+        fig.update_layout(
+            title_text=title, autosize=autosize, width=width, height=height, margin=dict(
+                l=10,
+                r=30.9,
+                b=30.9,
+                t=50,
+                pad=30.9),
+                showlegend=showlegend,
+            # Add annotations in the center of the donut pies.
+            annotations=[dict(text=pie1_name, x=ann1_x, y=ann1_y, font=dict(family='Roboto', size=font_size), showarrow=False),
+                        dict(text=pie2_name, x=ann2_x, y=ann2_y, font=dict(family='Roboto', size=font_size), showarrow=False)])
+
+    elif aspect == 'vertical':
+        fig = make_subplots(rows=2, cols=1, specs=[
+                            [{'type': 'domain'}], [{'type': 'domain'}]])
+        fig.add_trace(go.Pie(labels=labels, values=vals1, name=pie1_name, marker_colors=colors),
+                    1, 1)
+        fig.add_trace(go.Pie(labels=labels, values=vals2, name=pie2_name, marker_colors=colors),
+                    2, 1)
+
+        fig.update_traces(hole=.4, hoverinfo="label+percent+name")
+
+        if not ann1_x:
+            ann1_x=0.5
+        if not ann1_y:
+            ann1_y=0.81
+        if not ann2_x:
+            ann2_x=0.5
+        if not ann2_y:
+            ann2_y=0.19
+
+        fig.update_layout(
+            title_text=title, autosize=autosize, width=width, height=height, margin=dict(
+                l=10,
+                r=30.9,
+                b=30.9,
+                t=50,
+                pad=30.9),
+                showlegend=showlegend,
+            # Add annotations in the center of the donut pies.
+            annotations=[dict(text=pie1_name, x=ann1_x, y=ann1_y, font=dict(family='Roboto', size=font_size), showarrow=False),
+                        dict(text=pie2_name, x=ann2_x, y=ann2_y, font=dict(family='Roboto', size=font_size), showarrow=False)])
+
+    # fig.show()
+    iplot(fig)
+
+    style = 'pie_chart'
+    if title == None:
+        f_name = f'/charts/_{style}_{date.today()}'
+    else:
+        file_tag = title.replace(' ', '_')
+        f_name = f'/charts/{file_tag}_{style}_{date.today()}'
+
+    check_folder('charts')
+    fig.write_html(f'.{f_name}.html')
+
+    chart_html, chart_file = pwe_format(f_name)
+
+    return chart_html, chart_file
