@@ -25,6 +25,9 @@ end_date = date.today().strftime("%d-%m-%Y")
 
 BTC = cmc.cmc_data(symbol="BTC",start_date=start_date,end_date=end_date)
 
+# Initialize Security
+BTC = Security(BTC)
+
 settlements = dict({'2021-01-29': 'CME Exp.', '2021-02-26': 'CME Exp.', 
                     '2021-03-26': 'CME Exp.', '2021-04-30': 'CME Exp.', 
                     '2021-05-28': 'CME Exp.', '2021-06-25': 'CME Exp.', 
@@ -33,12 +36,15 @@ settlements = dict({'2021-01-29': 'CME Exp.', '2021-02-26': 'CME Exp.',
 auto_start = '2021-01-01'
 auto_end = '2021-08-15'
 
-charts.quant_chart_int(BTC,start_date,end_date,ticker='BTC',
-                       theme='white',auto_start=auto_start,auto_end=auto_end,
-                       asPlot=True,showlegend=True,boll_std=2,boll_periods=20,
-                       showboll=True,showrsi=True,rsi_periods=14,showama=True,
-                       ama_periods=9,showvol=True,show_price_range=True,
-                       textangle=60,annots=settlements)
+BTC.get_fibs(period='ytd', utc=True)
+support=BTC.f_618
+resist=BTC.f_382
+
+charts.quant_chart_int(BTC.df, start_date, end_date, ticker=symbol, title=None, theme='white', auto_start=auto_start, auto_end=auto_end,
+                asPlot=asPlot, showlegend=True, boll_std=2, boll_periods=20, showboll=True, showrsi=True, rsi_periods=14, showama=True,
+                ama_periods=9, showvol=True, showkal=False, kal_periods=1, show_range=True, annots=settlements, textangle=0, file_tag=None,
+                support=support, resist=resist, annot_font_size=6, title_dates=False, title_time=False, chart_ticker=True, top_margin=0.9,
+                spacing=0.08, range_fontsize=9.8885, title_x=0.5, title_y=0.933, arrowhead=6, arrowlen=-50)
 ```
 ![Candle Chart](img/BTC_BTC_01-01-2017-24-08-2021_interative_white_PWE.png)
 #### Download Quandl data:
@@ -61,7 +67,7 @@ charts.pwe_line_chart(BTC_Bitfinex,columns=['Last'],start_date=start_date,end_da
 ![Line (scatter) Chart](img/BTC_01-01-2017-24-08-2021_line_white_PWE.png)
 #### Initialize Securities & Calculate Returns:
 ```python
-BTC = Security(BTC)
+# BTC already initialized
 BTC.get_returns(price='Close')
 
 BTC_Bitfinex = Security(BTC_Bitfinex)
