@@ -139,6 +139,8 @@ def get_chart_dates(df, start_date=None, end_date=None, utc=True, auto_start=Non
 
 
 def chart_file_dates(df, start_date=None, end_date=None, time=True):
+    if (not isinstance(start_date, datetime)) or (not isinstance(end_date, datetime)):
+        time = False
     if time:
         if start_date == None:
             sdate = df.index.strftime('%Y-%m-%d_%H:%M:%S').min()
