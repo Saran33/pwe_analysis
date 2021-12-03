@@ -190,15 +190,24 @@ def chart_file_dates(df, start_date=None, end_date=None, time=True):
             try:
                 sdate = datetime.strftime(start_date, "%Y-%m-%d")
             except ValueError:
-                sdate = datetime.strftime(start_date, '%Y-%m-%d')
+                sdate = datetime.strftime(start_date, '%d-%m-%Y')
             try:
                 title_start = datetime.strftime(start_date, '%Y-%m-%d')
             except ValueError:
-                title_start = assign_tz(start_date, 'UTC')
-                title_start = datetime.strftime(title_start, '%Y-%m-%d')
+                try:
+                    title_start = assign_tz(start_date, 'UTC')
+                    title_start = datetime.strftime(title_start, '%Y-%m-%d')
+                except:
+                    try:
+                        title_start = datetime.strftime(start_date, '%d-%m-%Y')
+                    except:
+                        title_start = assign_tz(start_date, 'UTC')
+                        title_start = datetime.strftime(title_start, '%d-%m-%Y')
+
         elif start_date != None and isinstance(start_date, str):
             sdate = start_date
         sdate = sdate.strip().replace(':', ',')
+        title_start = sdate
 
         if end_date == None:
             edate = df.index.strftime('%Y-%m-%d').max()
@@ -220,6 +229,7 @@ def chart_file_dates(df, start_date=None, end_date=None, time=True):
         elif end_date != None and isinstance(end_date, str):
             edate = end_date
         edate = edate.strip().replace(':', ',')
+        title_end = edate
 
     chart_dates = str(title_start+" : "+title_end)
     return sdate, edate, chart_dates
@@ -535,9 +545,9 @@ def pwe_format(f_name):
 
 def quant_chart_int(df, start_date, end_date, ticker=None, title=None, theme='henanigans', auto_start=None, auto_end=None,
                     asPlot=True, showlegend=True, boll_std=2, boll_periods=20, showboll=False, showrsi=False, rsi_periods=14,
-                    showama=False, ama_periods=9, showvol=False, show_range=False, annots=None, textangle=0, file_tag=None,
-                    support=None, resist=None, annot_font_size=6, title_dates=False, title_time=False, chart_ticker=True,
-                    top_margin=0.9, spacing=0.08, range_fontsize=9.8885, title_x=0.5, title_y=0.933,
+                    showama=False, ama_periods=9, showvol=False, showkal=False, kal_periods=1, show_range=False, annots=None,
+                    textangle=0, file_tag=None, support=None, resist=None, annot_font_size=6, title_dates=False, title_time=False,
+                    chart_ticker=True, top_margin=0.9, spacing=0.08, range_fontsize=9.8885, title_x=0.5, title_y=0.933, 
                     arrowhead=6, arrowlen=-50):
     """
 
@@ -638,17 +648,18 @@ def quant_chart_int(df, start_date, end_date, ticker=None, title=None, theme='he
     if showama == True:
         qf.add_ama(periods=ama_periods, width=2, color=[
                    PWE_blue, vic_teal], legendgroup=False)
-    else:
-        pass
+
+    if showkal == True:
+        qf.add_kalman(periods=kal_periods, width=2, column='Close', color=[
+            pwe_light_teal, pwe_teal], legendgroup=False)
+
     if showrsi == True:
         qf.add_rsi(periods=rsi_periods, color=PWE_skin, legendgroup=False)
-    else:
-        pass
+
     if showvol == True:
         qf.add_volume(datalegend=True, legendgroup=True,
                       name="Volume", showlegend=False, up_color=PWE_grey)
-    else:
-        pass
+
 
     # for trace in qf['data']:
     #    if(trace == 'Volume'): trace['datalegend'] = False
