@@ -13,7 +13,7 @@ from alpha_vantage.timeseries import TimeSeries
 from alpha_vantage.cryptocurrencies import CryptoCurrencies
 
 
-def get_av_ts(ticker, endpoint, start, end, rel_dir, AV_API='ALPHAVANTAGE_API_KEY', interval=None, outputsize='compact', save_csv=False):
+def get_av_ts(ticker, endpoint, start, end, rel_dir, AV_API='ALPHAVANTAGE_API_KEY', interval=None, outputsize='compact', output_format='pandas', save_csv=False):
     """
     AlphaVatage API
     https://github.com/RomelTorres/alpha_vantage
@@ -47,7 +47,7 @@ def get_av_ts(ticker, endpoint, start, end, rel_dir, AV_API='ALPHAVANTAGE_API_KE
 
     else:
         print("No CSV found. Downloading data from API")
-        ts = TimeSeries(key=AV_API, output_format='pandas')  # retries=5
+        ts = TimeSeries(key=AV_API, output_format=output_format)  # retries=5
         # Get json object with the intraday data and another with  the call's metadata
         if endpoint == 'intraday':
             df, meta_data = ts.get_intraday(
@@ -188,3 +188,99 @@ def get_multi_av_ts(tickers, endpoint, start, end, rel_dir, AV_API='ALPHAVANTAGE
         return dfs, missing_secs
     else:
         return dfs
+
+
+
+def get_av_crypto(ticker, endpoint, start, end, rel_dir, AV_API='ALPHAVANTAGE_API_KEY', market='USD', interval=None, outputsize='compact', output_format='pandas', save_csv=False):
+    """
+    AlphaVatage API
+    https://github.com/RomelTorres/alpha_vantage
+
+    AV MARKET LIST:::: 
+
+    endpoint -> intraday, intraday_extended, daily, daily_adjusted, weekly, weekly_adjusted, monthly, monthly_adjusted.
+    interval -> 1min, 5min, 15min, 30min, 60min
+    outputsize:  The size of the call, supported values are
+        'compact' and 'full; the first returns the last 100 points in the
+        data series, and 'full' returns the full-length intraday times
+        series, commonly above 1MB (default 'compact')
+    """
+
+    tkr = ticker.replace('/', '_')
+
+    if endpoint in ['intraday', 'intraday_extended']:
+        if interval:
+            relpath = f'{rel_dir}/{tkr}_{endpoint}_{interval}_{start}_{end}.csv'
+    else:
+        relpath = f'{rel_dir}/{tkr}_{endpoint}_{start}_{end}.csv'
+    file_path = os.path.abspath(relpath)
+
+    print(file_path)
+
+    if os.path.exists(file_path) == True:
+
+        print("Reading recent file from CSV...")
+        print(file_path)
+        df = pd.read_csv(file_path, low_memory=False, index_col=[
+                         'DateTime'], parse_dates=['DateTime'], infer_datetime_format=True)
+        df.name = tkr
+
+    else:
+        print("No CSV found. Downloading data from API")
+        crypto = CryptoCurrencies(key=AV_API, output_format='pandas')  # retries=5
+        # Get json object with the intraday data and another with  the call's metadata
+        if endpoint == 'intraday':
+            df, meta_data = crypto.get_crypto_intraday(
+                tkr, market=market, interval=interval, outputsize=outputsize)
+        elif endpoint == 'daily':
+            df, meta_data = crypto.get_digital_currency_daily(tkr, market=market)
+        elif endpoint == 'weekly':
+            df, meta_data = crypto.get_digital_currency_weekly(tkr, market=market)
+        elif endpoint == 'monthly':
+            df, meta_data = crypto.get_digital_currency_monthly(tkr, market=market)
+        del_col_num(df)
+        sort_index(df)
+        df.index.names = ['DateTime']
+        df.name = tkr
+        start = df.index.min()
+        end = df.index.max()
+        if interval:
+            relpath = f'{rel_dir}/{tkr}_{endpoint}_{interval}_{start}_{end}.csv'
+        else:
+            relpath = f'{rel_dir}/{tkr}_{endpoint}_{start}_{end}.csv'
+        if save_csv:
+            df.to_csv(relpath, index=True)
+            abs_path = os.path.abspath(relpath)
+            print("Saved data to:", abs_path)
+
+    return df
+
+
+def get_av_live(ticker, AV_API='ALPHAVANTAGE_API_KEY', output_format='json'):
+    ts = TimeSeries(key=AV_API, output_format=output_format)
+    tkr = ticker.replace('/', '')
+    if output_format=='json':
+        data, meta_data = ts.get_quote_endpoint(tkr)
+        return data
+    else:
+        raise ValueError("get_av_live() function currently only returns a dict. Please update function to return other data types.")
+
+
+def get_av_live_crypto(from_currency, to_currency='USD', AV_API='ALPHAVANTAGE_API_KEY', output_format='json'):
+    crypto = CryptoCurrencies(key=AV_API, output_format=output_format)
+    if output_format=='json':
+        data, meta_data = crypto.get_digital_currency_exchange_rate(from_currency, to_currency)
+        return data
+    else:
+        raise ValueError("get_av_live_crypto() function currently only returns a dict. Please update function to return other data types.")
+
+
+def get_crypto_fcas_rating(symbol, AV_API='ALPHAVANTAGE_API_KEY', output_format='json'):
+    crypto = CryptoCurrencies(key=AV_API, output_format=output_format)
+    symbol = symbol.replace('/', '')
+    if output_format=='json':
+        data, meta_data = crypto.get_digital_crypto_rating(symbol)
+        return data
+    else:
+        raise ValueError("get_crypto_fcas_rating() function currently only returns a dict. Please update function to return other data types.")
+
