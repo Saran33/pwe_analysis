@@ -284,3 +284,13 @@ def get_crypto_fcas_rating(symbol, AV_API='ALPHAVANTAGE_API_KEY', output_format=
     else:
         raise ValueError("get_crypto_fcas_rating() function currently only returns a dict. Please update function to return other data types.")
 
+
+
+def av_search(keywords, AV_API='ALPHAVANTAGE_API_KEY', output_format='json'):
+    ts = TimeSeries(key=AV_API, output_format=output_format)
+    keywords = str(keywords)
+    if output_format=='json':
+        data, meta_data = ts.get_symbol_search(keywords)
+        return data
+    else:
+        raise ValueError("get_crypto_fcas_rating() function currently only returns a dict. Please update function to return other data types.")
