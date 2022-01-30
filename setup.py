@@ -27,7 +27,7 @@ setup(
         'datamine @ git+https://github.com/Saran33/datamine_python.git',
         'pykalman @ git+https://github.com/pykalman/pykalman.git',
         'pandas','numpy', 'scipy', 'pandas_summary','plotly','quandl','ta','tqdm','pytz',  # 'TA-Lib',
-        'pandas-datareader',
+        'datatile',
 ],
 	#package_dir={"": "src"},
     #packages=find_packages(where="pwe"),
