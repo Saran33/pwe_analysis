@@ -285,12 +285,24 @@ def get_crypto_fcas_rating(symbol, AV_API='ALPHAVANTAGE_API_KEY', output_format=
         raise ValueError("get_crypto_fcas_rating() function currently only returns a dict. Please update function to return other data types.")
 
 
-
-def av_search(keywords, AV_API='ALPHAVANTAGE_API_KEY', output_format='json'):
+def av_search(keywords, AV_API='ALPHAVANTAGE_API_KEY', output_format='json', best_match=True, cols=[]):
     ts = TimeSeries(key=AV_API, output_format=output_format)
     keywords = str(keywords)
+    data, meta_data = ts.get_symbol_search(keywords)
+    # data = del_col_num(data)
+    data.columns = data.columns.str.strip().str.replace('\d+', '', regex=True).str.replace('.', '', regex=False).str.replace(' ', '')
+    if cols:
+        data = data[cols]
+    if best_match:
+        data = data.iloc[0]
     if output_format=='json':
-        data, meta_data = ts.get_symbol_search(keywords)
+        data = data.to_json(orient='records')
+        return data
+    elif (output_format == 'pandas') or (output_format == 'df'):
         return data
     else:
-        raise ValueError("get_crypto_fcas_rating() function currently only returns a dict. Please update function to return other data types.")
+        raise ValueError("get_crypto_fcas_rating() function currently only returns a dict or pandas dataframe. Please update function to return other data types.")
+
+# from pprint import pprint as pp
+# pp(av_search('BTC', output_format='json', best_match=True, cols=['symbol', 'name']))
+# pp(av_search('BTC', output_format='pandas', best_match=False, cols=[]))
