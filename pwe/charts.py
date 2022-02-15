@@ -825,7 +825,8 @@ def pwe_line_chart(df, start_date, end_date, columns=None, kind='scatter', title
                    anntextangle=0, fontsize=6, annot_col=None, file_tag=None,
                    title_dates=False, title_time=False, chart_ticker=True,
                    top_margin=0.9, spacing=0.08, range_fontsize=9.8885,
-                   title_x=0.5, title_y=0.933, arrowhead=6, arrowlen=-50):
+                   title_x=0.5, title_y=0.933, arrowhead=6, arrowlen=-50,
+                   annot_yanchor='auto', annot_yref="y"):
     """
     Plots an interactive line or scatter chart and opens it in a new browser. It also formats HTML with PWE style.
 
@@ -883,8 +884,8 @@ def pwe_line_chart(df, start_date, end_date, columns=None, kind='scatter', title
                                title={'text': f'{chart_title}', 'y': title_y, 'x': title_x, 'xanchor': 'center', 'yanchor': 'top'})
         else:
 
-            ans = cf.tools.get_annotations(df=df[annot_col], annotations=annots, annot_col=annot_col,
-                                           fontsize=fontsize, yanchor='auto', yref="y", showarrow=True,
+            ans = cf.tools.get_annotations(df=df, annotations=annots, annot_col=annot_col,
+                                           fontsize=fontsize, yanchor=annot_yanchor, yref=annot_yref, showarrow=True,
                                            arrowhead=arrowhead, arrowcolor=arrowcolor, fontcolor=fontcolor,
                                            anntextangle=-anntextangle, arrowlen=arrowlen)
 
@@ -909,8 +910,8 @@ def pwe_line_chart(df, start_date, end_date, columns=None, kind='scatter', title
 
         else:
 
-            ans = cf.tools.get_annotations(df=df[annot_col], annotations=annots, annot_col=annot_col,
-                                           fontsize=fontsize, yanchor='auto', yref="y", showarrow=True,
+            ans = cf.tools.get_annotations(df=df[columns], annotations=annots, annot_col=annot_col,
+                                           fontsize=fontsize, yanchor=annot_yanchor, yref=annot_yref, showarrow=True,
                                            arrowhead=arrowhead, arrowcolor=arrowcolor, fontcolor=fontcolor,
                                            anntextangle=-anntextangle, arrowlen=arrowlen)
 
