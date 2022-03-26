@@ -826,7 +826,7 @@ def pwe_line_chart(df, start_date, end_date, columns=None, kind='scatter', title
                    title_dates=False, title_time=False, chart_ticker=True,
                    top_margin=0.9, spacing=0.08, range_fontsize=9.8885,
                    title_x=0.5, title_y=0.933, arrowhead=6, arrowlen=-50,
-                   annot_yanchor='auto', annot_yref="y"):
+                   annot_yanchor='auto', annot_yref="y", annot_font_size=6,):
     """
     Plots an interactive line or scatter chart and opens it in a new browser. It also formats HTML with PWE style.
 
@@ -910,10 +910,10 @@ def pwe_line_chart(df, start_date, end_date, columns=None, kind='scatter', title
 
         else:
 
-            ans = cf.tools.get_annotations(df=df[columns], annotations=annots, annot_col=annot_col,
-                                           fontsize=fontsize, yanchor=annot_yanchor, yref=annot_yref, showarrow=True,
+            ans = cf.tools.get_annotations(df=df[columns], annotations=annots, annot_col=None,
+                                           fontsize=annot_font_size, yanchor=annot_yanchor, showarrow=True,
                                            arrowhead=arrowhead, arrowcolor=arrowcolor, fontcolor=fontcolor,
-                                           anntextangle=-anntextangle, arrowlen=arrowlen)
+                                           anntextangle=-anntextangle, arrowlen=arrowlen, yref=annot_yref, )
 
             plt_int = df[columns].iplot(kind=kind, showlegend=showlegend, legend=legend, rangeslider=False,
                                         xTitle='Date', yTitle=yTitle, colors=colors, fontfamily='Roboto', theme=theme,
@@ -923,6 +923,10 @@ def pwe_line_chart(df, start_date, end_date, columns=None, kind='scatter', title
                                                            x=-0.025, y=1, visible=True), xrange=[auto_start, auto_end],
                                         connectgaps=connectgaps, annotations=ans, anntextangle=anntextangle,
                                         title={'text': f'{chart_title}', 'y': title_y, 'x': title_x, 'xanchor': 'center', 'yanchor': 'top'})
+
+    # plt_int.add_annotations(annots,
+    #                     showarrow=True, y=0, arrowhead=arrowhead, arrowcolor=arrowcolor, arrowlen=arrowlen, fontcolor=fontcolor,
+    #                     fontsize=annot_font_size, anntextangle=0, yanchor="bottom", fontfamily='Roboto')
 
     chart_html, chart_file = pwe_format(f_name)
 

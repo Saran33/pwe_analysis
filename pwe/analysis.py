@@ -119,7 +119,7 @@ class Security:
 
         return df
 
-    def get_ann_factor(self, interval, trading_periods, market_hours):
+    def get_ann_factor(self, interval='1d', trading_periods=252, market_hours=24):
 
         if interval == 'daily':
             ann_factor = trading_periods
@@ -200,7 +200,7 @@ class Security:
         """
         df = self.df
 
-        af, t, p = self.get_ann_factor(interval, trading_periods, market_hours)
+        af, t, p = self.get_ann_factor(interval=interval, trading_periods=trading_periods, market_hours=market_hours)
 
         # Standard deviation:
         df['Std_{}_{}'.format(window, p)] = (
@@ -251,7 +251,7 @@ class Security:
         """
         df = self.df
 
-        af, t, p = self.get_ann_factor(interval, trading_periods, market_hours)
+        af, t, p = self.get_ann_factor(interval=interval, trading_periods=trading_periods, market_hours=market_hours)
 
         log_ho = (df['High'] / df['Open']).apply(np.log)
         log_lo = (df['Low'] / df['Open']).apply(np.log)
@@ -327,49 +327,8 @@ class Security:
         start_date = df.index.min()
         end_date = df.index.max()
 
-        if interval == 'daily':
-            ann_factor = trading_periods
-            t = 'days'
-            #vol_window = vol_window
-        elif interval == 'annual':
-            ann_factor = 1
-            t = 'years'
-            #vol_window = vol_window
-        elif interval == 'hourly':
-            ann_factor = trading_periods*market_hours
-            t = 'hours'
-            #vol_window = vol_window*market_hours
-        elif interval == '30min':
-            ann_factor = trading_periods*market_hours*2
-            t = '30min'
-        elif interval == '15min':
-            ann_factor = trading_periods*market_hours*4
-            t = '15min'
-        elif interval == '5min':
-            ann_factor = trading_periods*market_hours*12
-            t = '5min'
-        elif interval == 'minutes':
-            ann_factor = trading_periods*market_hours*60
-            t = 'minutes'
-            #vol_window = vol_window*market_hours*60
-        elif interval == 'seconds':
-            ann_factor = trading_periods*market_hours*(60**2)
-            t = 'seconds'
-            #vol_window = vol_window*market_hours*(60**2)
-        elif interval == 'weekly':
-            ann_factor = 52
-            t = 'weeks'
-            #vol_window = vol_window/7
-        elif interval == 'quarterly':
-            ann_factor = 4
-            t = 'quarters'
-        elif interval == 'semiannual':
-            ann_factor = 2
-            t = 'half years'
-        elif interval == 'monthly':
-            ann_factor = 12
-            t = 'months'
-            print('')
+        factor, t, p = self.get_ann_factor(interval, trading_periods, market_hours)
+        print('')
 
         print('\n')
         if self.ticker == self.name:
@@ -379,7 +338,7 @@ class Security:
             print(f'{self.ticker} {period_str} Return Stats:')
         print(f"Dates: {start_date} - {end_date}")
         periods = df[returns].count()
-        years = periods/ann_factor
+        years = periods/factor
         print(f"Periods: {periods} {t}")
         print(f"Trading Periods: {trading_periods} days a year")
         print("Years: {:.3}".format(years))
@@ -419,15 +378,15 @@ class Security:
 #####################################################################################################################
 
         # Annualized Return:
-        #self.avg_ann = self.avg_ret * ann_factor
-        avg_ann = ((1 + self.avg_ret)**ann_factor)-1
+        #self.avg_ann = self.avg_ret * factor
+        avg_ann = ((1 + self.avg_ret)**factor)-1
         setattr(self, 'avg_ann', avg_ann)
-        #self.avg_ann = self.avg_ret * ann_factor
+        #self.avg_ann = self.avg_ret * factor
         print('Annualaized Arithmetic Return:', "{:.2%}".format(self.avg_ann))
 
         if geo:
             # Annualaized Geometric:
-            avg_ann_geo = ((1 + self.cum_ret)**(ann_factor/periods)) - 1
+            avg_ann_geo = ((1 + self.cum_ret)**(factor/periods)) - 1
             setattr(self, 'avg_ann_geo', avg_ann_geo)
             #self.avg_ann_geo = ((1 + df[returns]).cumprod()) -1
             print('Annualized Geometric Return:',
@@ -442,11 +401,11 @@ class Security:
         print('Vol. of Period Returns:', "{:.6%}".format(self.vol))
 
         # Average {vol_window} Day Volatility:
-        if f'Vol_{vol_window}' in df:
+        if f'Vol_{vol_window}_{p}' in df:
             self.vol_roll_mean = df[f'Vol_{vol_window}'].mean()
         else:
             std, ann_vol, vol_roll, vol_roll_an, vs_vol, r_vol = self.get_vol(
-                window=vol_window, returns=returns, trading_periods=ann_factor)
+                window=vol_window, returns=returns, trading_periods=factor)
             vol_roll_mean = vol_roll.mean()
             setattr(self, 'vol_roll_mean', vol_roll_mean)
         print(f'Mean Volatility ({vol_window}):',
@@ -465,21 +424,21 @@ class Security:
             pass
 
         # Annualized Volatility:
-        ann_vol = self.vol*np.sqrt(ann_factor)
+        ann_vol = self.vol*np.sqrt(factor)
         setattr(self, 'ann_vol', ann_vol)
         print('Annualized Vol:', "{:.2%}".format(self.ann_vol))
 
         # Average Annualized {vol_window} Volatility:
-        vol_roll_an = self.vol_roll_mean*np.sqrt(ann_factor)
+        vol_roll_an = self.vol_roll_mean*np.sqrt(factor)
         setattr(self, 'vol_roll_an', vol_roll_an)
         print(f'Annualized Mean Volatility ({vol_window}):', "{:.2%}".format(
             self.vol_roll_an))
 
         # Annualized {vol_window} YangZhang:
         if ('High' in df) and ('Low' in df) and ('Open' in df) and ('Close' in df):
-            yz_roll_ann = self.yz_roll_mean*np.sqrt(ann_factor)
+            yz_roll_ann = self.yz_roll_mean*np.sqrt(factor)
             setattr(self, 'yz_roll_ann', yz_roll_ann)
-            #yz_yr, yz_yr_an = YangZhang_estimator(df,window=periods,trading_periods=ann_factor,clean=True);
+            #yz_yr, yz_yr_an = YangZhang_estimator(df,window=periods,trading_periods=factor,clean=True);
             #self.yz_yr_an = yz_yr_an.iloc[-1]
             print(f'Annualized Mean YangZhang ({vol_window}):', "{:.2%}".format(
                 self.yz_roll_ann))
@@ -503,7 +462,7 @@ class Security:
         print(' ')
 
         # Compute Sortino Ratio (No RFR)
-        sortino = self.sortino(returns, rfr=0, trading_periods=ann_factor)
+        sortino = self.sortino(df[returns], rfr=0, trading_periods=factor)
         setattr(self, 'sortino', sortino)
         print('Sortino Ratio:', "{:.2f}".format(self.sortino))
 
