@@ -22,8 +22,8 @@ setup(
     ],
     install_requires=[
         'cufflinks @ git+https://github.com/Saran33/cufflynx.git@Saran33#egg=cufflinks',
-        'alpha_vantage @ git+git://github.com/Saran33/alpha_vantage.git@develop#egg=alpha_vantage',
-        'nomics @ git+git://github.com/Saran33/nomics-python.git',
+        'alpha_vantage @ git+https://github.com/Saran33/alpha_vantage.git@develop#egg=alpha_vantage',
+        'nomics @ git+https://github.com/Saran33/nomics-python.git',
         'cryptocmd @ git+https://github.com/Saran33/cryptoCMD',
         'datamine @ git+https://github.com/Saran33/datamine_python.git',
         'pykalman @ git+https://github.com/pykalman/pykalman.git',
